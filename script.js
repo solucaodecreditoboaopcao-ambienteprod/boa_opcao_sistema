@@ -21,6 +21,14 @@ let imgbbApiKey = '';
 let organizacaoAtiva = false;
 let contratoAtualId = null;
 
+// Mapeamento de tipo de venda
+const tipoVendaMap = {
+    'cartao_alimentacao': 'Cartão Alimentação',
+    'cartao_refeicao': 'Cartão Refeição',
+    'cartao_credito_parcelado': 'Crédito Parcelado',
+    'cartao_credito_vista': 'Crédito À Vista'
+};
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
     await verificarOrganizacao();
@@ -101,6 +109,18 @@ function setupEventListeners() {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
         e.target.value = value;
+    });
+    
+    // Tipo de venda - ajustar parcelas automaticamente
+    document.getElementById('tipoVenda').addEventListener('change', function() {
+        const tipo = this.value;
+        const parcelasInput = document.getElementById('parcelas');
+        if (tipo === 'cartao_credito_vista') {
+            parcelasInput.value = 1;
+            parcelasInput.readOnly = true;
+        } else {
+            parcelasInput.readOnly = false;
+        }
     });
     
     // Busca em tempo real
@@ -213,7 +233,6 @@ async function salvarContrato(e) {
     btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
     
     try {
-        // Montar endereço completo
         const enderecoCompleto = {
             cep: document.getElementById('cep').value,
             logradouro: document.getElementById('endereco').value,
@@ -225,7 +244,6 @@ async function salvarContrato(e) {
             completo: `${document.getElementById('endereco').value}, ${document.getElementById('numeroEndereco').value} - ${document.getElementById('bairro').value}, ${document.getElementById('cidade').value}/${document.getElementById('estado').value}`
         };
         
-        // Dados do cartão retido
         const cartaoRetido = document.getElementById('cartaoRetido').checked;
         const dadosCartaoRetido = cartaoRetido ? {
             retido: true,
@@ -239,9 +257,13 @@ async function salvarContrato(e) {
             retido: false
         };
         
+        const tipoVenda = document.getElementById('tipoVenda').value;
+        
         const dadosContrato = {
             numeroContrato: document.getElementById('numeroContrato').value,
             status: document.getElementById('statusContrato').value,
+            tipoVenda: tipoVenda,
+            tipoVendaNome: tipoVendaMap[tipoVenda] || tipoVenda,
             dataContrato: document.getElementById('dataContrato').value,
             nome: document.getElementById('nome').value.toUpperCase(),
             cpf: document.getElementById('cpf').value.replace(/\D/g, ''),
@@ -259,7 +281,6 @@ async function salvarContrato(e) {
             dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // Upload imagens
         const fichaFile = document.getElementById('fichaCliente').files[0];
         const docFile = document.getElementById('documentoCliente').files[0];
         
@@ -297,6 +318,7 @@ async function buscarContratos() {
     const telefone = document.getElementById('searchTelefone').value.replace(/\D/g, '');
     const contrato = document.getElementById('searchContrato').value;
     const status = document.getElementById('searchStatus').value;
+    const tipoVenda = document.getElementById('searchTipoVenda').value;
     const dataInicio = document.getElementById('searchDataInicio').value;
     const dataFim = document.getElementById('searchDataFim').value;
     const cartaoRetido = document.getElementById('searchCartaoRetido').checked;
@@ -308,6 +330,7 @@ async function buscarContratos() {
     if (telefone) query = query.where('telefone', '==', telefone);
     if (contrato) query = query.where('numeroContrato', '==', contrato);
     if (status) query = query.where('status', '==', status);
+    if (tipoVenda) query = query.where('tipoVenda', '==', tipoVenda);
     if (dataInicio) query = query.where('dataContrato', '>=', dataInicio);
     if (dataFim) query = query.where('dataContrato', '<=', dataFim);
     if (cartaoRetido) query = query.where('cartaoRetido.retido', '==', true);
@@ -351,9 +374,8 @@ async function buscarContratos() {
                 }
             }
             
-            const endereco = dados.endereco?.logradouro 
-                ? `<span class="endereco-completo">${dados.endereco.logradouro}, ${dados.endereco.numero || 'S/N'}<br><small>${dados.endereco.bairro || ''} - ${dados.endereco.cidade || ''}/${dados.endereco.estado || ''}</small></span>`
-                : '<span class="text-muted">-</span>';
+            const tipoVendaNome = dados.tipoVendaNome || dados.tipoVenda || 'N/A';
+            const tipoVendaClass = dados.tipoVenda ? `tipo-${dados.tipoVenda}` : '';
             
             const data = dados.dataContrato ? new Date(dados.dataContrato + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
             
@@ -365,7 +387,7 @@ async function buscarContratos() {
                     <td>${dados.nome}</td>
                     <td class="cpf-mask">${mascararCPF(dados.cpf)}</td>
                     <td class="tel-mask">${mascararTelefone(dados.telefone)}</td>
-                    <td>${endereco}</td>
+                    <td><span class="tipo-venda-badge ${tipoVendaClass}">${tipoVendaNome}</span></td>
                     <td>R$ ${(dados.valorCartao || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
                     <td>${dados.parcelas || 0}x</td>
@@ -435,6 +457,9 @@ async function verDetalhes(id) {
             const dados = doc.data();
             const modalBody = document.getElementById('detalhesContrato');
             
+            const tipoVendaNome = dados.tipoVendaNome || dados.tipoVenda || 'N/A';
+            const tipoVendaClass = dados.tipoVenda ? `tipo-${dados.tipoVenda}` : '';
+            
             const enderecoHTML = dados.endereco?.logradouro ? `
                 <div class="card mb-3">
                     <div class="card-header bg-light">
@@ -471,6 +496,7 @@ async function verDetalhes(id) {
                     <div class="col-md-6">
                         <h6 class="text-primary">Contrato: ${dados.numeroContrato}</h6>
                         <p><strong>Status:</strong> ${dados.status}</p>
+                        <p><strong>Tipo de Venda:</strong> <span class="tipo-venda-badge ${tipoVendaClass}">${tipoVendaNome}</span></p>
                         <p><strong>Data:</strong> ${dados.dataContrato}</p>
                         <p><strong>Nome:</strong> ${dados.nome}</p>
                         <p><strong>CPF:</strong> ${mascararCPF(dados.cpf)}</p>
@@ -505,6 +531,7 @@ function atualizarCamposRelatorio() {
     document.getElementById('relatorioMes').style.display = tipo === 'mensal' ? 'block' : 'none';
     document.getElementById('relatorioDataInicio').style.display = tipo === 'periodo' ? 'block' : 'none';
     document.getElementById('relatorioDataFim').style.display = tipo === 'periodo' ? 'block' : 'none';
+    document.getElementById('divTipoVendaRelatorio').style.display = tipo === 'tipo_venda' ? 'block' : 'none';
 }
 
 async function gerarRelatorio() {
@@ -527,6 +554,9 @@ async function gerarRelatorio() {
         const fim = document.getElementById('relatorioDataFim').value;
         if (inicio) query = query.where('dataContrato', '>=', inicio);
         if (fim) query = query.where('dataContrato', '<=', fim);
+    } else if (tipo === 'tipo_venda') {
+        const tipoVenda = document.getElementById('relatorioTipoVenda').value;
+        if (tipoVenda) query = query.where('tipoVenda', '==', tipoVenda);
     }
     
     query = query.orderBy('dataContrato', 'desc');
@@ -539,17 +569,25 @@ async function gerarRelatorio() {
         let totalCartoes = 0, totalEmprestado = 0, totalLucro = 0;
         let cartoesRetidosPendentes = 0, cartoesDevolvidos = 0, cartoesRetidosTotal = 0;
         
+        // Agrupar por tipo de venda se for relatório completo
+        const porTipoVenda = {};
+        
         snapshot.forEach(doc => {
             const dados = doc.data();
-            
-            if (tipo === 'status') {
-                const statusFiltro = document.getElementById('searchStatus').value;
-                if (statusFiltro && dados.status !== statusFiltro) return;
-            }
             
             totalCartoes += dados.valorCartao || 0;
             totalEmprestado += dados.valorEmprestado || 0;
             totalLucro += dados.lucro || 0;
+            
+            // Agrupamento
+            const tv = dados.tipoVenda || 'outros';
+            if (!porTipoVenda[tv]) {
+                porTipoVenda[tv] = { nome: dados.tipoVendaNome || tv, quantidade: 0, valorCartao: 0, valorEmprestado: 0, lucro: 0 };
+            }
+            porTipoVenda[tv].quantidade++;
+            porTipoVenda[tv].valorCartao += dados.valorCartao || 0;
+            porTipoVenda[tv].valorEmprestado += dados.valorEmprestado || 0;
+            porTipoVenda[tv].lucro += dados.lucro || 0;
             
             let cartaoInfo = 'Não';
             if (dados.cartaoRetido?.retido) {
@@ -563,16 +601,14 @@ async function gerarRelatorio() {
                 }
             }
             
-            const endereco = dados.endereco?.cidade 
-                ? `${dados.endereco.cidade}/${dados.endereco.estado}`
-                : 'N/A';
+            const tipoVendaNome = dados.tipoVendaNome || dados.tipoVenda || 'N/A';
             
             tbody.innerHTML += `
                 <tr>
                     <td>${dados.numeroContrato}</td>
                     <td>${dados.nome}</td>
                     <td>${mascararCPF(dados.cpf)}</td>
-                    <td>${endereco}</td>
+                    <td>${tipoVendaNome}</td>
                     <td>R$ ${(dados.valorCartao || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.lucro || 0).toFixed(2)}</td>
@@ -582,6 +618,28 @@ async function gerarRelatorio() {
                 </tr>
             `;
         });
+        
+        // Se for relatório completo, adicionar resumo por tipo de venda
+        if (tipo === 'completo' && Object.keys(porTipoVenda).length > 0) {
+            tbody.innerHTML += `
+                <tr class="table-secondary fw-bold">
+                    <td colspan="10">RESUMO POR TIPO DE VENDA</td>
+                </tr>
+            `;
+            Object.values(porTipoVenda).forEach(tv => {
+                tbody.innerHTML += `
+                    <tr class="table-light">
+                        <td colspan="2">${tv.nome}</td>
+                        <td>${tv.quantidade} contrato(s)</td>
+                        <td></td>
+                        <td>R$ ${tv.valorCartao.toFixed(2)}</td>
+                        <td>R$ ${tv.valorEmprestado.toFixed(2)}</td>
+                        <td>R$ ${tv.lucro.toFixed(2)}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                `;
+            });
+        }
         
         // Atualizar cards
         document.getElementById('totalContratos').textContent = snapshot.size;
@@ -596,10 +654,10 @@ async function gerarRelatorio() {
         
         document.getElementById('tabelaRelatorio').style.display = 'block';
         
-        // Salvar dados para exportação
         window.dadosExportacao = {
             contratos: snapshot.docs.map(doc => doc.data()),
-            totais: { totalCartoes, totalEmprestado, totalLucro, cartoesRetidosPendentes, cartoesDevolvidos }
+            totais: { totalCartoes, totalEmprestado, totalLucro, cartoesRetidosPendentes, cartoesDevolvidos },
+            porTipoVenda: porTipoVenda
         };
         
     } catch (error) {
@@ -620,6 +678,7 @@ function exportarParaExcel() {
         'Nome': c.nome,
         'CPF': c.cpf,
         'Telefone': c.telefone,
+        'Tipo Venda': c.tipoVendaNome || c.tipoVenda || '',
         'Endereço': c.endereco?.completo || '',
         'CEP': c.endereco?.cep || '',
         'Cidade': c.endereco?.cidade || '',
@@ -709,6 +768,8 @@ function limparFormulario() {
     document.getElementById('divUltimosDigitos').style.display = 'none';
     document.getElementById('divDataRetirada').style.display = 'none';
     document.getElementById('divObservacaoCartao').style.display = 'none';
+    
+    document.getElementById('parcelas').readOnly = false;
     
     gerarNumeroContrato();
 }
