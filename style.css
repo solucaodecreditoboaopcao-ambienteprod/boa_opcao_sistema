@@ -333,6 +333,7 @@ body {
     border: none;
     font-weight: 600;
     padding: 1rem;
+    font-size: 0.9rem;
 }
 
 .table tbody tr {
@@ -350,6 +351,7 @@ body {
     border-radius: 20px;
     font-weight: 600;
     font-size: 0.85rem;
+    white-space: nowrap;
 }
 
 .status-pago {
@@ -375,6 +377,74 @@ body {
 .status-atrasado {
     background: linear-gradient(135deg, #ff6f00, #ffa040);
     color: white;
+}
+
+/* ========== CARTÃO RETIDO ========== */
+.form-check-input:checked {
+    background-color: var(--danger);
+    border-color: var(--danger);
+}
+
+.form-check-input:focus {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 0.2rem rgba(255, 23, 68, 0.25);
+}
+
+.cartao-retido-badge {
+    background: linear-gradient(135deg, #ff1744, #ff5252);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    animation: pulse 2s infinite;
+    white-space: nowrap;
+}
+
+.cartao-retido-badge i {
+    margin-right: 5px;
+}
+
+.cartao-devolvido-badge {
+    background: linear-gradient(135deg, #00c853, #69f0ae);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* Destaque para cartões retidos na tabela */
+tr.cartao-retido-row {
+    background: rgba(255, 23, 68, 0.05) !important;
+    border-left: 4px solid var(--danger);
+}
+
+tr.cartao-retido-row:hover {
+    background: rgba(255, 23, 68, 0.1) !important;
+}
+
+/* Card de resumo de cartões retidos */
+.card-cartoes-retidos {
+    background: linear-gradient(135deg, #ff1744, #ff5252);
+    color: white;
+}
+
+.card-cartoes-retidos .card-body {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-cartoes-retidos .card-body::after {
+    content: '\F6E8';
+    font-family: 'Bootstrap Icons';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 4rem;
+    opacity: 0.3;
 }
 
 /* ========== SEARCH FILTERS ========== */
@@ -414,6 +484,19 @@ body {
     }
 }
 
+/* ========== ANIMAÇÕES ========== */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* ========== ENDEREÇO ========== */
+.endereco-completo {
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
 /* ========== RESPONSIVIDADE ========== */
 @media (max-width: 768px) {
     .org-title {
@@ -447,17 +530,10 @@ body {
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
     }
-}
-
-/* ========== ANIMAÇÕES ========== */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.pulse {
-    animation: pulse 2s infinite;
+    
+    .table {
+        font-size: 0.8rem;
+    }
 }
 
 /* Scrollbar personalizada */
