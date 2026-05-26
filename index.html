@@ -73,7 +73,7 @@
                                 </h4>
                                 
                                 <form id="formEmprestimo">
-                                    <!-- Número do Contrato e Status -->
+                                    <!-- Número do Contrato, Status e Tipo de Venda -->
                                     <div class="row mb-4">
                                         <div class="col-md-4">
                                             <div class="form-floating">
@@ -98,6 +98,24 @@
                                                 </label>
                                             </div>
                                         </div>
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                <select class="form-select" id="tipoVenda" required>
+                                                    <option value="">Selecione...</option>
+                                                    <option value="cartao_alimentacao">Cartão Alimentação</option>
+                                                    <option value="cartao_refeicao">Cartão Refeição</option>
+                                                    <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
+                                                    <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
+                                                </select>
+                                                <label for="tipoVenda">
+                                                    <i class="bi bi-tag"></i> Tipo de Venda *
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Data do Contrato -->
+                                    <div class="row mb-4">
                                         <div class="col-md-4">
                                             <div class="form-floating">
                                                 <input type="date" class="form-control" id="dataContrato" required>
@@ -286,6 +304,10 @@
                                                     <option value="Hipercard">Hipercard</option>
                                                     <option value="Diners">Diners Club</option>
                                                     <option value="Discover">Discover</option>
+                                                    <option value="Sodexo">Sodexo</option>
+                                                    <option value="Ticket">Ticket</option>
+                                                    <option value="Alelo">Alelo</option>
+                                                    <option value="VR">VR</option>
                                                     <option value="Outros">Outros</option>
                                                 </select>
                                                 <label for="bandeiraCartao">Bandeira do Cartão</label>
@@ -410,6 +432,18 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-floating">
+                                        <select class="form-select" id="searchTipoVenda">
+                                            <option value="">Todos os Tipos</option>
+                                            <option value="cartao_alimentacao">Cartão Alimentação</option>
+                                            <option value="cartao_refeicao">Cartão Refeição</option>
+                                            <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
+                                            <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
+                                        </select>
+                                        <label for="searchTipoVenda">Tipo de Venda</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating">
                                         <input type="date" class="form-control" id="searchDataInicio">
                                         <label for="searchDataInicio">Data Início</label>
                                     </div>
@@ -420,6 +454,8 @@
                                         <label for="searchDataFim">Data Fim</label>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="row g-2 mt-2">
                                 <div class="col-md-3">
                                     <div class="form-check form-switch mt-3">
                                         <input class="form-check-input" type="checkbox" id="searchCartaoRetido">
@@ -428,9 +464,7 @@
                                         </label>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row mt-3">
-                                <div class="col-12">
+                                <div class="col-md-9">
                                     <button class="btn btn-info btn-lg w-100" onclick="buscarContratos()">
                                         <i class="bi bi-search"></i> Buscar Contratos
                                     </button>
@@ -447,7 +481,7 @@
                                         <th>Nome</th>
                                         <th>CPF</th>
                                         <th>Telefone</th>
-                                        <th>Endereço</th>
+                                        <th>Tipo Venda</th>
                                         <th>Valor Cartão</th>
                                         <th>Valor Emprestado</th>
                                         <th>Parcelas</th>
@@ -476,18 +510,18 @@
                         
                         <!-- Filtros do Relatório -->
                         <div class="row g-3 mb-4">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="form-floating">
                                     <select class="form-select" id="relatorioTipo" onchange="atualizarCamposRelatorio()">
-                                        <option value="mensal">Relatório Mensal</option>
+                                        <option value="mensal">Mensal</option>
                                         <option value="periodo">Por Período</option>
-                                        <option value="status">Por Status</option>
-                                        <option value="completo">Relatório Completo</option>
+                                        <option value="tipo_venda">Por Tipo de Venda</option>
+                                        <option value="completo">Completo</option>
                                     </select>
-                                    <label for="relatorioTipo">Tipo de Relatório</label>
+                                    <label for="relatorioTipo">Tipo</label>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="form-floating">
                                     <input type="month" class="form-control" id="relatorioMes">
                                     <label for="relatorioMes">Mês/Ano</label>
@@ -503,6 +537,18 @@
                                 <div class="form-floating">
                                     <input type="date" class="form-control" id="relatorioDataFim" style="display:none;">
                                     <label for="relatorioDataFim">Data Fim</label>
+                                </div>
+                            </div>
+                            <div class="col-md-2" id="divTipoVendaRelatorio" style="display:none;">
+                                <div class="form-floating">
+                                    <select class="form-select" id="relatorioTipoVenda">
+                                        <option value="">Todos</option>
+                                        <option value="cartao_alimentacao">Cartão Alimentação</option>
+                                        <option value="cartao_refeicao">Cartão Refeição</option>
+                                        <option value="cartao_credito_parcelado">Crédito Parcelado</option>
+                                        <option value="cartao_credito_vista">Crédito À Vista</option>
+                                    </select>
+                                    <label for="relatorioTipoVenda">Tipo de Venda</label>
                                 </div>
                             </div>
                             <div class="col-md-2">
@@ -584,7 +630,7 @@
                                         <th>Contrato</th>
                                         <th>Cliente</th>
                                         <th>CPF</th>
-                                        <th>Endereço</th>
+                                        <th>Tipo Venda</th>
                                         <th>Valor Cartão</th>
                                         <th>Valor Emprestado</th>
                                         <th>Lucro</th>
@@ -609,7 +655,7 @@
     <!-- Footer -->
     <footer class="footer mt-5">
         <div class="container">
-            <p class="mb-0">&copy; APPTECH - Todos os direitos reservados</p>
+            <p class="mb-0">&copy; 2024 - Todos os direitos reservados</p>
         </div>
     </footer>
 
