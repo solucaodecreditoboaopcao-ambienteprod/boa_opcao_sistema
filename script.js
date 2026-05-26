@@ -1,5 +1,5 @@
 // ============================================
-// SISTEMA BOA OPÇÃO - JAVASCRIPT
+// SISTEMA BOA OPÇÃO - JAVASCRIPT COMPLETO
 // ============================================
 
 // Configuração do Firebase
@@ -20,7 +20,6 @@ const db = firebase.firestore();
 let imgbbApiKey = '';
 let organizacaoAtiva = false;
 let contratoAtualId = null;
-let dataTable = null;
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
@@ -28,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     await carregarImgBBApiKey();
     gerarNumeroContrato();
     setupEventListeners();
-    inicializarDataTable();
+    atualizarCamposRelatorio();
 });
 
 // ========== FUNÇÕES DE VERIFICAÇÃO ==========
@@ -98,9 +97,21 @@ function setupEventListeners() {
     // Máscaras
     document.getElementById('cpf').addEventListener('input', mascaraCPF);
     document.getElementById('numero').addEventListener('input', mascaraTelefone);
+    document.getElementById('cep').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+        e.target.value = value;
+    });
     
-    // Relatório
-    document.getElementById('relatorioTipo').addEventListener('change', atualizarCamposRelatorio);
+    // Busca em tempo real
+    document.querySelectorAll('#searchCPF, #searchNome, #searchTelefone, #searchContrato').forEach(input => {
+        input.addEventListener('input', function() {
+            clearTimeout(window.timeoutBusca);
+            window.timeoutBusca = setTimeout(buscarContratos, 500);
+        });
+    });
+    
+    document.getElementById('searchCartaoRetido').addEventListener('change', buscarContratos);
 }
 
 // ========== PREVIEW DE IMAGENS ==========
@@ -141,6 +152,53 @@ async function uploadImagemParaImgBB(file) {
     return data.data.url;
 }
 
+// ========== TOGGLE CARTÃO RETIDO ==========
+function toggleCartaoRetido() {
+    const isRetido = document.getElementById('cartaoRetido').checked;
+    
+    document.getElementById('divBandeiraCartao').style.display = isRetido ? 'block' : 'none';
+    document.getElementById('divUltimosDigitos').style.display = isRetido ? 'block' : 'none';
+    document.getElementById('divDataRetirada').style.display = isRetido ? 'block' : 'none';
+    document.getElementById('divObservacaoCartao').style.display = isRetido ? 'block' : 'none';
+    
+    if (!isRetido) {
+        document.getElementById('bandeiraCartao').value = '';
+        document.getElementById('ultimosDigitos').value = '';
+        document.getElementById('dataRetirada').value = '';
+        document.getElementById('observacaoCartao').value = '';
+    }
+}
+
+// ========== BUSCAR CEP ==========
+async function buscarCEP() {
+    const cep = document.getElementById('cep').value.replace(/\D/g, '');
+    
+    if (cep.length !== 8) return;
+    
+    try {
+        document.getElementById('cep').disabled = true;
+        
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+        
+        if (data.erro) {
+            mostrarStatus('CEP não encontrado!', 'warning');
+            return;
+        }
+        
+        document.getElementById('endereco').value = data.logradouro || '';
+        document.getElementById('bairro').value = data.bairro || '';
+        document.getElementById('cidade').value = data.localidade || '';
+        document.getElementById('estado').value = data.uf || '';
+        document.getElementById('numeroEndereco').focus();
+        
+    } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
+    } finally {
+        document.getElementById('cep').disabled = false;
+    }
+}
+
 // ========== SALVAR CONTRATO ==========
 async function salvarContrato(e) {
     e.preventDefault();
@@ -155,6 +213,32 @@ async function salvarContrato(e) {
     btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
     
     try {
+        // Montar endereço completo
+        const enderecoCompleto = {
+            cep: document.getElementById('cep').value,
+            logradouro: document.getElementById('endereco').value,
+            numero: document.getElementById('numeroEndereco').value,
+            bairro: document.getElementById('bairro').value,
+            complemento: document.getElementById('complemento').value,
+            cidade: document.getElementById('cidade').value,
+            estado: document.getElementById('estado').value,
+            completo: `${document.getElementById('endereco').value}, ${document.getElementById('numeroEndereco').value} - ${document.getElementById('bairro').value}, ${document.getElementById('cidade').value}/${document.getElementById('estado').value}`
+        };
+        
+        // Dados do cartão retido
+        const cartaoRetido = document.getElementById('cartaoRetido').checked;
+        const dadosCartaoRetido = cartaoRetido ? {
+            retido: true,
+            bandeira: document.getElementById('bandeiraCartao').value,
+            ultimosDigitos: document.getElementById('ultimosDigitos').value,
+            dataRetirada: document.getElementById('dataRetirada').value,
+            observacao: document.getElementById('observacaoCartao').value,
+            dataDevolucao: null,
+            statusDevolucao: 'retido'
+        } : {
+            retido: false
+        };
+        
         const dadosContrato = {
             numeroContrato: document.getElementById('numeroContrato').value,
             status: document.getElementById('statusContrato').value,
@@ -162,13 +246,15 @@ async function salvarContrato(e) {
             nome: document.getElementById('nome').value.toUpperCase(),
             cpf: document.getElementById('cpf').value.replace(/\D/g, ''),
             telefone: document.getElementById('numero').value.replace(/\D/g, ''),
+            endereco: enderecoCompleto,
             pix: document.getElementById('pix').value,
             banco: document.getElementById('banco').value,
             bancoNome: document.getElementById('banco').options[document.getElementById('banco').selectedIndex].text,
-            valorCartao: parseFloat(document.getElementById('valorCartao').value),
-            parcelas: parseInt(document.getElementById('parcelas').value),
-            valorEmprestado: parseFloat(document.getElementById('valorEmprestado').value),
-            lucro: parseFloat(document.getElementById('valorCartao').value) - parseFloat(document.getElementById('valorEmprestado').value),
+            valorCartao: parseFloat(document.getElementById('valorCartao').value) || 0,
+            parcelas: parseInt(document.getElementById('parcelas').value) || 0,
+            valorEmprestado: parseFloat(document.getElementById('valorEmprestado').value) || 0,
+            lucro: (parseFloat(document.getElementById('valorCartao').value) || 0) - (parseFloat(document.getElementById('valorEmprestado').value) || 0),
+            cartaoRetido: dadosCartaoRetido,
             dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
             dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -186,7 +272,12 @@ async function salvarContrato(e) {
         
         await db.collection('contratos').add(dadosContrato);
         
-        mostrarStatus('✅ Contrato cadastrado com sucesso!', 'success');
+        if (cartaoRetido) {
+            mostrarStatus('✅ Contrato cadastrado! Cartão registrado como RETIDO.', 'warning');
+        } else {
+            mostrarStatus('✅ Contrato cadastrado com sucesso!', 'success');
+        }
+        
         limparFormulario();
         gerarNumeroContrato();
         
@@ -208,10 +299,10 @@ async function buscarContratos() {
     const status = document.getElementById('searchStatus').value;
     const dataInicio = document.getElementById('searchDataInicio').value;
     const dataFim = document.getElementById('searchDataFim').value;
+    const cartaoRetido = document.getElementById('searchCartaoRetido').checked;
     
     let query = db.collection('contratos');
     
-    // Aplicar filtros
     if (cpf) query = query.where('cpf', '==', cpf);
     if (nome) query = query.where('nome', '>=', nome).where('nome', '<=', nome + '\uf8ff');
     if (telefone) query = query.where('telefone', '==', telefone);
@@ -219,8 +310,9 @@ async function buscarContratos() {
     if (status) query = query.where('status', '==', status);
     if (dataInicio) query = query.where('dataContrato', '>=', dataInicio);
     if (dataFim) query = query.where('dataContrato', '<=', dataFim);
+    if (cartaoRetido) query = query.where('cartaoRetido.retido', '==', true);
     
-    query = query.orderBy('dataCadastro', 'desc');
+    query = query.orderBy('dataCadastro', 'desc').limit(100);
     
     try {
         const snapshot = await query.get();
@@ -228,13 +320,11 @@ async function buscarContratos() {
         tbody.innerHTML = '';
         
         if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center">Nenhum contrato encontrado</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" class="text-center py-4">Nenhum contrato encontrado</td></tr>';
             return;
         }
         
-        let totalCartoes = 0;
-        let totalEmprestado = 0;
-        let totalLucro = 0;
+        let totalCartoes = 0, totalEmprestado = 0, totalLucro = 0, totalCartoesRetidos = 0;
         
         snapshot.forEach(doc => {
             const dados = doc.data();
@@ -251,37 +341,59 @@ async function buscarContratos() {
             totalEmprestado += dados.valorEmprestado || 0;
             totalLucro += dados.lucro || 0;
             
+            let cartaoInfo = '<span class="text-muted">-</span>';
+            if (dados.cartaoRetido?.retido) {
+                totalCartoesRetidos++;
+                if (dados.cartaoRetido.statusDevolucao === 'devolvido') {
+                    cartaoInfo = '<span class="cartao-devolvido-badge"><i class="bi bi-check-circle"></i> Devolvido</span>';
+                } else {
+                    cartaoInfo = '<span class="cartao-retido-badge"><i class="bi bi-lock-fill"></i> Retido</span>';
+                }
+            }
+            
+            const endereco = dados.endereco?.logradouro 
+                ? `<span class="endereco-completo">${dados.endereco.logradouro}, ${dados.endereco.numero || 'S/N'}<br><small>${dados.endereco.bairro || ''} - ${dados.endereco.cidade || ''}/${dados.endereco.estado || ''}</small></span>`
+                : '<span class="text-muted">-</span>';
+            
             const data = dados.dataContrato ? new Date(dados.dataContrato + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
             
+            const rowClass = dados.cartaoRetido?.retido && dados.cartaoRetido?.statusDevolucao !== 'devolvido' ? 'cartao-retido-row' : '';
+            
             tbody.innerHTML += `
-                <tr>
+                <tr class="${rowClass}">
                     <td><strong>${dados.numeroContrato}</strong></td>
                     <td>${dados.nome}</td>
                     <td class="cpf-mask">${mascararCPF(dados.cpf)}</td>
                     <td class="tel-mask">${mascararTelefone(dados.telefone)}</td>
+                    <td>${endereco}</td>
                     <td>R$ ${(dados.valorCartao || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
-                    <td>${dados.parcelas}x</td>
+                    <td>${dados.parcelas || 0}x</td>
+                    <td>${cartaoInfo}</td>
                     <td><span class="badge badge-status ${statusClass}">${statusTexto}</span></td>
                     <td>${data}</td>
                     <td>
-                        <button class="btn btn-sm btn-info" onclick="verDetalhes('${doc.id}')" title="Ver detalhes">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-primary" onclick="editarContrato('${doc.id}')" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </button>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-info" onclick="verDetalhes('${doc.id}')" title="Ver detalhes">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            ${dados.cartaoRetido?.retido && dados.cartaoRetido?.statusDevolucao === 'retido' ? `
+                                <button class="btn btn-success" onclick="registrarDevolucao('${doc.id}')" title="Registrar devolução">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                            ` : ''}
+                        </div>
                     </td>
                 </tr>
             `;
         });
         
-        // Adicionar linha de totais
         tbody.innerHTML += `
             <tr class="table-active fw-bold">
-                <td colspan="4">TOTAIS</td>
+                <td colspan="5">TOTAIS (${snapshot.size} contratos | ${totalCartoesRetidos} cartões retidos)</td>
                 <td>R$ ${totalCartoes.toFixed(2)}</td>
                 <td>R$ ${totalEmprestado.toFixed(2)}</td>
+                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
@@ -295,6 +407,26 @@ async function buscarContratos() {
     }
 }
 
+// ========== REGISTRAR DEVOLUÇÃO ==========
+async function registrarDevolucao(id) {
+    if (!confirm('Confirmar a devolução deste cartão ao cliente?')) return;
+    
+    try {
+        await db.collection('contratos').doc(id).update({
+            'cartaoRetido.statusDevolucao': 'devolvido',
+            'cartaoRetido.dataDevolucao': new Date().toISOString().split('T')[0],
+            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        mostrarStatus('✅ Devolução do cartão registrada com sucesso!', 'success');
+        buscarContratos();
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarStatus('❌ Erro ao registrar devolução: ' + error.message, 'danger');
+    }
+}
+
 // ========== VER DETALHES ==========
 async function verDetalhes(id) {
     try {
@@ -303,10 +435,41 @@ async function verDetalhes(id) {
             const dados = doc.data();
             const modalBody = document.getElementById('detalhesContrato');
             
+            const enderecoHTML = dados.endereco?.logradouro ? `
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <i class="bi bi-geo-alt"></i> <strong>Endereço Completo</strong>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>CEP:</strong> ${dados.endereco.cep || 'N/A'}</p>
+                        <p><strong>Logradouro:</strong> ${dados.endereco.logradouro || 'N/A'}, ${dados.endereco.numero || 'S/N'}</p>
+                        ${dados.endereco.complemento ? `<p><strong>Complemento:</strong> ${dados.endereco.complemento}</p>` : ''}
+                        <p><strong>Bairro:</strong> ${dados.endereco.bairro || 'N/A'}</p>
+                        <p><strong>Cidade/Estado:</strong> ${dados.endereco.cidade || 'N/A'}/${dados.endereco.estado || 'N/A'}</p>
+                    </div>
+                </div>
+            ` : '';
+            
+            const cartaoHTML = dados.cartaoRetido?.retido ? `
+                <div class="card mb-3 border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <i class="bi bi-credit-card"></i> <strong>Cartão Retido</strong>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Bandeira:</strong> ${dados.cartaoRetido.bandeira || 'N/A'}</p>
+                        <p><strong>Últimos dígitos:</strong> ${dados.cartaoRetido.ultimosDigitos || 'N/A'}</p>
+                        <p><strong>Data da Retirada:</strong> ${dados.cartaoRetido.dataRetirada || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${dados.cartaoRetido.statusDevolucao === 'devolvido' ? '✅ Devolvido' : '⚠️ Pendente de Devolução'}</p>
+                        ${dados.cartaoRetido.dataDevolucao ? `<p><strong>Data Devolução:</strong> ${dados.cartaoRetido.dataDevolucao}</p>` : ''}
+                        ${dados.cartaoRetido.observacao ? `<p><strong>Observações:</strong> ${dados.cartaoRetido.observacao}</p>` : ''}
+                    </div>
+                </div>
+            ` : '';
+            
             modalBody.innerHTML = `
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>Contrato: ${dados.numeroContrato}</h6>
+                        <h6 class="text-primary">Contrato: ${dados.numeroContrato}</h6>
                         <p><strong>Status:</strong> ${dados.status}</p>
                         <p><strong>Data:</strong> ${dados.dataContrato}</p>
                         <p><strong>Nome:</strong> ${dados.nome}</p>
@@ -315,15 +478,17 @@ async function verDetalhes(id) {
                     </div>
                     <div class="col-md-6">
                         <p><strong>Banco:</strong> ${dados.bancoNome}</p>
-                        <p><strong>PIX:</strong> ${dados.pix}</p>
-                        <p><strong>Valor Cartão:</strong> R$ ${dados.valorCartao.toFixed(2)}</p>
-                        <p><strong>Valor Emprestado:</strong> R$ ${dados.valorEmprestado.toFixed(2)}</p>
-                        <p><strong>Parcelas:</strong> ${dados.parcelas}x</p>
+                        <p><strong>PIX:</strong> ${dados.pix || 'N/A'}</p>
+                        <p><strong>Valor Cartão:</strong> R$ ${(dados.valorCartao || 0).toFixed(2)}</p>
+                        <p><strong>Valor Emprestado:</strong> R$ ${(dados.valorEmprestado || 0).toFixed(2)}</p>
+                        <p><strong>Parcelas:</strong> ${dados.parcelas || 0}x</p>
                         <p><strong>Lucro:</strong> R$ ${(dados.lucro || 0).toFixed(2)}</p>
                     </div>
                 </div>
-                ${dados.fichaUrl ? `<img src="${dados.fichaUrl}" class="img-fluid mt-3" alt="Ficha">` : ''}
-                ${dados.documentoUrl ? `<img src="${dados.documentoUrl}" class="img-fluid mt-3" alt="Documento">` : ''}
+                ${enderecoHTML}
+                ${cartaoHTML}
+                ${dados.fichaUrl ? `<div class="mb-3"><strong>Ficha do Cliente:</strong><br><img src="${dados.fichaUrl}" class="img-fluid mt-2 rounded" alt="Ficha"></div>` : ''}
+                ${dados.documentoUrl ? `<div class="mb-3"><strong>Documento:</strong><br><img src="${dados.documentoUrl}" class="img-fluid mt-2 rounded" alt="Documento"></div>` : ''}
             `;
             
             contratoAtualId = id;
@@ -335,6 +500,13 @@ async function verDetalhes(id) {
 }
 
 // ========== RELATÓRIOS ==========
+function atualizarCamposRelatorio() {
+    const tipo = document.getElementById('relatorioTipo').value;
+    document.getElementById('relatorioMes').style.display = tipo === 'mensal' ? 'block' : 'none';
+    document.getElementById('relatorioDataInicio').style.display = tipo === 'periodo' ? 'block' : 'none';
+    document.getElementById('relatorioDataFim').style.display = tipo === 'periodo' ? 'block' : 'none';
+}
+
 async function gerarRelatorio() {
     const tipo = document.getElementById('relatorioTipo').value;
     let query = db.collection('contratos');
@@ -347,7 +519,8 @@ async function gerarRelatorio() {
         }
         const [ano, mesNum] = mes.split('-');
         const inicio = `${ano}-${mesNum}-01`;
-        const fim = new Date(ano, mesNum, 0).toISOString().split('T')[0];
+        const ultimoDia = new Date(ano, mesNum, 0).getDate();
+        const fim = `${ano}-${mesNum}-${ultimoDia}`;
         query = query.where('dataContrato', '>=', inicio).where('dataContrato', '<=', fim);
     } else if (tipo === 'periodo') {
         const inicio = document.getElementById('relatorioDataInicio').value;
@@ -364,6 +537,7 @@ async function gerarRelatorio() {
         tbody.innerHTML = '';
         
         let totalCartoes = 0, totalEmprestado = 0, totalLucro = 0;
+        let cartoesRetidosPendentes = 0, cartoesDevolvidos = 0, cartoesRetidosTotal = 0;
         
         snapshot.forEach(doc => {
             const dados = doc.data();
@@ -377,14 +551,32 @@ async function gerarRelatorio() {
             totalEmprestado += dados.valorEmprestado || 0;
             totalLucro += dados.lucro || 0;
             
+            let cartaoInfo = 'Não';
+            if (dados.cartaoRetido?.retido) {
+                cartoesRetidosTotal++;
+                if (dados.cartaoRetido.statusDevolucao === 'devolvido') {
+                    cartoesDevolvidos++;
+                    cartaoInfo = 'Devolvido';
+                } else {
+                    cartoesRetidosPendentes++;
+                    cartaoInfo = 'Retido';
+                }
+            }
+            
+            const endereco = dados.endereco?.cidade 
+                ? `${dados.endereco.cidade}/${dados.endereco.estado}`
+                : 'N/A';
+            
             tbody.innerHTML += `
                 <tr>
                     <td>${dados.numeroContrato}</td>
                     <td>${dados.nome}</td>
                     <td>${mascararCPF(dados.cpf)}</td>
+                    <td>${endereco}</td>
                     <td>R$ ${(dados.valorCartao || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.lucro || 0).toFixed(2)}</td>
+                    <td>${cartaoInfo}</td>
                     <td>${dados.status}</td>
                     <td>${dados.dataContrato}</td>
                 </tr>
@@ -397,12 +589,17 @@ async function gerarRelatorio() {
         document.getElementById('totalEmprestado').textContent = `R$ ${totalEmprestado.toFixed(2)}`;
         document.getElementById('lucroTotal').textContent = `R$ ${totalLucro.toFixed(2)}`;
         
+        document.getElementById('totalCartoesRetidosPendentes').textContent = cartoesRetidosPendentes;
+        document.getElementById('totalCartoesDevolvidos').textContent = cartoesDevolvidos;
+        document.getElementById('totalCartoesRetidos').textContent = cartoesRetidosTotal;
+        document.getElementById('cardsCartoesRetidos').style.display = cartoesRetidosTotal > 0 ? 'flex' : 'none';
+        
         document.getElementById('tabelaRelatorio').style.display = 'block';
         
         // Salvar dados para exportação
         window.dadosExportacao = {
             contratos: snapshot.docs.map(doc => doc.data()),
-            totais: { totalCartoes, totalEmprestado, totalLucro }
+            totais: { totalCartoes, totalEmprestado, totalLucro, cartoesRetidosPendentes, cartoesDevolvidos }
         };
         
     } catch (error) {
@@ -423,13 +620,24 @@ function exportarParaExcel() {
         'Nome': c.nome,
         'CPF': c.cpf,
         'Telefone': c.telefone,
+        'Endereço': c.endereco?.completo || '',
+        'CEP': c.endereco?.cep || '',
+        'Cidade': c.endereco?.cidade || '',
+        'Estado': c.endereco?.estado || '',
         'Valor Cartão': c.valorCartao,
         'Valor Emprestado': c.valorEmprestado,
         'Lucro': c.lucro || 0,
         'Parcelas': c.parcelas,
+        'Cartão Retido': c.cartaoRetido?.retido ? 'SIM' : 'NÃO',
+        'Bandeira Cartão': c.cartaoRetido?.bandeira || '',
+        'Últimos Dígitos': c.cartaoRetido?.ultimosDigitos || '',
+        'Status Devolução': c.cartaoRetido?.statusDevolucao === 'devolvido' ? 'Devolvido' : c.cartaoRetido?.retido ? 'Pendente' : '',
+        'Data Retirada': c.cartaoRetido?.dataRetirada || '',
+        'Data Devolução': c.cartaoRetido?.dataDevolucao || '',
         'Status': c.status,
-        'Data': c.dataContrato,
-        'Banco': c.bancoNome
+        'Data Contrato': c.dataContrato,
+        'Banco': c.bancoNome,
+        'PIX': c.pix || ''
     }));
     
     const ws = XLSX.utils.json_to_sheet(dados);
@@ -467,13 +675,14 @@ function mascaraTelefone(e) {
 }
 
 function mascararCPF(cpf) {
-    if (!cpf) return '';
+    if (!cpf || cpf.length !== 11) return cpf || '';
     return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 }
 
 function mascararTelefone(tel) {
-    if (!tel) return '';
-    return tel.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    if (!tel || tel.length < 10) return tel || '';
+    if (tel.length === 11) return tel.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    return tel.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
 }
 
 function mostrarStatus(mensagem, tipo) {
@@ -495,6 +704,12 @@ function limparFormulario() {
     document.getElementById('previewDocumento').style.display = 'none';
     document.querySelectorAll('.upload-icon').forEach(icon => icon.style.display = 'block');
     document.querySelectorAll('.upload-area p').forEach(p => p.style.display = 'block');
+    
+    document.getElementById('divBandeiraCartao').style.display = 'none';
+    document.getElementById('divUltimosDigitos').style.display = 'none';
+    document.getElementById('divDataRetirada').style.display = 'none';
+    document.getElementById('divObservacaoCartao').style.display = 'none';
+    
     gerarNumeroContrato();
 }
 
@@ -502,23 +717,3 @@ function desabilitarFormulario() {
     const inputs = document.querySelectorAll('#formEmprestimo input, #formEmprestimo select, #formEmprestimo button');
     inputs.forEach(input => input.disabled = true);
 }
-
-function inicializarDataTable() {
-    // DataTable será inicializado quando houver dados
-}
-
-function atualizarCamposRelatorio() {
-    const tipo = document.getElementById('relatorioTipo').value;
-    document.getElementById('relatorioMes').style.display = tipo === 'mensal' ? 'block' : 'none';
-    document.getElementById('relatorioDataInicio').style.display = tipo === 'periodo' ? 'block' : 'none';
-    document.getElementById('relatorioDataFim').style.display = tipo === 'periodo' ? 'block' : 'none';
-}
-
-// Busca em tempo real (opcional)
-let timeoutBusca;
-document.querySelectorAll('#searchCPF, #searchNome, #searchTelefone, #searchContrato').forEach(input => {
-    input.addEventListener('input', function() {
-        clearTimeout(timeoutBusca);
-        timeoutBusca = setTimeout(buscarContratos, 500);
-    });
-});
