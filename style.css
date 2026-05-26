@@ -1,11 +1,12 @@
 /* ============================================
    SISTEMA BOA OPÇÃO - DESIGN PROFISSIONAL
+   FUNDO LARANJA DEGRADÊ
    ============================================ */
 
 :root {
-    --primary: #1a237e;
-    --primary-light: #534bae;
-    --primary-dark: #000051;
+    --primary: #e65100;
+    --primary-light: #ff833a;
+    --primary-dark: #ac1900;
     --accent: #ff6f00;
     --accent-light: #ffa040;
     --success: #00c853;
@@ -17,6 +18,8 @@
     --gray-300: #e0e0e0;
     --gray-700: #616161;
     --gray-900: #212121;
+    --orange-light: #fff3e0;
+    --orange-medium: #ffe0b2;
     --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
     --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
     --shadow-lg: 0 10px 30px rgba(0,0,0,0.15);
@@ -35,19 +38,35 @@
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ff6f00 0%, #ff8f00 25%, #ffa000 50%, #ff8f00 75%, #e65100 100%);
     background-attachment: fixed;
     min-height: 100vh;
     color: var(--gray-900);
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* ========== HEADER ========== */
 .header {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #fff8f0 100%);
     padding: 2rem 0;
     box-shadow: var(--shadow-xl);
     position: relative;
     overflow: hidden;
+    z-index: 1;
 }
 
 .header::before {
@@ -57,7 +76,7 @@ body {
     left: 0;
     right: 0;
     height: 5px;
-    background: linear-gradient(90deg, var(--primary), var(--accent), var(--success));
+    background: linear-gradient(90deg, #e65100, #ff6f00, #ff9800, #ff6f00, #e65100);
     animation: gradientMove 3s ease infinite;
     background-size: 200% 200%;
 }
@@ -71,7 +90,7 @@ body {
 .logo-grande {
     max-width: 250px;
     height: auto;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 10px 20px rgba(230, 81, 0, 0.3));
     transition: var(--transition);
     animation: logoFloat 3s ease-in-out infinite;
 }
@@ -92,17 +111,17 @@ body {
 .org-title {
     font-size: 2.5rem;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    background: linear-gradient(135deg, #e65100, #ff6f00, #ff9800);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     margin-bottom: 0;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    text-shadow: 2px 2px 4px rgba(230, 81, 0, 0.1);
 }
 
 .org-subtitle {
     font-size: 1.2rem;
-    color: var(--gray-700);
+    color: #e65100;
     font-weight: 300;
     letter-spacing: 8px;
     text-transform: uppercase;
@@ -117,6 +136,8 @@ body {
     padding: 0.5rem;
     box-shadow: var(--shadow-lg);
     backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
 }
 
 .custom-tabs .nav-link {
@@ -138,7 +159,7 @@ body {
     transform: translateX(-50%);
     width: 0;
     height: 3px;
-    background: var(--accent);
+    background: #ff6f00;
     transition: var(--transition);
 }
 
@@ -147,7 +168,7 @@ body {
 }
 
 .custom-tabs .nav-link.active {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: linear-gradient(135deg, #e65100, #ff6f00);
     color: white;
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
@@ -164,6 +185,8 @@ body {
     padding: 2rem;
     box-shadow: var(--shadow-xl);
     backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
 }
 
 /* ========== CARDS ========== */
@@ -181,8 +204,8 @@ body {
 
 .card-title {
     font-weight: 700;
-    color: var(--gray-900);
-    border-bottom: 2px solid var(--gray-200);
+    color: #e65100;
+    border-bottom: 2px solid var(--orange-medium);
     padding-bottom: 1rem;
 }
 
@@ -197,8 +220,8 @@ body {
 
 .form-floating > .form-control:focus,
 .form-floating > .form-select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 0.2rem rgba(26, 35, 126, 0.15);
+    border-color: #ff6f00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 111, 0, 0.15);
     transform: translateY(-2px);
 }
 
@@ -210,21 +233,24 @@ body {
 .section-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--primary);
+    color: #e65100;
     margin: 2rem 0 1rem;
     padding-left: 1rem;
-    border-left: 4px solid var(--accent);
+    border-left: 4px solid #ff6f00;
+    background: linear-gradient(90deg, var(--orange-light), transparent);
+    padding: 0.5rem 1rem;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 /* ========== UPLOAD AREA ========== */
 .upload-area {
-    border: 3px dashed var(--gray-300);
+    border: 3px dashed #ffcc80;
     border-radius: var(--radius-md);
     padding: 2rem;
     text-align: center;
     cursor: pointer;
     transition: var(--transition);
-    background: var(--gray-100);
+    background: var(--orange-light);
     position: relative;
     min-height: 200px;
     display: flex;
@@ -234,20 +260,20 @@ body {
 }
 
 .upload-area:hover {
-    border-color: var(--primary);
-    background: rgba(26, 35, 126, 0.05);
+    border-color: #ff6f00;
+    background: rgba(255, 111, 0, 0.08);
     transform: scale(1.02);
     box-shadow: var(--shadow-md);
 }
 
 .upload-icon {
     font-size: 3rem;
-    color: var(--gray-700);
+    color: #ff6f00;
     transition: var(--transition);
 }
 
 .upload-area:hover .upload-icon {
-    color: var(--primary);
+    color: #e65100;
     transform: scale(1.2);
 }
 
@@ -288,25 +314,29 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: linear-gradient(135deg, #e65100, #ff6f00);
     border: none;
     box-shadow: var(--shadow-md);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    background: linear-gradient(135deg, #ff6f00, #e65100);
     transform: translateY(-3px);
     box-shadow: var(--shadow-lg);
 }
 
 .btn-info {
-    background: linear-gradient(135deg, var(--info), #0091ea);
+    background: linear-gradient(135deg, #ff8f00, #ffa000);
     border: none;
     color: white;
 }
 
+.btn-info:hover {
+    background: linear-gradient(135deg, #ffa000, #ff8f00);
+}
+
 .btn-success {
-    background: linear-gradient(135deg, var(--success), #00c853);
+    background: linear-gradient(135deg, #00c853, #69f0ae);
     border: none;
 }
 
@@ -316,8 +346,9 @@ body {
 }
 
 .btn-outline-secondary:hover {
-    background: var(--gray-100);
-    border-color: var(--gray-700);
+    background: var(--orange-light);
+    border-color: #ff6f00;
+    color: #e65100;
 }
 
 /* ========== TABELAS ========== */
@@ -328,7 +359,7 @@ body {
 }
 
 .table thead th {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: linear-gradient(135deg, #e65100, #ff6f00);
     color: white;
     border: none;
     font-weight: 600;
@@ -341,7 +372,7 @@ body {
 }
 
 .table tbody tr:hover {
-    background: rgba(26, 35, 126, 0.05);
+    background: var(--orange-light);
     transform: scale(1.01);
 }
 
@@ -375,7 +406,36 @@ body {
 }
 
 .status-atrasado {
-    background: linear-gradient(135deg, #ff6f00, #ffa040);
+    background: linear-gradient(135deg, #e65100, #ff6f00);
+    color: white;
+}
+
+/* ========== TIPO DE VENDA BADGES ========== */
+.tipo-venda-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.tipo-cartao_alimentacao {
+    background: linear-gradient(135deg, #4caf50, #81c784);
+    color: white;
+}
+
+.tipo-cartao_refeicao {
+    background: linear-gradient(135deg, #2196f3, #64b5f6);
+    color: white;
+}
+
+.tipo-cartao_credito_parcelado {
+    background: linear-gradient(135deg, #9c27b0, #ba68c8);
+    color: white;
+}
+
+.tipo-cartao_credito_vista {
+    background: linear-gradient(135deg, #ff9800, #ffb74d);
     color: white;
 }
 
@@ -415,7 +475,6 @@ body {
     white-space: nowrap;
 }
 
-/* Destaque para cartões retidos na tabela */
 tr.cartao-retido-row {
     background: rgba(255, 23, 68, 0.05) !important;
     border-left: 4px solid var(--danger);
@@ -425,7 +484,6 @@ tr.cartao-retido-row:hover {
     background: rgba(255, 23, 68, 0.1) !important;
 }
 
-/* Card de resumo de cartões retidos */
 .card-cartoes-retidos {
     background: linear-gradient(135deg, #ff1744, #ff5252);
     color: white;
@@ -449,20 +507,21 @@ tr.cartao-retido-row:hover {
 
 /* ========== SEARCH FILTERS ========== */
 .search-filters {
-    background: var(--gray-100);
+    background: var(--orange-light);
     padding: 1.5rem;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
+    border: 1px solid #ffe0b2;
 }
 
 /* ========== FOOTER ========== */
 .footer {
-    background: linear-gradient(135deg, var(--gray-900), #000);
+    background: linear-gradient(135deg, #e65100, #bf360c);
     color: white;
     padding: 2rem 0;
     text-align: center;
     margin-top: 4rem;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 -10px 30px rgba(230, 81, 0, 0.3);
 }
 
 /* ========== ALERTS ========== */
@@ -495,6 +554,11 @@ tr.cartao-retido-row:hover {
 .endereco-completo {
     font-size: 0.85rem;
     line-height: 1.4;
+}
+
+/* ========== MODAL ========== */
+.modal-header.bg-primary {
+    background: linear-gradient(135deg, #e65100, #ff6f00) !important;
 }
 
 /* ========== RESPONSIVIDADE ========== */
@@ -542,14 +606,14 @@ tr.cartao-retido-row:hover {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--gray-100);
+    background: var(--orange-light);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--primary-light);
+    background: #ff6f00;
     border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
+    background: #e65100;
 }
