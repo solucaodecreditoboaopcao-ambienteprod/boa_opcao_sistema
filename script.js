@@ -1,3 +1,7 @@
+// ============================================
+// SISTEMA BOA OPÇÃO - JAVASCRIPT
+// ============================================
+
 // Configuração do Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCmTzre-Jh86Xh3KkH09DqxXs2J9nDZxFE",
@@ -15,17 +19,19 @@ const db = firebase.firestore();
 // Variáveis globais
 let imgbbApiKey = '';
 let organizacaoAtiva = false;
-let nomeOrganizacao = '';
-let subNomeOrganizacao = '';
+let contratoAtualId = null;
+let dataTable = null;
 
-// Verificar status da organização ao carregar a página
+// Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
     await verificarOrganizacao();
     await carregarImgBBApiKey();
+    gerarNumeroContrato();
     setupEventListeners();
+    inicializarDataTable();
 });
 
-// Função para verificar se a organização está ativa
+// ========== FUNÇÕES DE VERIFICAÇÃO ==========
 async function verificarOrganizacao() {
     try {
         const orgDoc = await db.collection('config').doc('org').get();
@@ -33,128 +39,114 @@ async function verificarOrganizacao() {
         if (orgDoc.exists) {
             const orgData = orgDoc.data();
             organizacaoAtiva = orgData.org_atv === true;
-            nomeOrganizacao = orgData.nome_org || 'BOA OPÇÃO';
-            subNomeOrganizacao = orgData.sub_nome_org || 'SOLUÇÕES DE CRÉDITO';
             
-            // Atualizar interface
-            document.getElementById('orgName').textContent = nomeOrganizacao;
-            document.getElementById('orgSubName').textContent = subNomeOrganizacao;
+            document.getElementById('orgName').textContent = orgData.nome_org || 'BOA OPÇÃO';
+            document.getElementById('orgSubName').textContent = orgData.sub_nome_org || 'SOLUÇÕES DE CRÉDITO';
             
             if (!organizacaoAtiva) {
-                mostrarStatus('Organização inativa! Entre em contato com o administrador.', 'danger');
+                mostrarStatus('⚠️ Organização inativa! Contate o administrador.', 'danger');
                 desabilitarFormulario();
-            } else {
-                mostrarStatus('Sistema ativo - Organização verificada com sucesso!', 'success');
-                habilitarFormulario();
             }
-        } else {
-            mostrarStatus('Configuração da organização não encontrada!', 'warning');
-            desabilitarFormulario();
         }
     } catch (error) {
         console.error('Erro ao verificar organização:', error);
-        mostrarStatus('Erro ao verificar status da organização.', 'danger');
-        desabilitarFormulario();
     }
 }
 
-// Carregar API Key do ImgBB
 async function carregarImgBBApiKey() {
     try {
         const apiKeyDoc = await db.collection('config').doc('api_key').get();
-        
         if (apiKeyDoc.exists) {
             imgbbApiKey = apiKeyDoc.data().imgbb_api_key;
-            console.log('API Key do ImgBB carregada com sucesso');
-        } else {
-            console.error('API Key do ImgBB não encontrada');
-            mostrarStatus('Configuração de upload de imagens não encontrada.', 'warning');
         }
     } catch (error) {
         console.error('Erro ao carregar API Key:', error);
     }
 }
 
-// Configurar event listeners
+// ========== GERAR NÚMERO DO CONTRATO ==========
+function gerarNumeroContrato() {
+    const ano = new Date().getFullYear();
+    const aleatorio = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+    const numero = `CT-${ano}-${aleatorio}`;
+    document.getElementById('numeroContrato').value = numero;
+}
+
+// ========== SETUP EVENT LISTENERS ==========
 function setupEventListeners() {
-    // Preview de imagens
+    // Form submit
+    document.getElementById('formEmprestimo').addEventListener('submit', salvarContrato);
+    
+    // Upload areas
+    document.getElementById('uploadFicha').addEventListener('click', () => {
+        document.getElementById('fichaCliente').click();
+    });
+    
+    document.getElementById('uploadDocumento').addEventListener('click', () => {
+        document.getElementById('documentoCliente').click();
+    });
+    
+    // File inputs
     document.getElementById('fichaCliente').addEventListener('change', function(e) {
-        previewImagem(e.target, 'previewFicha');
+        previewImagem(e.target, 'previewFicha', 'uploadFicha');
     });
     
     document.getElementById('documentoCliente').addEventListener('change', function(e) {
-        previewImagem(e.target, 'previewDocumento');
+        previewImagem(e.target, 'previewDocumento', 'uploadDocumento');
     });
     
-    // Máscara de CPF
-    document.getElementById('cpf').addEventListener('input', function(e) {
-        mascaraCPF(e.target);
-    });
+    // Máscaras
+    document.getElementById('cpf').addEventListener('input', mascaraCPF);
+    document.getElementById('numero').addEventListener('input', mascaraTelefone);
     
-    // Máscara de telefone
-    document.getElementById('numero').addEventListener('input', function(e) {
-        mascaraTelefone(e.target);
-    });
-    
-    // Submit do formulário
-    document.getElementById('formEmprestimo').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        await salvarEmprestimo();
-    });
+    // Relatório
+    document.getElementById('relatorioTipo').addEventListener('change', atualizarCamposRelatorio);
 }
 
-// Preview de imagem
-function previewImagem(input, previewId) {
+// ========== PREVIEW DE IMAGENS ==========
+function previewImagem(input, previewId, uploadAreaId) {
     const preview = document.getElementById(previewId);
-    const container = document.getElementById('previewContainer');
+    const uploadArea = document.getElementById(uploadAreaId);
+    const icon = uploadArea.querySelector('.upload-icon');
+    const text = uploadArea.querySelector('p');
     
     if (input.files && input.files[0]) {
         const reader = new FileReader();
-        
         reader.onload = function(e) {
             preview.src = e.target.result;
-            container.style.display = 'flex';
+            preview.style.display = 'block';
+            icon.style.display = 'none';
+            text.style.display = 'none';
         }
-        
         reader.readAsDataURL(input.files[0]);
-    } else {
-        preview.src = '';
-        container.style.display = 'none';
     }
 }
 
-// Upload de imagem para o ImgBB
+// ========== UPLOAD IMGBB ==========
 async function uploadImagemParaImgBB(file) {
-    if (!imgbbApiKey) {
-        throw new Error('API Key do ImgBB não configurada');
-    }
+    if (!imgbbApiKey) throw new Error('API Key do ImgBB não configurada');
     
     const formData = new FormData();
     formData.append('image', file);
     formData.append('key', imgbbApiKey);
     
-    try {
-        const response = await fetch('https://api.imgbb.com/1/upload', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) {
-            throw new Error('Falha no upload da imagem');
-        }
-        
-        const data = await response.json();
-        return data.data.url;
-    } catch (error) {
-        console.error('Erro ao fazer upload para ImgBB:', error);
-        throw error;
-    }
+    const response = await fetch('https://api.imgbb.com/1/upload', {
+        method: 'POST',
+        body: formData
+    });
+    
+    if (!response.ok) throw new Error('Falha no upload');
+    
+    const data = await response.json();
+    return data.data.url;
 }
 
-// Salvar empréstimo
-async function salvarEmprestimo() {
+// ========== SALVAR CONTRATO ==========
+async function salvarContrato(e) {
+    e.preventDefault();
+    
     if (!organizacaoAtiva) {
-        mostrarStatus('Organização inativa. Não é possível realizar cadastros.', 'danger');
+        mostrarStatus('Organização inativa. Não é possível cadastrar.', 'danger');
         return;
     }
     
@@ -163,167 +155,370 @@ async function salvarEmprestimo() {
     btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
     
     try {
-        // Coletar dados do formulário
-        const dadosEmprestimo = {
-            nome: document.getElementById('nome').value,
+        const dadosContrato = {
+            numeroContrato: document.getElementById('numeroContrato').value,
+            status: document.getElementById('statusContrato').value,
+            dataContrato: document.getElementById('dataContrato').value,
+            nome: document.getElementById('nome').value.toUpperCase(),
             cpf: document.getElementById('cpf').value.replace(/\D/g, ''),
-            numero: document.getElementById('numero').value.replace(/\D/g, ''),
+            telefone: document.getElementById('numero').value.replace(/\D/g, ''),
             pix: document.getElementById('pix').value,
             banco: document.getElementById('banco').value,
+            bancoNome: document.getElementById('banco').options[document.getElementById('banco').selectedIndex].text,
             valorCartao: parseFloat(document.getElementById('valorCartao').value),
             parcelas: parseInt(document.getElementById('parcelas').value),
             valorEmprestado: parseFloat(document.getElementById('valorEmprestado').value),
+            lucro: parseFloat(document.getElementById('valorCartao').value) - parseFloat(document.getElementById('valorEmprestado').value),
             dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
-            status: 'ativo'
+            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // Upload das imagens
-        const fichaClienteFile = document.getElementById('fichaCliente').files[0];
-        const documentoClienteFile = document.getElementById('documentoCliente').files[0];
+        // Upload imagens
+        const fichaFile = document.getElementById('fichaCliente').files[0];
+        const docFile = document.getElementById('documentoCliente').files[0];
         
-        if (fichaClienteFile) {
-            mostrarStatus('Fazendo upload da ficha do cliente...', 'info');
-            dadosEmprestimo.fichaClienteUrl = await uploadImagemParaImgBB(fichaClienteFile);
+        if (fichaFile) {
+            dadosContrato.fichaUrl = await uploadImagemParaImgBB(fichaFile);
+        }
+        if (docFile) {
+            dadosContrato.documentoUrl = await uploadImagemParaImgBB(docFile);
         }
         
-        if (documentoClienteFile) {
-            mostrarStatus('Fazendo upload do documento do cliente...', 'info');
-            dadosEmprestimo.documentoClienteUrl = await uploadImagemParaImgBB(documentoClienteFile);
-        }
+        await db.collection('contratos').add(dadosContrato);
         
-        // Salvar no Firestore
-        const docRef = await db.collection('emprestimos').add(dadosEmprestimo);
-        
-        mostrarStatus(`Empréstimo cadastrado com sucesso! ID: ${docRef.id}`, 'success');
+        mostrarStatus('✅ Contrato cadastrado com sucesso!', 'success');
         limparFormulario();
+        gerarNumeroContrato();
         
     } catch (error) {
-        console.error('Erro ao salvar empréstimo:', error);
-        mostrarStatus('Erro ao cadastrar empréstimo: ' + error.message, 'danger');
+        console.error('Erro:', error);
+        mostrarStatus('❌ Erro ao cadastrar: ' + error.message, 'danger');
     } finally {
         btnSubmit.disabled = false;
-        btnSubmit.innerHTML = '<i class="bi bi-check-circle"></i> Cadastrar Empréstimo';
+        btnSubmit.innerHTML = '<i class="bi bi-check-circle"></i> Cadastrar Contrato';
     }
 }
 
-// Buscar empréstimos
-async function buscarEmprestimos() {
+// ========== BUSCAR CONTRATOS ==========
+async function buscarContratos() {
     const cpf = document.getElementById('searchCPF').value.replace(/\D/g, '');
+    const nome = document.getElementById('searchNome').value.toUpperCase();
+    const telefone = document.getElementById('searchTelefone').value.replace(/\D/g, '');
+    const contrato = document.getElementById('searchContrato').value;
+    const status = document.getElementById('searchStatus').value;
+    const dataInicio = document.getElementById('searchDataInicio').value;
+    const dataFim = document.getElementById('searchDataFim').value;
     
-    if (!cpf) {
-        mostrarStatus('Por favor, informe um CPF para busca.', 'warning');
-        return;
-    }
+    let query = db.collection('contratos');
     
-    const resultadosDiv = document.getElementById('resultadosConsulta');
-    resultadosDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-primary"></div></div>';
+    // Aplicar filtros
+    if (cpf) query = query.where('cpf', '==', cpf);
+    if (nome) query = query.where('nome', '>=', nome).where('nome', '<=', nome + '\uf8ff');
+    if (telefone) query = query.where('telefone', '==', telefone);
+    if (contrato) query = query.where('numeroContrato', '==', contrato);
+    if (status) query = query.where('status', '==', status);
+    if (dataInicio) query = query.where('dataContrato', '>=', dataInicio);
+    if (dataFim) query = query.where('dataContrato', '<=', dataFim);
+    
+    query = query.orderBy('dataCadastro', 'desc');
     
     try {
-        const snapshot = await db.collection('emprestimos')
-            .where('cpf', '==', cpf)
-            .orderBy('dataCadastro', 'desc')
-            .get();
+        const snapshot = await query.get();
+        const tbody = document.getElementById('resultadosBusca');
+        tbody.innerHTML = '';
         
         if (snapshot.empty) {
-            resultadosDiv.innerHTML = '<div class="alert alert-info">Nenhum empréstimo encontrado para este CPF.</div>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center">Nenhum contrato encontrado</td></tr>';
             return;
         }
         
-        let html = `
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Valor Cartão</th>
-                        <th>Valor Emprestado</th>
-                        <th>Parcelas</th>
-                        <th>Data</th>
-                        <th>Documentos</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+        let totalCartoes = 0;
+        let totalEmprestado = 0;
+        let totalLucro = 0;
         
         snapshot.forEach(doc => {
             const dados = doc.data();
-            html += `
+            const statusClass = `status-${dados.status}`;
+            const statusTexto = {
+                'pago': 'Pago',
+                'pendente_documento': 'Pend. Doc.',
+                'estornado': 'Estornado',
+                'ativo': 'Ativo',
+                'atrasado': 'Atrasado'
+            }[dados.status] || dados.status;
+            
+            totalCartoes += dados.valorCartao || 0;
+            totalEmprestado += dados.valorEmprestado || 0;
+            totalLucro += dados.lucro || 0;
+            
+            const data = dados.dataContrato ? new Date(dados.dataContrato + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+            
+            tbody.innerHTML += `
                 <tr>
+                    <td><strong>${dados.numeroContrato}</strong></td>
                     <td>${dados.nome}</td>
-                    <td>R$ ${dados.valorCartao.toFixed(2)}</td>
-                    <td>R$ ${dados.valorEmprestado.toFixed(2)}</td>
+                    <td class="cpf-mask">${mascararCPF(dados.cpf)}</td>
+                    <td class="tel-mask">${mascararTelefone(dados.telefone)}</td>
+                    <td>R$ ${(dados.valorCartao || 0).toFixed(2)}</td>
+                    <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
                     <td>${dados.parcelas}x</td>
-                    <td>${dados.dataCadastro ? new Date(dados.dataCadastro.toDate()).toLocaleDateString() : 'N/A'}</td>
+                    <td><span class="badge badge-status ${statusClass}">${statusTexto}</span></td>
+                    <td>${data}</td>
                     <td>
-                        ${dados.fichaClienteUrl ? `<a href="${dados.fichaClienteUrl}" target="_blank" class="btn btn-sm btn-outline-primary">Ficha</a>` : ''}
-                        ${dados.documentoClienteUrl ? `<a href="${dados.documentoClienteUrl}" target="_blank" class="btn btn-sm btn-outline-info">Documento</a>` : ''}
+                        <button class="btn btn-sm btn-info" onclick="verDetalhes('${doc.id}')" title="Ver detalhes">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="editarContrato('${doc.id}')" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
                     </td>
                 </tr>
             `;
         });
         
-        html += '</tbody></table>';
-        resultadosDiv.innerHTML = html;
+        // Adicionar linha de totais
+        tbody.innerHTML += `
+            <tr class="table-active fw-bold">
+                <td colspan="4">TOTAIS</td>
+                <td>R$ ${totalCartoes.toFixed(2)}</td>
+                <td>R$ ${totalEmprestado.toFixed(2)}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        `;
         
     } catch (error) {
-        console.error('Erro ao buscar empréstimos:', error);
-        resultadosDiv.innerHTML = '<div class="alert alert-danger">Erro ao buscar empréstimos.</div>';
+        console.error('Erro na busca:', error);
+        mostrarStatus('Erro ao buscar contratos: ' + error.message, 'danger');
     }
 }
 
-// Máscaras
-function mascaraCPF(input) {
-    let value = input.value.replace(/\D/g, '');
+// ========== VER DETALHES ==========
+async function verDetalhes(id) {
+    try {
+        const doc = await db.collection('contratos').doc(id).get();
+        if (doc.exists) {
+            const dados = doc.data();
+            const modalBody = document.getElementById('detalhesContrato');
+            
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Contrato: ${dados.numeroContrato}</h6>
+                        <p><strong>Status:</strong> ${dados.status}</p>
+                        <p><strong>Data:</strong> ${dados.dataContrato}</p>
+                        <p><strong>Nome:</strong> ${dados.nome}</p>
+                        <p><strong>CPF:</strong> ${mascararCPF(dados.cpf)}</p>
+                        <p><strong>Telefone:</strong> ${mascararTelefone(dados.telefone)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Banco:</strong> ${dados.bancoNome}</p>
+                        <p><strong>PIX:</strong> ${dados.pix}</p>
+                        <p><strong>Valor Cartão:</strong> R$ ${dados.valorCartao.toFixed(2)}</p>
+                        <p><strong>Valor Emprestado:</strong> R$ ${dados.valorEmprestado.toFixed(2)}</p>
+                        <p><strong>Parcelas:</strong> ${dados.parcelas}x</p>
+                        <p><strong>Lucro:</strong> R$ ${(dados.lucro || 0).toFixed(2)}</p>
+                    </div>
+                </div>
+                ${dados.fichaUrl ? `<img src="${dados.fichaUrl}" class="img-fluid mt-3" alt="Ficha">` : ''}
+                ${dados.documentoUrl ? `<img src="${dados.documentoUrl}" class="img-fluid mt-3" alt="Documento">` : ''}
+            `;
+            
+            contratoAtualId = id;
+            new bootstrap.Modal(document.getElementById('modalDetalhes')).show();
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+    }
+}
+
+// ========== RELATÓRIOS ==========
+async function gerarRelatorio() {
+    const tipo = document.getElementById('relatorioTipo').value;
+    let query = db.collection('contratos');
+    
+    if (tipo === 'mensal') {
+        const mes = document.getElementById('relatorioMes').value;
+        if (!mes) {
+            mostrarStatus('Selecione um mês!', 'warning');
+            return;
+        }
+        const [ano, mesNum] = mes.split('-');
+        const inicio = `${ano}-${mesNum}-01`;
+        const fim = new Date(ano, mesNum, 0).toISOString().split('T')[0];
+        query = query.where('dataContrato', '>=', inicio).where('dataContrato', '<=', fim);
+    } else if (tipo === 'periodo') {
+        const inicio = document.getElementById('relatorioDataInicio').value;
+        const fim = document.getElementById('relatorioDataFim').value;
+        if (inicio) query = query.where('dataContrato', '>=', inicio);
+        if (fim) query = query.where('dataContrato', '<=', fim);
+    }
+    
+    query = query.orderBy('dataContrato', 'desc');
+    
+    try {
+        const snapshot = await query.get();
+        const tbody = document.getElementById('dadosRelatorio');
+        tbody.innerHTML = '';
+        
+        let totalCartoes = 0, totalEmprestado = 0, totalLucro = 0;
+        
+        snapshot.forEach(doc => {
+            const dados = doc.data();
+            
+            if (tipo === 'status') {
+                const statusFiltro = document.getElementById('searchStatus').value;
+                if (statusFiltro && dados.status !== statusFiltro) return;
+            }
+            
+            totalCartoes += dados.valorCartao || 0;
+            totalEmprestado += dados.valorEmprestado || 0;
+            totalLucro += dados.lucro || 0;
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td>${dados.numeroContrato}</td>
+                    <td>${dados.nome}</td>
+                    <td>${mascararCPF(dados.cpf)}</td>
+                    <td>R$ ${(dados.valorCartao || 0).toFixed(2)}</td>
+                    <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
+                    <td>R$ ${(dados.lucro || 0).toFixed(2)}</td>
+                    <td>${dados.status}</td>
+                    <td>${dados.dataContrato}</td>
+                </tr>
+            `;
+        });
+        
+        // Atualizar cards
+        document.getElementById('totalContratos').textContent = snapshot.size;
+        document.getElementById('totalCartoes').textContent = `R$ ${totalCartoes.toFixed(2)}`;
+        document.getElementById('totalEmprestado').textContent = `R$ ${totalEmprestado.toFixed(2)}`;
+        document.getElementById('lucroTotal').textContent = `R$ ${totalLucro.toFixed(2)}`;
+        
+        document.getElementById('tabelaRelatorio').style.display = 'block';
+        
+        // Salvar dados para exportação
+        window.dadosExportacao = {
+            contratos: snapshot.docs.map(doc => doc.data()),
+            totais: { totalCartoes, totalEmprestado, totalLucro }
+        };
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarStatus('Erro ao gerar relatório', 'danger');
+    }
+}
+
+// ========== EXPORTAR EXCEL ==========
+function exportarParaExcel() {
+    if (!window.dadosExportacao || !window.dadosExportacao.contratos.length) {
+        mostrarStatus('Gere um relatório primeiro!', 'warning');
+        return;
+    }
+    
+    const dados = window.dadosExportacao.contratos.map(c => ({
+        'Contrato': c.numeroContrato,
+        'Nome': c.nome,
+        'CPF': c.cpf,
+        'Telefone': c.telefone,
+        'Valor Cartão': c.valorCartao,
+        'Valor Emprestado': c.valorEmprestado,
+        'Lucro': c.lucro || 0,
+        'Parcelas': c.parcelas,
+        'Status': c.status,
+        'Data': c.dataContrato,
+        'Banco': c.bancoNome
+    }));
+    
+    const ws = XLSX.utils.json_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+    
+    const data = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `relatorio_contratos_${data}.xlsx`);
+    
+    mostrarStatus('✅ Relatório exportado com sucesso!', 'success');
+}
+
+// ========== UTILITÁRIOS ==========
+function mascaraCPF(e) {
+    let value = e.target ? e.target.value : e;
+    value = value.replace(/\D/g, '');
     if (value.length <= 11) {
         value = value.replace(/(\d{3})(\d)/, '$1.$2');
         value = value.replace(/(\d{3})(\d)/, '$1.$2');
         value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     }
-    input.value = value;
+    if (e.target) e.target.value = value;
+    return value;
 }
 
-function mascaraTelefone(input) {
-    let value = input.value.replace(/\D/g, '');
+function mascaraTelefone(e) {
+    let value = e.target ? e.target.value : e;
+    value = value.replace(/\D/g, '');
     if (value.length <= 11) {
         value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
         value = value.replace(/(\d)(\d{4})$/, '$1-$2');
     }
-    input.value = value;
+    if (e.target) e.target.value = value;
+    return value;
 }
 
-// Funções de interface
+function mascararCPF(cpf) {
+    if (!cpf) return '';
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
+function mascararTelefone(tel) {
+    if (!tel) return '';
+    return tel.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+}
+
 function mostrarStatus(mensagem, tipo) {
     const statusDiv = document.getElementById('statusOrg');
     const statusMessage = document.getElementById('statusMessage');
     
     statusDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
-    statusMessage.textContent = mensagem;
+    statusMessage.innerHTML = mensagem;
     statusDiv.style.display = 'block';
     
-    // Auto-hide após 5 segundos
     setTimeout(() => {
         statusDiv.style.display = 'none';
     }, 5000);
 }
 
-function desabilitarFormulario() {
-    const form = document.getElementById('formEmprestimo');
-    const inputs = form.querySelectorAll('input, select, textarea, button');
-    inputs.forEach(input => {
-        input.disabled = true;
-    });
-}
-
-function habilitarFormulario() {
-    const form = document.getElementById('formEmprestimo');
-    const inputs = form.querySelectorAll('input, select, textarea, button');
-    inputs.forEach(input => {
-        input.disabled = false;
-    });
-}
-
 function limparFormulario() {
     document.getElementById('formEmprestimo').reset();
-    document.getElementById('previewFicha').src = '';
-    document.getElementById('previewDocumento').src = '';
-    document.getElementById('previewContainer').style.display = 'none';
+    document.getElementById('previewFicha').style.display = 'none';
+    document.getElementById('previewDocumento').style.display = 'none';
+    document.querySelectorAll('.upload-icon').forEach(icon => icon.style.display = 'block');
+    document.querySelectorAll('.upload-area p').forEach(p => p.style.display = 'block');
+    gerarNumeroContrato();
 }
+
+function desabilitarFormulario() {
+    const inputs = document.querySelectorAll('#formEmprestimo input, #formEmprestimo select, #formEmprestimo button');
+    inputs.forEach(input => input.disabled = true);
+}
+
+function inicializarDataTable() {
+    // DataTable será inicializado quando houver dados
+}
+
+function atualizarCamposRelatorio() {
+    const tipo = document.getElementById('relatorioTipo').value;
+    document.getElementById('relatorioMes').style.display = tipo === 'mensal' ? 'block' : 'none';
+    document.getElementById('relatorioDataInicio').style.display = tipo === 'periodo' ? 'block' : 'none';
+    document.getElementById('relatorioDataFim').style.display = tipo === 'periodo' ? 'block' : 'none';
+}
+
+// Busca em tempo real (opcional)
+let timeoutBusca;
+document.querySelectorAll('#searchCPF, #searchNome, #searchTelefone, #searchContrato').forEach(input => {
+    input.addEventListener('input', function() {
+        clearTimeout(timeoutBusca);
+        timeoutBusca = setTimeout(buscarContratos, 500);
+    });
+});
