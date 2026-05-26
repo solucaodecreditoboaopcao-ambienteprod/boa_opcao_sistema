@@ -9,8 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- SheetJS -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <!-- Custom CSS -->
@@ -75,7 +73,7 @@
                                 </h4>
                                 
                                 <form id="formEmprestimo">
-                                    <!-- Número do Contrato -->
+                                    <!-- Número do Contrato e Status -->
                                     <div class="row mb-4">
                                         <div class="col-md-4">
                                             <div class="form-floating">
@@ -136,19 +134,98 @@
                                         </div>
                                     </div>
 
+                                    <!-- Endereço -->
+                                    <div class="section-title">
+                                        <i class="bi bi-geo-alt"></i> Endereço
+                                    </div>
+                                    
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-3">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="cep" placeholder="00000-000" maxlength="9" onblur="buscarCEP()">
+                                                <label for="cep">CEP</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="endereco" placeholder="Rua, Avenida...">
+                                                <label for="endereco">Logradouro</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="numeroEndereco" placeholder="Nº">
+                                                <label for="numeroEndereco">Número</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="bairro" placeholder="Bairro">
+                                                <label for="bairro">Bairro</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="complemento" placeholder="Apto, Bloco, etc.">
+                                                <label for="complemento">Complemento</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="cidade" placeholder="Cidade">
+                                                <label for="cidade">Cidade</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <div class="form-floating">
+                                                <select class="form-select" id="estado">
+                                                    <option value="">UF</option>
+                                                    <option value="AC">AC</option>
+                                                    <option value="AL">AL</option>
+                                                    <option value="AP">AP</option>
+                                                    <option value="AM">AM</option>
+                                                    <option value="BA">BA</option>
+                                                    <option value="CE">CE</option>
+                                                    <option value="DF">DF</option>
+                                                    <option value="ES">ES</option>
+                                                    <option value="GO">GO</option>
+                                                    <option value="MA">MA</option>
+                                                    <option value="MT">MT</option>
+                                                    <option value="MS">MS</option>
+                                                    <option value="MG">MG</option>
+                                                    <option value="PA">PA</option>
+                                                    <option value="PB">PB</option>
+                                                    <option value="PR">PR</option>
+                                                    <option value="PE">PE</option>
+                                                    <option value="PI">PI</option>
+                                                    <option value="RJ">RJ</option>
+                                                    <option value="RN">RN</option>
+                                                    <option value="RS">RS</option>
+                                                    <option value="RO">RO</option>
+                                                    <option value="RR">RR</option>
+                                                    <option value="SC">SC</option>
+                                                    <option value="SP">SP</option>
+                                                    <option value="SE">SE</option>
+                                                    <option value="TO">TO</option>
+                                                </select>
+                                                <label for="estado">Estado</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <!-- Dados Financeiros -->
                                     <div class="section-title">
                                         <i class="bi bi-cash-stack"></i> Dados Financeiros
                                     </div>
                                     
                                     <div class="row g-3 mb-4">
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <div class="form-floating">
                                                 <input type="text" class="form-control" id="pix" placeholder="Chave PIX">
                                                 <label for="pix">Chave PIX</label>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <div class="form-floating">
                                                 <select class="form-select" id="banco" required>
                                                     <option value="">Selecione...</option>
@@ -184,6 +261,56 @@
                                         </div>
                                     </div>
 
+                                    <!-- Controle de Cartão Retido -->
+                                    <div class="section-title">
+                                        <i class="bi bi-credit-card"></i> Controle de Cartão
+                                    </div>
+                                    
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-12">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="cartaoRetido" onchange="toggleCartaoRetido()">
+                                                <label class="form-check-label fw-bold" for="cartaoRetido">
+                                                    <i class="bi bi-lock"></i> Cartão Retido para Devolução
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4" id="divBandeiraCartao" style="display: none;">
+                                            <div class="form-floating">
+                                                <select class="form-select" id="bandeiraCartao">
+                                                    <option value="">Selecione...</option>
+                                                    <option value="Visa">Visa</option>
+                                                    <option value="Mastercard">Mastercard</option>
+                                                    <option value="Elo">Elo</option>
+                                                    <option value="American Express">American Express</option>
+                                                    <option value="Hipercard">Hipercard</option>
+                                                    <option value="Diners">Diners Club</option>
+                                                    <option value="Discover">Discover</option>
+                                                    <option value="Outros">Outros</option>
+                                                </select>
+                                                <label for="bandeiraCartao">Bandeira do Cartão</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4" id="divUltimosDigitos" style="display: none;">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="ultimosDigitos" placeholder="0000" maxlength="4">
+                                                <label for="ultimosDigitos">Últimos 4 dígitos</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4" id="divDataRetirada" style="display: none;">
+                                            <div class="form-floating">
+                                                <input type="date" class="form-control" id="dataRetirada">
+                                                <label for="dataRetirada">Data da Retirada</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12" id="divObservacaoCartao" style="display: none;">
+                                            <div class="form-floating">
+                                                <textarea class="form-control" id="observacaoCartao" style="height: 80px;" placeholder="Observações sobre o cartão"></textarea>
+                                                <label for="observacaoCartao">Observações</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <!-- Documentos -->
                                     <div class="section-title">
                                         <i class="bi bi-file-earmark-image"></i> Documentos do Cliente
@@ -195,7 +322,7 @@
                                             <div class="upload-area" id="uploadFicha">
                                                 <input type="file" id="fichaCliente" accept="image/*" capture="environment" hidden>
                                                 <i class="bi bi-cloud-upload upload-icon"></i>
-                                                <p>Clique para fazer upload da ficha</p>
+                                                <p>Clique para upload da ficha</p>
                                                 <img id="previewFicha" class="preview-doc" style="display:none;">
                                             </div>
                                         </div>
@@ -204,7 +331,7 @@
                                             <div class="upload-area" id="uploadDocumento">
                                                 <input type="file" id="documentoCliente" accept="image/*" capture="environment" hidden>
                                                 <i class="bi bi-cloud-upload upload-icon"></i>
-                                                <p>Clique para fazer upload do documento</p>
+                                                <p>Clique para upload do documento</p>
                                                 <img id="previewDocumento" class="preview-doc" style="display:none;">
                                             </div>
                                         </div>
@@ -267,8 +394,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="row mt-3">
-                                <div class="col-md-4">
+                            <div class="row g-2 mt-2">
+                                <div class="col-md-3">
                                     <div class="form-floating">
                                         <select class="form-select" id="searchStatus">
                                             <option value="">Todos os Status</option>
@@ -293,9 +420,19 @@
                                         <label for="searchDataFim">Data Fim</label>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <button class="btn btn-info btn-lg w-100 h-100" onclick="buscarContratos()">
-                                        <i class="bi bi-search"></i> Buscar
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch mt-3">
+                                        <input class="form-check-input" type="checkbox" id="searchCartaoRetido">
+                                        <label class="form-check-label fw-bold" for="searchCartaoRetido">
+                                            <i class="bi bi-credit-card"></i> Cartões Retidos
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <button class="btn btn-info btn-lg w-100" onclick="buscarContratos()">
+                                        <i class="bi bi-search"></i> Buscar Contratos
                                     </button>
                                 </div>
                             </div>
@@ -303,16 +440,18 @@
 
                         <!-- Resultados -->
                         <div class="table-responsive">
-                            <table id="tabelaContratos" class="table table-hover display" style="width:100%">
+                            <table class="table table-hover" id="tabelaContratos">
                                 <thead>
                                     <tr>
                                         <th>Contrato</th>
                                         <th>Nome</th>
                                         <th>CPF</th>
                                         <th>Telefone</th>
+                                        <th>Endereço</th>
                                         <th>Valor Cartão</th>
                                         <th>Valor Emprestado</th>
                                         <th>Parcelas</th>
+                                        <th>Cartão</th>
                                         <th>Status</th>
                                         <th>Data</th>
                                         <th>Ações</th>
@@ -339,7 +478,7 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-3">
                                 <div class="form-floating">
-                                    <select class="form-select" id="relatorioTipo">
+                                    <select class="form-select" id="relatorioTipo" onchange="atualizarCamposRelatorio()">
                                         <option value="mensal">Relatório Mensal</option>
                                         <option value="periodo">Por Período</option>
                                         <option value="status">Por Status</option>
@@ -356,13 +495,13 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-floating">
-                                    <input type="date" class="form-control" id="relatorioDataInicio">
+                                    <input type="date" class="form-control" id="relatorioDataInicio" style="display:none;">
                                     <label for="relatorioDataInicio">Data Início</label>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="form-floating">
-                                    <input type="date" class="form-control" id="relatorioDataFim">
+                                    <input type="date" class="form-control" id="relatorioDataFim" style="display:none;">
                                     <label for="relatorioDataFim">Data Fim</label>
                                 </div>
                             </div>
@@ -409,17 +548,47 @@
                             </div>
                         </div>
 
+                        <!-- Cards de Cartões Retidos -->
+                        <div class="row g-3 mb-4" id="cardsCartoesRetidos" style="display:none;">
+                            <div class="col-md-4">
+                                <div class="card card-cartoes-retidos">
+                                    <div class="card-body">
+                                        <h6><i class="bi bi-lock-fill"></i> Pendentes de Devolução</h6>
+                                        <h3 id="totalCartoesRetidosPendentes">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <h6><i class="bi bi-check-circle"></i> Cartões Devolvidos</h6>
+                                        <h3 id="totalCartoesDevolvidos">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body">
+                                        <h6><i class="bi bi-credit-card"></i> Total Cartões Retidos</h6>
+                                        <h3 id="totalCartoesRetidos">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Tabela de Relatório -->
                         <div class="table-responsive" id="tabelaRelatorio" style="display:none;">
-                            <table class="table table-hover" id="tabelaDadosRelatorio">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th>Contrato</th>
                                         <th>Cliente</th>
                                         <th>CPF</th>
+                                        <th>Endereço</th>
                                         <th>Valor Cartão</th>
                                         <th>Valor Emprestado</th>
                                         <th>Lucro</th>
+                                        <th>Cartão Retido</th>
                                         <th>Status</th>
                                         <th>Data</th>
                                     </tr>
@@ -440,11 +609,11 @@
     <!-- Footer -->
     <footer class="footer mt-5">
         <div class="container">
-            <p class="mb-0">&copy; 2024 - Todos os direitos reservados</p>
+            <p class="mb-0">&copy; APPTECH - Todos os direitos reservados</p>
         </div>
     </footer>
 
-    <!-- Modal de Detalhes do Contrato -->
+    <!-- Modal de Detalhes -->
     <div class="modal fade" id="modalDetalhes" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -458,19 +627,13 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-primary" onclick="editarContrato()">
-                        <i class="bi bi-pencil"></i> Editar
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="script.js"></script>
