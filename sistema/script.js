@@ -512,7 +512,8 @@ async function salvarContrato(e) {
         
         const dadosContrato = {
             numeroContrato: document.getElementById('numeroContrato').value,
-            status: document.getElementById('statusContrato').value,
+            statusValorCartao: document.getElementById('statusValorCartao').value,
+            statusValorEmprestado: document.getElementById('statusValorEmprestado').value,
             tipoVenda: tipoVenda,
             tipoVendaNome: tipoVendaMap[tipoVenda] || tipoVenda,
             dataContrato: document.getElementById('dataContrato').value,
@@ -590,7 +591,8 @@ async function buscarContratos() {
     const nome = document.getElementById('searchNome').value.toUpperCase();
     const telefone = document.getElementById('searchTelefone').value.replace(/\D/g, '');
     const contrato = document.getElementById('searchContrato').value;
-    const status = document.getElementById('searchStatus').value;
+    const statusCartao = document.getElementById('searchStatusCartao').value;
+    const statusEmprestado = document.getElementById('searchStatusEmprestado').value;
     const tipoVenda = document.getElementById('searchTipoVenda').value;
     const dataInicio = document.getElementById('searchDataInicio').value;
     const dataFim = document.getElementById('searchDataFim').value;
@@ -602,7 +604,8 @@ async function buscarContratos() {
     if (nome) query = query.where('nome', '>=', nome).where('nome', '<=', nome + '\uf8ff');
     if (telefone) query = query.where('telefone', '==', telefone);
     if (contrato) query = query.where('numeroContrato', '==', contrato);
-    if (status) query = query.where('status', '==', status);
+    if (statusCartao) query = query.where('statusValorCartao', '==', statusCartao);
+    if (statusEmprestado) query = query.where('statusValorEmprestado', '==', statusEmprestado);
     if (tipoVenda) query = query.where('tipoVenda', '==', tipoVenda);
     if (dataInicio) query = query.where('dataContrato', '>=', dataInicio);
     if (dataFim) query = query.where('dataContrato', '<=', dataFim);
@@ -616,7 +619,7 @@ async function buscarContratos() {
         tbody.innerHTML = '';
         
         if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="13" class="text-center py-4">Nenhum contrato encontrado</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="14" class="text-center py-4">Nenhum contrato encontrado</td></tr>';
             return;
         }
         
@@ -624,12 +627,22 @@ async function buscarContratos() {
         
         snapshot.forEach(doc => {
             const dados = doc.data();
-            const statusClass = `status-${dados.status}`;
-            const statusTexto = {
+            
+            // Status Valor Cartão
+            const statusCartaoClass = `status-cartao-${dados.statusValorCartao || 'processamento'}`;
+            const statusCartaoTexto = {
+                'processamento': 'Processamento',
+                'recebido': 'Recebido',
+                'cancelado': 'Cancelado'
+            }[dados.statusValorCartao] || 'Processamento';
+            
+            // Status Valor Emprestado
+            const statusEmprestadoClass = `status-emprestado-${dados.statusValorEmprestado || 'processamento'}`;
+            const statusEmprestadoTexto = {
                 'processamento': 'Processamento',
                 'pago': 'Pago',
                 'cancelado': 'Cancelado'
-            }[dados.status] || dados.status;
+            }[dados.statusValorEmprestado] || 'Processamento';
             
             totalCartoes += dados.valorCartao || 0;
             totalEmprestado += dados.valorEmprestado || 0;
@@ -664,7 +677,8 @@ async function buscarContratos() {
                     <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
                     <td>${dados.parcelas || 0}x</td>
                     <td>${cartaoInfo}</td>
-                    <td><span class="badge badge-status ${statusClass}">${statusTexto}</span></td>
+                    <td><span class="badge badge-status ${statusCartaoClass}">${statusCartaoTexto}</span></td>
+                    <td><span class="badge badge-status ${statusEmprestadoClass}">${statusEmprestadoTexto}</span></td>
                     <td>${data}</td>
                     <td>
                         <div class="btn-group btn-group-sm">
@@ -676,11 +690,20 @@ async function buscarContratos() {
                                     <i class="bi bi-arrow-repeat"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusContrato('${doc.id}', 'pago')">
+                                    <li><h6 class="dropdown-header">Status Valor Cartão</h6></li>
+                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusCartao('${doc.id}', 'recebido')">
+                                        <i class="bi bi-check-circle text-success"></i> Marcar como Recebido
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusCartao('${doc.id}', 'cancelado')">
+                                        <i class="bi bi-x-circle text-danger"></i> Cancelar Cartão
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header">Status Valor Emprestado</h6></li>
+                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusEmprestado('${doc.id}', 'pago')">
                                         <i class="bi bi-check-circle text-success"></i> Marcar como Pago
                                     </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusContrato('${doc.id}', 'cancelado')">
-                                        <i class="bi bi-x-circle text-danger"></i> Cancelar Contrato
+                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusEmprestado('${doc.id}', 'cancelado')">
+                                        <i class="bi bi-x-circle text-danger"></i> Cancelar Empréstimo
                                     </a></li>
                                 </ul>
                             </div>
@@ -701,6 +724,7 @@ async function buscarContratos() {
                 <td>R$ ${totalCartoes.toFixed(2)}</td>
                 <td></td>
                 <td>R$ ${totalEmprestado.toFixed(2)}</td>
+                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
@@ -735,6 +759,55 @@ async function registrarDevolucao(id) {
     }
 }
 
+// ========== ATUALIZAR STATUS DO CARTÃO ==========
+async function atualizarStatusCartao(id, novoStatus) {
+    const statusTexto = {
+        'recebido': 'Recebido',
+        'cancelado': 'Cancelado'
+    }[novoStatus];
+    
+    if (!confirm(`Confirmar alteração do status do cartão para "${statusTexto}"?`)) return;
+    
+    try {
+        await db.collection('contratos').doc(id).update({
+            statusValorCartao: novoStatus,
+            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        mostrarStatus(`✅ Status do cartão atualizado para "${statusTexto}" com sucesso!`, 'success');
+        buscarContratos();
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarStatus('❌ Erro ao atualizar status: ' + error.message, 'danger');
+    }
+}
+
+// ========== ATUALIZAR STATUS DO EMPRÉSTIMO ==========
+async function atualizarStatusEmprestado(id, novoStatus) {
+    const statusTexto = {
+        'pago': 'Pago',
+        'cancelado': 'Cancelado'
+    }[novoStatus];
+    
+    if (!confirm(`Confirmar alteração do status do empréstimo para "${statusTexto}"?`)) return;
+    
+    try {
+        await db.collection('contratos').doc(id).update({
+            statusValorEmprestado: novoStatus,
+            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        mostrarStatus(`✅ Status do empréstimo atualizado para "${statusTexto}" com sucesso!`, 'success');
+        buscarContratos();
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarStatus('❌ Erro ao atualizar status: ' + error.message, 'danger');
+    }
+}
+
+
 // ========== VER DETALHES ==========
 async function verDetalhes(id) {
     try {
@@ -746,11 +819,20 @@ async function verDetalhes(id) {
             const tipoVendaNome = dados.tipoVendaNome || dados.tipoVenda || 'N/A';
             const tipoVendaClass = dados.tipoVenda ? `tipo-${dados.tipoVenda}` : '';
             
-            const statusTexto = {
+            const statusCartaoTexto = {
+                'processamento': 'Processamento',
+                'recebido': 'Recebido',
+                'cancelado': 'Cancelado'
+            }[dados.statusValorCartao] || 'Processamento';
+            
+            const statusEmprestadoTexto = {
                 'processamento': 'Processamento',
                 'pago': 'Pago',
                 'cancelado': 'Cancelado'
-            }[dados.status] || dados.status;
+            }[dados.statusValorEmprestado] || 'Processamento';
+            
+            const statusCartaoClass = `status-cartao-${dados.statusValorCartao || 'processamento'}`;
+            const statusEmprestadoClass = `status-emprestado-${dados.statusValorEmprestado || 'processamento'}`;
             
             const enderecoHTML = dados.endereco?.logradouro ? `
                 <div class="card mb-3">
@@ -800,7 +882,8 @@ async function verDetalhes(id) {
                 <div class="row">
                     <div class="col-md-6">
                         <h6 class="text-primary">Contrato: ${dados.numeroContrato}</h6>
-                        <p><strong>Status:</strong> <span class="badge badge-status status-${dados.status}">${statusTexto}</span></p>
+                        <p><strong>Status Cartão:</strong> <span class="badge badge-status ${statusCartaoClass}">${statusCartaoTexto}</span></p>
+                        <p><strong>Status Empréstimo:</strong> <span class="badge badge-status ${statusEmprestadoClass}">${statusEmprestadoTexto}</span></p>
                         <p><strong>Tipo de Venda:</strong> <span class="tipo-venda-badge ${tipoVendaClass}">${tipoVendaNome}</span></p>
                         <p><strong>Data:</strong> ${dados.dataContrato}</p>
                         <p><strong>Nome:</strong> ${dados.nome}</p>
@@ -914,11 +997,17 @@ async function gerarRelatorio() {
             }
             
             const tipoVendaNome = dados.tipoVendaNome || dados.tipoVenda || 'N/A';
-            const statusTexto = {
+            const statusCartaoTexto = {
+                'processamento': 'Processamento',
+                'recebido': 'Recebido',
+                'cancelado': 'Cancelado'
+            }[dados.statusValorCartao] || 'Processamento';
+            
+            const statusEmprestadoTexto = {
                 'processamento': 'Processamento',
                 'pago': 'Pago',
                 'cancelado': 'Cancelado'
-            }[dados.status] || dados.status;
+            }[dados.statusValorEmprestado] || 'Processamento';
             
             tbody.innerHTML += `
                 <tr>
@@ -931,7 +1020,8 @@ async function gerarRelatorio() {
                     <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.lucro || 0).toFixed(2)}</td>
                     <td>${cartaoInfo}</td>
-                    <td>${statusTexto}</td>
+                    <td>${statusCartaoTexto}</td>
+                    <td>${statusEmprestadoTexto}</td>
                     <td>${dados.dataContrato}</td>
                 </tr>
             `;
@@ -941,7 +1031,7 @@ async function gerarRelatorio() {
         if (tipo === 'completo' && Object.keys(porTipoVenda).length > 0) {
             tbody.innerHTML += `
                 <tr class="table-secondary fw-bold">
-                    <td colspan="11">RESUMO POR TIPO DE VENDA</td>
+                    <td colspan="12">RESUMO POR TIPO DE VENDA</td>
                 </tr>
             `;
             Object.values(porTipoVenda).forEach(tv => {
@@ -954,7 +1044,7 @@ async function gerarRelatorio() {
                         <td></td>
                         <td>R$ ${tv.valorEmprestado.toFixed(2)}</td>
                         <td>R$ ${tv.lucro.toFixed(2)}</td>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                     </tr>
                 `;
             });
@@ -1011,13 +1101,14 @@ function exportarParaExcel() {
         'Beneficiário PIX': c.nomeBeneficiario || '',
         'Mesmo Titular': c.mesmoTitular ? 'Sim' : 'Não',
         'Banco': c.banco || '',
+        'Status Cartão': c.statusValorCartao || 'processamento',
+        'Status Empréstimo': c.statusValorEmprestado || 'processamento',
         'Cartão Retido': c.cartaoRetido?.retido ? 'SIM' : 'NÃO',
         'Bandeira Cartão': c.cartaoRetido?.bandeira || '',
         'Últimos Dígitos': c.cartaoRetido?.ultimosDigitos || '',
         'Status Devolução': c.cartaoRetido?.statusDevolucao === 'devolvido' ? 'Devolvido' : c.cartaoRetido?.retido ? 'Pendente' : '',
         'Data Retirada': c.cartaoRetido?.dataRetirada || '',
         'Data Devolução': c.cartaoRetido?.dataDevolucao || '',
-        'Status': c.status,
         'Data Contrato': c.dataContrato
     }));
     
@@ -1079,6 +1170,7 @@ function mostrarStatus(mensagem, tipo) {
     }, 5000);
 }
 
+// ========== LIMPAR FORMULÁRIO ==========
 function limparFormulario() {
     document.getElementById('formEmprestimo').reset();
     document.getElementById('previewFicha').style.display = 'none';
@@ -1099,6 +1191,10 @@ function limparFormulario() {
     // Resetar flags
     document.getElementById('flagEnderecoManual').checked = false;
     document.getElementById('flagMesmoTitular').checked = true;
+    
+    // Resetar status para padrão "processamento"
+    document.getElementById('statusValorCartao').value = 'processamento';
+    document.getElementById('statusValorEmprestado').value = 'processamento';
     
     gerarNumeroContrato();
 }
