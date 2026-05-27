@@ -140,12 +140,14 @@ function validarCPF(cpf) {
 
 // ========== CÁLCULO DO VALOR DA PARCELA ==========
 function calcularValorParcela() {
-    const valorCartao = parseFloat(document.getElementById('valorCartao').value) || 0;
+    const valorCartaoStr = document.getElementById('valorCartao').value;
+    // Converte vírgula para ponto para fazer o cálculo
+    const valorCartao = parseFloat(valorCartaoStr.replace(/\./g, '').replace(',', '.')) || 0;
     const parcelas = parseInt(document.getElementById('parcelas').value) || 0;
     
     if (valorCartao > 0 && parcelas > 0) {
         const valorParcela = valorCartao / parcelas;
-        document.getElementById('valorParcelas').value = valorParcela.toFixed(2);
+        document.getElementById('valorParcelas').value = valorParcela.toFixed(2).replace('.', ',');
     } else {
         document.getElementById('valorParcelas').value = '';
     }
@@ -489,24 +491,51 @@ function setupEventListeners() {
         });
     }
     
-    // Validação de valores (apenas duas casas decimais)
+    // Validação de valores (formatação automática com centavos)
     ['valorCartao', 'valorEmprestado'].forEach(id => {
         const element = document.getElementById(id);
         if (element) {
+            // Mudar o tipo para text para permitir formatação
+            element.type = 'text';
+            element.inputMode = 'numeric';
+            
             element.addEventListener('input', function(e) {
                 let value = e.target.value;
-                value = value.replace(/[^\d.]/g, '');
                 
-                const parts = value.split('.');
-                if (parts.length > 2) {
-                    value = parts[0] + '.' + parts.slice(1).join('');
+                // Remove tudo que não for número
+                value = value.replace(/\D/g, '');
+                
+                // Formata com centavos (últimos 2 dígitos = centavos)
+                if (value.length > 0) {
+                    // Completa com zeros à esquerda se necessário
+                    value = value.padStart(3, '0');
+                    
+                    // Separa os centavos
+                    const inteiros = value.slice(0, -2);
+                    const centavos = value.slice(-2);
+                    
+                    // Remove zeros à esquerda dos inteiros
+                    const inteirosFormatado = parseInt(inteiros).toString();
+                    
+                    e.target.value = `${inteirosFormatado},${centavos}`;
+                } else {
+                    e.target.value = '';
                 }
                 
-                if (parts.length === 2 && parts[1].length > 2) {
-                    value = parts[0] + '.' + parts[1].substring(0, 2);
+                if (id === 'valorCartao') calcularValorParcela();
+            });
+            
+            // Ao perder o foco, garantir formato correto
+            element.addEventListener('blur', function(e) {
+                let value = e.target.value;
+                
+                if (value) {
+                    // Substitui vírgula por ponto para cálculo
+                    value = value.replace(/\./g, '').replace(',', '.');
+                    const numero = parseFloat(value) || 0;
+                    e.target.value = numero.toFixed(2).replace('.', ',');
                 }
                 
-                e.target.value = value;
                 if (id === 'valorCartao') calcularValorParcela();
             });
         }
@@ -709,12 +738,47 @@ async function salvarContrato(e) {
         return element;
     }
     
+    // Função para converter valor com vírgula para número
+    function parseValor(valorStr) {
+        if (!valorStr) return 0;
+        // Remove pontos e substitui vírgula por ponto
+        const limpo = valorStr.replace(/\./g, '').replace(',', '.');
+        return parseFloat(limpo) || 0;
+    }
+    
+    // Validar nome do cliente
+    const nome = getValue('nome').trim();
+    if (!nome || nome.length < 3) {
+        mostrarStatus('Nome do cliente é obrigatório e deve ter pelo menos 3 caracteres!', 'danger');
+        const nomeElement = getElement('nome');
+        if (nomeElement) nomeElement.focus();
+        return;
+    }
+    
     // Validar CPF do cliente
     const cpf = getValue('cpf').replace(/\D/g, '');
     if (!validarCPF(cpf)) {
         mostrarStatus('CPF do cliente inválido! Verifique e tente novamente.', 'danger');
         const cpfElement = getElement('cpf');
         if (cpfElement) cpfElement.focus();
+        return;
+    }
+    
+    // Validar data do contrato
+    const dataContrato = getValue('dataContrato');
+    if (!dataContrato) {
+        mostrarStatus('Data do contrato é obrigatória!', 'danger');
+        const dataElement = getElement('dataContrato');
+        if (dataElement) dataElement.focus();
+        return;
+    }
+    
+    // Validar tipo de venda
+    const tipoVenda = getValue('tipoVenda');
+    if (!tipoVenda) {
+        mostrarStatus('Tipo de Venda é obrigatório!', 'danger');
+        const tipoVendaElement = getElement('tipoVenda');
+        if (tipoVendaElement) tipoVendaElement.focus();
         return;
     }
     
@@ -763,6 +827,25 @@ async function salvarContrato(e) {
         }
     }
     
+    // Validar banco
+    const bancoSelecionado = getValue('banco');
+    if (!bancoSelecionado) {
+        mostrarStatus('Banco é obrigatório!', 'danger');
+        const bancoElement = getElement('banco');
+        if (bancoElement) bancoElement.focus();
+        return;
+    }
+    
+    // Validar valor do cartão
+    const valorCartaoStr = getValue('valorCartao');
+    const valorCartao = parseValor(valorCartaoStr);
+    if (!valorCartaoStr || valorCartao <= 0) {
+        mostrarStatus('Valor do Cartão é obrigatório e deve ser maior que zero!', 'danger');
+        const valorCartaoElement = getElement('valorCartao');
+        if (valorCartaoElement) valorCartaoElement.focus();
+        return;
+    }
+    
     // Validar parcelas
     const parcelasValue = getValue('parcelas');
     const parcelas = parseInt(parcelasValue);
@@ -773,12 +856,21 @@ async function salvarContrato(e) {
         return;
     }
     
-    // Validar nome do cliente
-    const nome = getValue('nome').trim();
-    if (!nome || nome.length < 3) {
-        mostrarStatus('Nome do cliente é obrigatório e deve ter pelo menos 3 caracteres!', 'danger');
-        const nomeElement = getElement('nome');
-        if (nomeElement) nomeElement.focus();
+    // Validar valor emprestado
+    const valorEmprestadoStr = getValue('valorEmprestado');
+    const valorEmprestado = parseValor(valorEmprestadoStr);
+    if (!valorEmprestadoStr || valorEmprestado <= 0) {
+        mostrarStatus('Valor Emprestado é obrigatório e deve ser maior que zero!', 'danger');
+        const valorEmprestadoElement = getElement('valorEmprestado');
+        if (valorEmprestadoElement) valorEmprestadoElement.focus();
+        return;
+    }
+    
+    // Validar se valor emprestado não é maior que valor do cartão
+    if (valorEmprestado > valorCartao) {
+        mostrarStatus('Valor Emprestado não pode ser maior que o Valor do Cartão!', 'danger');
+        const valorEmprestadoElement = getElement('valorEmprestado');
+        if (valorEmprestadoElement) valorEmprestadoElement.focus();
         return;
     }
     
@@ -789,6 +881,7 @@ async function salvarContrato(e) {
     }
     
     try {
+        // Montar endereço
         const enderecoCompleto = {
             cep: getValue('cep'),
             logradouro: getValue('endereco'),
@@ -800,6 +893,7 @@ async function salvarContrato(e) {
             completo: `${getValue('endereco')}, ${getValue('numeroEndereco')} - ${getValue('bairro')}, ${getValue('cidade')}/${getValue('estado')}`
         };
         
+        // Dados do cartão retido
         const cartaoRetidoCheckbox = getElement('cartaoRetido');
         const cartaoRetido = cartaoRetidoCheckbox ? cartaoRetidoCheckbox.checked : false;
         const bandeiraSelecionada = getValue('bandeiraCartao');
@@ -818,17 +912,14 @@ async function salvarContrato(e) {
             retido: false
         };
         
-        const tipoVenda = getValue('tipoVenda');
-        const bancoSelecionado = getValue('banco');
+        // Banco
         const bancoElement = getElement('banco');
         const bancoFinal = bancoSelecionado === 'outros' ? 
             getValue('bancoOutros') : 
             (bancoElement ? bancoElement.options[bancoElement.selectedIndex]?.text : '');
         
-        const valorCartao = parseFloat(getValue('valorCartao')) || 0;
-        const parcelasCount = parseInt(getValue('parcelas')) || 0;
-        const valorParcelas = parcelasCount > 0 ? valorCartao / parcelasCount : 0;
-        const valorEmprestado = parseFloat(getValue('valorEmprestado')) || 0;
+        // Cálculo do valor da parcela
+        const valorParcelas = parcelas > 0 ? valorCartao / parcelas : 0;
         
         // Montar dados de pagamento
         const dadosPagamento = {
@@ -850,13 +941,14 @@ async function salvarContrato(e) {
             dadosPagamento.dadosTransferencia = getValue('dadosTransferencia');
         }
         
+        // Montar objeto do contrato
         const dadosContrato = {
             numeroContrato: getValue('numeroContrato'),
             statusValorCartao: getValue('statusValorCartao', 'processamento'),
             statusValorEmprestado: getValue('statusValorEmprestado', 'processamento'),
             tipoVenda: tipoVenda,
             tipoVendaNome: tipoVendaMap[tipoVenda] || tipoVenda,
-            dataContrato: getValue('dataContrato'),
+            dataContrato: dataContrato,
             nome: nome.toUpperCase(),
             cpf: cpf,
             telefone: getValue('numero').replace(/\D/g, ''),
@@ -864,7 +956,7 @@ async function salvarContrato(e) {
             pagamento: dadosPagamento,
             banco: bancoFinal,
             valorCartao: valorCartao,
-            parcelas: parcelasCount,
+            parcelas: parcelas,
             valorParcelas: valorParcelas,
             valorEmprestado: valorEmprestado,
             lucro: valorCartao - valorEmprestado,
@@ -873,6 +965,7 @@ async function salvarContrato(e) {
             dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
         };
         
+        // Upload de imagens (se houver)
         const fichaFile = getElement('fichaCliente')?.files[0];
         const docFile = getElement('documentoCliente')?.files[0];
         
@@ -883,22 +976,25 @@ async function salvarContrato(e) {
             dadosContrato.documentoUrl = await uploadImagemParaImgBB(docFile);
         }
         
+        // Salvar no Firebase
         await db.collection('contratos').add(dadosContrato);
         
         // Adicionar à lista de contratos existentes
         contratosExistentes.push(dadosContrato.numeroContrato);
         
+        // Mensagem de sucesso
         if (cartaoRetido) {
-            mostrarStatus('✅ Contrato cadastrado! Cartão registrado como RETIDO.', 'warning');
+            mostrarStatus('✅ Contrato cadastrado com sucesso! Cartão registrado como RETIDO.', 'warning');
         } else {
             mostrarStatus('✅ Contrato cadastrado com sucesso!', 'success');
         }
         
+        // Limpar formulário e gerar novo número
         limparFormulario();
         gerarNumeroContrato();
         
     } catch (error) {
-        console.error('Erro:', error);
+        console.error('Erro ao salvar contrato:', error);
         mostrarStatus('❌ Erro ao cadastrar: ' + error.message, 'danger');
     } finally {
         if (btnSubmit) {
