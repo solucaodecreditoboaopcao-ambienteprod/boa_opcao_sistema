@@ -1087,6 +1087,7 @@ async function buscarContratos() {
         
         if (snapshot.empty) {
             tbody.innerHTML = '<tr><td colspan="14" class="text-center py-4">Nenhum contrato encontrado</td></tr>';
+            ajustarTabelaConsulta();
             return;
         }
         
@@ -1152,35 +1153,35 @@ async function buscarContratos() {
                     <td><span class="badge badge-status ${statusCartaoClass}">${statusCartaoTexto}</span></td>
                     <td><span class="badge badge-status ${statusEmprestadoClass}">${statusEmprestadoTexto}</span></td>
                     <td>${data}</td>
-                    <td>
+                    <td style="position: relative; overflow: visible !important;">
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-info" onclick="verDetalhes('${doc.id}')" title="Ver detalhes">
+                            <button class="btn btn-info btn-sm" onclick="verDetalhes('${doc.id}')" title="Ver detalhes">
                                 <i class="bi bi-eye"></i>
                             </button>
-                            <div class="btn-group btn-group-sm dropend">
-                                <button class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false" title="Alterar status">
+                            <div class="dropdown" style="position: static;">
+                                <button class="btn btn-warning btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-reference="parent" aria-expanded="false" title="Alterar status">
                                     <i class="bi bi-arrow-repeat"></i>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end" style="position: absolute; z-index: 9999;">
+                                <ul class="dropdown-menu" style="z-index: 99999 !important; position: absolute !important;">
                                     <li><h6 class="dropdown-header">Status Valor Cartão</h6></li>
-                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); atualizarStatusCartao('${doc.id}', 'recebido')">
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusCartao('${doc.id}', 'recebido'); return false;">
                                         <i class="bi bi-check-circle text-success"></i> Marcar como Recebido
                                     </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); atualizarStatusCartao('${doc.id}', 'cancelado')">
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusCartao('${doc.id}', 'cancelado'); return false;">
                                         <i class="bi bi-x-circle text-danger"></i> Cancelar Cartão
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header">Status Valor Emprestado</h6></li>
-                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); atualizarStatusEmprestado('${doc.id}', 'pago')">
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusEmprestado('${doc.id}', 'pago'); return false;">
                                         <i class="bi bi-check-circle text-success"></i> Marcar como Pago
                                     </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); atualizarStatusEmprestado('${doc.id}', 'cancelado')">
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusEmprestado('${doc.id}', 'cancelado'); return false;">
                                         <i class="bi bi-x-circle text-danger"></i> Cancelar Empréstimo
                                     </a></li>
                                 </ul>
                             </div>
                             ${dados.cartaoRetido?.retido && dados.cartaoRetido?.statusDevolucao === 'retido' ? `
-                                <button class="btn btn-success" onclick="registrarDevolucao('${doc.id}')" title="Registrar devolução">
+                                <button class="btn btn-success btn-sm" onclick="registrarDevolucao('${doc.id}')" title="Registrar devolução">
                                     <i class="bi bi-check-circle"></i>
                                 </button>
                             ` : ''}
@@ -1209,7 +1210,7 @@ async function buscarContratos() {
             </tr>
         `;
         
-        // AJUSTAR A TABELA APÓS CARREGAR OS DADOS
+        // Ajustar a tabela após carregar os dados
         ajustarTabelaConsulta();
         
     } catch (error) {
@@ -1224,7 +1225,6 @@ function ajustarTabelaConsulta() {
     const tabela = document.getElementById('tabelaContratos');
     
     if (tabelaContainer) {
-        // Forçar scroll horizontal
         tabelaContainer.style.overflowX = 'auto';
         tabelaContainer.style.overflowY = 'visible';
         tabelaContainer.style.width = '100%';
@@ -1233,13 +1233,29 @@ function ajustarTabelaConsulta() {
     }
     
     if (tabela) {
-        // Forçar estilos da tabela
         tabela.style.width = 'auto';
         tabela.style.minWidth = '100%';
         tabela.style.whiteSpace = 'nowrap';
         tabela.style.tableLayout = 'auto';
     }
 }
+
+// ========== CORRIGIR DROPDOWNS AO ABRIR ==========
+document.addEventListener('shown.bs.dropdown', function(e) {
+    const dropdownMenu = e.target.querySelector('.dropdown-menu');
+    if (dropdownMenu) {
+        dropdownMenu.style.zIndex = '99999';
+        dropdownMenu.style.position = 'absolute';
+    }
+});
+
+document.addEventListener('show.bs.dropdown', function(e) {
+    const dropdownMenu = e.target.querySelector('.dropdown-menu');
+    if (dropdownMenu) {
+        dropdownMenu.style.zIndex = '99999';
+        dropdownMenu.style.position = 'absolute';
+    }
+});
 
 // ========== REGISTRAR DEVOLUÇÃO ==========
 async function registrarDevolucao(id) {
