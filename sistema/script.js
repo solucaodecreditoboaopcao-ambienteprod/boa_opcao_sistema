@@ -181,6 +181,54 @@ function toggleBandeiraOutros() {
     }
 }
 
+// ========== TOGGLE TIPO PAGAMENTO ==========
+function toggleTipoPagamento() {
+    const tipoPagamento = document.querySelector('input[name="tipoPagamento"]:checked').value;
+    const divPixCampos = document.getElementById('divPixCampos');
+    const divTransferenciaCampos = document.getElementById('divTransferenciaCampos');
+    const pixInput = document.getElementById('pix');
+    const nomeBeneficiario = document.getElementById('nomeBeneficiario');
+    const dadosTransferencia = document.getElementById('dadosTransferencia');
+    
+    if (tipoPagamento === 'pix') {
+        // Mostrar campos PIX
+        divPixCampos.style.display = 'block';
+        divTransferenciaCampos.style.display = 'none';
+        
+        // Tornar campos PIX disponíveis
+        pixInput.required = false;
+        nomeBeneficiario.required = false;
+        
+        // Limpar campo de transferência
+        dadosTransferencia.value = '';
+        dadosTransferencia.required = false;
+        
+        // Resetar beneficiário para mesmo titular
+        document.getElementById('radioMesmoTitular').checked = true;
+        toggleTipoBeneficiario();
+        
+    } else if (tipoPagamento === 'transferencia') {
+        // Mostrar campo transferência
+        divPixCampos.style.display = 'none';
+        divTransferenciaCampos.style.display = 'block';
+        
+        // Tornar campo transferência obrigatório
+        dadosTransferencia.required = true;
+        
+        // Limpar campos PIX
+        pixInput.value = '';
+        pixInput.required = false;
+        nomeBeneficiario.value = '';
+        nomeBeneficiario.required = false;
+        
+        // Esconder CPF terceiros
+        document.getElementById('divCpfTerceiros').style.display = 'none';
+        document.getElementById('cpfTerceiros').value = '';
+        document.getElementById('cpfTerceiros').required = false;
+        document.getElementById('cpfTerceiros').classList.remove('is-invalid', 'is-valid');
+    }
+}
+
 // ========== TOGGLE TIPO BENEFICIÁRIO ==========
 function toggleTipoBeneficiario() {
     const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
@@ -271,9 +319,9 @@ function setupEventListeners() {
     document.getElementById('cpfTerceiros').addEventListener('input', mascaraCPF);
     document.getElementById('cpfTerceiros').addEventListener('blur', function() {
         const cpf = this.value.replace(/\D/g, '');
-        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
+        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
         
-        if (tipoBeneficiario === 'terceiros') {
+        if (tipoBeneficiario && tipoBeneficiario.value === 'terceiros') {
             if (cpf.length === 11 && !validarCPF(cpf)) {
                 this.classList.add('is-invalid');
                 document.getElementById('cpfTerceirosFeedback').textContent = 'CPF inválido!';
@@ -346,6 +394,11 @@ function setupEventListeners() {
     // Flag endereço manual
     document.getElementById('flagEnderecoManual').addEventListener('change', toggleEnderecoManual);
     
+    // Radio buttons tipo pagamento
+    document.querySelectorAll('input[name="tipoPagamento"]').forEach(radio => {
+        radio.addEventListener('change', toggleTipoPagamento);
+    });
+    
     // Radio buttons tipo beneficiário
     document.querySelectorAll('input[name="tipoBeneficiario"]').forEach(radio => {
         radio.addEventListener('change', toggleTipoBeneficiario);
@@ -353,8 +406,8 @@ function setupEventListeners() {
     
     // Atualizar nome do beneficiário quando mudar o nome do cliente
     document.getElementById('nome').addEventListener('input', function() {
-        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
-        if (tipoBeneficiario === 'mesmo_titular') {
+        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
+        if (tipoBeneficiario && tipoBeneficiario.value === 'mesmo_titular') {
             document.getElementById('nomeBeneficiario').value = this.value;
         }
     });
@@ -497,11 +550,15 @@ async function salvarContrato(e) {
         return;
     }
     
-    // Validar CPF de terceiros (se selecionado)
-    const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
+    // Validar tipo de pagamento
+    const tipoPagamento = document.querySelector('input[name="tipoPagamento"]:checked').value;
+    
+    // Validar CPF de terceiros (apenas se for PIX e terceiros)
+    const tipoBeneficiario = tipoPagamento === 'pix' ? 
+        document.querySelector('input[name="tipoBeneficiario"]:checked').value : null;
     let cpfTerceiros = '';
     
-    if (tipoBeneficiario === 'terceiros') {
+    if (tipoPagamento === 'pix' && tipoBeneficiario === 'terceiros') {
         cpfTerceiros = document.getElementById('cpfTerceiros').value.replace(/\D/g, '');
         
         if (!cpfTerceiros) {
@@ -520,6 +577,16 @@ async function salvarContrato(e) {
         if (cpfTerceiros === cpf) {
             mostrarStatus('O CPF do terceiro não pode ser igual ao CPF do cliente!', 'danger');
             document.getElementById('cpfTerceiros').focus();
+            return;
+        }
+    }
+    
+    // Validar dados da transferência se for o caso
+    if (tipoPagamento === 'transferencia') {
+        const dadosTransferencia = document.getElementById('dadosTransferencia').value.trim();
+        if (!dadosTransferencia) {
+            mostrarStatus('Informe os detalhes da transferência!', 'danger');
+            document.getElementById('dadosTransferencia').focus();
             return;
         }
     }
@@ -576,14 +643,25 @@ async function salvarContrato(e) {
         const valorParcelas = valorCartao / parcelasCount;
         const valorEmprestado = parseFloat(document.getElementById('valorEmprestado').value) || 0;
         
-        // Montar dados do beneficiário
-        const dadosBeneficiario = {
-            tipo: tipoBeneficiario,
-            nome: document.getElementById('nomeBeneficiario').value
+        // Montar dados de pagamento
+        const dadosPagamento = {
+            tipo: tipoPagamento
         };
         
-        if (tipoBeneficiario === 'terceiros') {
-            dadosBeneficiario.cpf = cpfTerceiros;
+        if (tipoPagamento === 'pix') {
+            dadosPagamento.pix = document.getElementById('pix').value;
+            
+            // Montar dados do beneficiário
+            dadosPagamento.beneficiario = {
+                tipo: tipoBeneficiario,
+                nome: document.getElementById('nomeBeneficiario').value
+            };
+            
+            if (tipoBeneficiario === 'terceiros') {
+                dadosPagamento.beneficiario.cpf = cpfTerceiros;
+            }
+        } else if (tipoPagamento === 'transferencia') {
+            dadosPagamento.dadosTransferencia = document.getElementById('dadosTransferencia').value;
         }
         
         const dadosContrato = {
@@ -597,8 +675,7 @@ async function salvarContrato(e) {
             cpf: cpf,
             telefone: document.getElementById('numero').value.replace(/\D/g, ''),
             endereco: enderecoCompleto,
-            pix: document.getElementById('pix').value,
-            beneficiario: dadosBeneficiario,
+            pagamento: dadosPagamento,
             banco: bancoFinal,
             valorCartao: valorCartao,
             parcelas: parcelasCount,
@@ -922,16 +999,30 @@ async function verDetalhes(id) {
                 </div>
             ` : '';
             
-            const pixHTML = dados.pix ? `
+            const pagamentoHTML = dados.pagamento ? `
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <i class="bi bi-qr-code"></i> <strong>Dados PIX</strong>
+                        <i class="bi bi-cash-stack"></i> <strong>Dados do Pagamento</strong>
                     </div>
                     <div class="card-body">
-                        <p><strong>Chave PIX:</strong> ${dados.pix}</p>
-                        <p><strong>Tipo Beneficiário:</strong> ${dados.beneficiario?.tipo === 'terceiros' ? 'Terceiros' : 'Mesmo titular do cartão'}</p>
-                        <p><strong>Beneficiário:</strong> ${dados.beneficiario?.nome || 'N/A'}</p>
-                        ${dados.beneficiario?.tipo === 'terceiros' && dados.beneficiario?.cpf ? `<p><strong>CPF Terceiro:</strong> ${mascararCPF(dados.beneficiario.cpf)}</p>` : ''}
+                        <p><strong>Modalidade:</strong> ${dados.pagamento.tipo === 'pix' ? 
+                            '<span class="badge bg-info">PIX</span>' : 
+                            '<span class="badge bg-primary">Transferência Bancária</span>'}</p>
+                        
+                        ${dados.pagamento.tipo === 'pix' ? `
+                            <p><strong>Chave PIX:</strong> ${dados.pagamento.pix || 'N/A'}</p>
+                            <p><strong>Tipo Beneficiário:</strong> ${dados.pagamento.beneficiario?.tipo === 'terceiros' ? 'Terceiros' : 'Mesmo titular do cartão'}</p>
+                            <p><strong>Beneficiário:</strong> ${dados.pagamento.beneficiario?.nome || 'N/A'}</p>
+                            ${dados.pagamento.beneficiario?.tipo === 'terceiros' && dados.pagamento.beneficiario?.cpf ? 
+                                `<p><strong>CPF Terceiro:</strong> ${mascararCPF(dados.pagamento.beneficiario.cpf)}</p>` : ''}
+                        ` : ''}
+                        
+                        ${dados.pagamento.tipo === 'transferencia' ? `
+                            <p><strong>Detalhes da Transferência:</strong></p>
+                            <div class="alert alert-light border">
+                                <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">${dados.pagamento.dadosTransferencia || 'N/A'}</pre>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             ` : '';
@@ -957,7 +1048,7 @@ async function verDetalhes(id) {
                         <p><strong>Lucro:</strong> R$ ${(dados.lucro || 0).toFixed(2)}</p>
                     </div>
                 </div>
-                ${pixHTML}
+                ${pagamentoHTML}
                 ${enderecoHTML}
                 ${cartaoHTML}
                 ${dados.fichaUrl ? `<div class="mb-3"><strong>Ficha do Cliente:</strong><br><img src="${dados.fichaUrl}" class="img-fluid mt-2 rounded" alt="Ficha"></div>` : ''}
@@ -1155,10 +1246,12 @@ function exportarParaExcel() {
         'Valor Parcela': c.valorParcelas || 0,
         'Valor Emprestado': c.valorEmprestado,
         'Lucro': c.lucro || 0,
-        'Chave PIX': c.pix || '',
-        'Tipo Beneficiário': c.beneficiario?.tipo === 'terceiros' ? 'Terceiros' : 'Mesmo Titular',
-        'Beneficiário PIX': c.beneficiario?.nome || '',
-        'CPF Terceiro': c.beneficiario?.cpf || '',
+        'Modalidade Pagamento': c.pagamento?.tipo === 'pix' ? 'PIX' : 'Transferência',
+        'Chave PIX': c.pagamento?.pix || '',
+        'Tipo Beneficiário': c.pagamento?.beneficiario?.tipo === 'terceiros' ? 'Terceiros' : c.pagamento?.tipo === 'pix' ? 'Mesmo Titular' : '',
+        'Beneficiário': c.pagamento?.beneficiario?.nome || '',
+        'CPF Terceiro': c.pagamento?.beneficiario?.cpf || '',
+        'Detalhes Transferência': c.pagamento?.dadosTransferencia || '',
         'Banco': c.banco || '',
         'Status Cartão': c.statusValorCartao || 'processamento',
         'Status Empréstimo': c.statusValorEmprestado || 'processamento',
@@ -1243,6 +1336,8 @@ function limparFormulario() {
     document.getElementById('divObservacaoCartao').style.display = 'none';
     document.getElementById('divBancoOutros').style.display = 'none';
     document.getElementById('divCpfTerceiros').style.display = 'none';
+    document.getElementById('divTransferenciaCampos').style.display = 'none';
+    document.getElementById('divPixCampos').style.display = 'block';
     
     document.getElementById('parcelas').readOnly = false;
     document.getElementById('cpf').classList.remove('is-valid', 'is-invalid');
@@ -1251,13 +1346,15 @@ function limparFormulario() {
     // Resetar flags
     document.getElementById('flagEnderecoManual').checked = false;
     document.getElementById('radioMesmoTitular').checked = true;
+    document.getElementById('radioPix').checked = true;
     
     // Resetar status para padrão "processamento"
     document.getElementById('statusValorCartao').value = 'processamento';
     document.getElementById('statusValorEmprestado').value = 'processamento';
     
-    // Limpar campo de terceiros
+    // Limpar campos
     document.getElementById('cpfTerceiros').value = '';
+    document.getElementById('dadosTransferencia').value = '';
     document.getElementById('nomeBeneficiario').readOnly = true;
     document.getElementById('nomeBeneficiario').style.backgroundColor = '#f8f9fa';
     
