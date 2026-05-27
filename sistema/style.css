@@ -654,6 +654,45 @@ tr.cartao-retido-row:hover {
 
 .form-check-label i { margin-right: 0.3rem; }
 
+/* Botões de ação na tabela */
+#tabelaContratos td .d-flex.gap-1 {
+    gap: 0.25rem !important;
+}
+
+#tabelaContratos .btn-outline-warning {
+    color: #ff6f00;
+    border-color: #ff6f00;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+#tabelaContratos .btn-outline-warning:hover {
+    background: #ff6f00;
+    color: white;
+}
+
+#tabelaContratos .btn-outline-info {
+    color: #00b0ff;
+    border-color: #00b0ff;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+#tabelaContratos .btn-outline-info:hover {
+    background: #00b0ff;
+    color: white;
+}
+
+/* Botões pequenos na tabela */
+#tabelaContratos .btn-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+}
+
+#tabelaContratos .btn-sm i {
+    font-size: 0.8rem;
+}
+
 /* ========== BADGES ========== */
 .badge.bg-info { background: linear-gradient(135deg, #00b0ff, #40c4ff) !important; font-size: 0.9rem; padding: 0.4rem 0.8rem; }
 .badge.bg-primary { background: linear-gradient(135deg, #1565c0, #1976d2) !important; font-size: 0.9rem; padding: 0.4rem 0.8rem; }
