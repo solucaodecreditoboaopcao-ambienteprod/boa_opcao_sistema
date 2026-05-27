@@ -291,12 +291,24 @@ function toggleEnderecoManual() {
     
     camposEndereco.forEach(campo => {
         const elemento = document.getElementById(campo);
-        if (manual) {
-            elemento.readOnly = false;
-            elemento.style.backgroundColor = '';
-        } else {
-            elemento.readOnly = true;
-            elemento.style.backgroundColor = '#f8f9fa';
+        if (elemento) {
+            if (manual) {
+                // Se marcou manual, libera tudo
+                elemento.readOnly = false;
+                elemento.style.backgroundColor = '';
+            } else {
+                // Se desmarcou manual, volta a bloquear (exceto se já tiver CEP preenchido)
+                const cep = document.getElementById('cep').value.replace(/\D/g, '');
+                if (cep.length === 8) {
+                    // Se tem CEP preenchido, mantém liberado
+                    elemento.readOnly = false;
+                    elemento.style.backgroundColor = '';
+                } else {
+                    // Se não tem CEP, bloqueia
+                    elemento.readOnly = true;
+                    elemento.style.backgroundColor = '#f8f9fa';
+                }
+            }
         }
     });
 }
@@ -519,8 +531,8 @@ function setupEventListeners() {
     // Busca CEP
     if (cepInput) {
         cepInput.addEventListener('blur', function() {
-            const flagManual = document.getElementById('flagEnderecoManual');
-            if (flagManual && !flagManual.checked) {
+            const cep = this.value.replace(/\D/g, '');
+            if (cep.length === 8) {
                 buscarCEP();
             }
         });
@@ -654,10 +666,15 @@ async function buscarCEP() {
         feedback.textContent = 'CEP encontrado!';
         feedback.className = 'form-text text-success';
         
-        // Permitir edição após busca
-        if (!document.getElementById('flagEnderecoManual').checked) {
-            toggleEnderecoManual();
-        }
+        // LIBERAR CAMPOS PARA EDIÇÃO após preencher o CEP
+        const camposEndereco = ['endereco', 'numeroEndereco', 'bairro', 'complemento', 'cidade', 'estado'];
+        camposEndereco.forEach(campo => {
+            const elemento = document.getElementById(campo);
+            if (elemento) {
+                elemento.readOnly = false;
+                elemento.style.backgroundColor = '';
+            }
+        });
         
     } catch (error) {
         console.error('Erro ao buscar CEP:', error);
