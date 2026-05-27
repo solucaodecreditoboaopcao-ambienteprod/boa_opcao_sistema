@@ -1132,6 +1132,11 @@ async function buscarContratos() {
             
             const rowClass = dados.cartaoRetido?.retido && dados.cartaoRetido?.statusDevolucao !== 'devolvido' ? 'cartao-retido-row' : '';
             
+            // Formatar valores com vírgula
+            const valorCartaoFormatado = (dados.valorCartao || 0).toFixed(2).replace('.', ',');
+            const valorParcelaFormatado = (dados.valorParcelas || 0).toFixed(2).replace('.', ',');
+            const valorEmprestadoFormatado = (dados.valorEmprestado || 0).toFixed(2).replace('.', ',');
+            
             tbody.innerHTML += `
                 <tr class="${rowClass}">
                     <td><strong>${dados.numeroContrato}</strong></td>
@@ -1139,9 +1144,9 @@ async function buscarContratos() {
                     <td class="cpf-mask">${mascararCPF(dados.cpf)}</td>
                     <td class="tel-mask">${mascararTelefone(dados.telefone)}</td>
                     <td><span class="tipo-venda-badge ${tipoVendaClass}">${tipoVendaNome}</span></td>
-                    <td>R$ ${(dados.valorCartao || 0).toFixed(2)}</td>
-                    <td>R$ ${(dados.valorParcelas || 0).toFixed(2)}</td>
-                    <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
+                    <td>R$ ${valorCartaoFormatado}</td>
+                    <td>R$ ${valorParcelaFormatado}</td>
+                    <td>R$ ${valorEmprestadoFormatado}</td>
                     <td>${dados.parcelas || 0}x</td>
                     <td>${cartaoInfo}</td>
                     <td><span class="badge badge-status ${statusCartaoClass}">${statusCartaoTexto}</span></td>
@@ -1185,12 +1190,16 @@ async function buscarContratos() {
             `;
         });
         
+        // Linha de totais
+        const totalCartoesFormatado = totalCartoes.toFixed(2).replace('.', ',');
+        const totalEmprestadoFormatado = totalEmprestado.toFixed(2).replace('.', ',');
+        
         tbody.innerHTML += `
             <tr class="table-active fw-bold">
                 <td colspan="5">TOTAIS (${snapshot.size} contratos | ${totalCartoesRetidos} cartões retidos)</td>
-                <td>R$ ${totalCartoes.toFixed(2)}</td>
+                <td>R$ ${totalCartoesFormatado}</td>
                 <td></td>
-                <td>R$ ${totalEmprestado.toFixed(2)}</td>
+                <td>R$ ${totalEmprestadoFormatado}</td>
                 <td></td>
                 <td></td>
                 <td></td>
@@ -1200,9 +1209,35 @@ async function buscarContratos() {
             </tr>
         `;
         
+        // AJUSTAR A TABELA APÓS CARREGAR OS DADOS
+        ajustarTabelaConsulta();
+        
     } catch (error) {
         console.error('Erro na busca:', error);
         mostrarStatus('Erro ao buscar contratos: ' + error.message, 'danger');
+    }
+}
+
+// ========== AJUSTAR TABELA DE CONSULTA ==========
+function ajustarTabelaConsulta() {
+    const tabelaContainer = document.querySelector('#consulta .table-responsive');
+    const tabela = document.getElementById('tabelaContratos');
+    
+    if (tabelaContainer) {
+        // Forçar scroll horizontal
+        tabelaContainer.style.overflowX = 'auto';
+        tabelaContainer.style.overflowY = 'visible';
+        tabelaContainer.style.width = '100%';
+        tabelaContainer.style.maxWidth = '100%';
+        tabelaContainer.style.display = 'block';
+    }
+    
+    if (tabela) {
+        // Forçar estilos da tabela
+        tabela.style.width = 'auto';
+        tabela.style.minWidth = '100%';
+        tabela.style.whiteSpace = 'nowrap';
+        tabela.style.tableLayout = 'auto';
     }
 }
 
