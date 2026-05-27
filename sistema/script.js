@@ -303,149 +303,208 @@ function toggleEnderecoManual() {
 
 // ========== SETUP EVENT LISTENERS ==========
 function setupEventListeners() {
+    // Função auxiliar para adicionar event listener com segurança
+    function safeAddListener(id, event, handler) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener(event, handler);
+        } else {
+            console.warn(`Elemento com ID "${id}" não encontrado`);
+        }
+    }
+    
     // Form submit
-    document.getElementById('formEmprestimo').addEventListener('submit', salvarContrato);
+    safeAddListener('formEmprestimo', 'submit', salvarContrato);
     
     // Upload areas
-    document.getElementById('uploadFicha').addEventListener('click', () => {
-        document.getElementById('fichaCliente').click();
-    });
+    const uploadFicha = document.getElementById('uploadFicha');
+    const uploadDocumento = document.getElementById('uploadDocumento');
     
-    document.getElementById('uploadDocumento').addEventListener('click', () => {
-        document.getElementById('documentoCliente').click();
-    });
+    if (uploadFicha) {
+        uploadFicha.addEventListener('click', () => {
+            document.getElementById('fichaCliente')?.click();
+        });
+    }
+    
+    if (uploadDocumento) {
+        uploadDocumento.addEventListener('click', () => {
+            document.getElementById('documentoCliente')?.click();
+        });
+    }
     
     // File inputs
-    document.getElementById('fichaCliente').addEventListener('change', function(e) {
-        previewImagem(e.target, 'previewFicha', 'uploadFicha');
-    });
+    const fichaCliente = document.getElementById('fichaCliente');
+    const documentoCliente = document.getElementById('documentoCliente');
     
-    document.getElementById('documentoCliente').addEventListener('change', function(e) {
-        previewImagem(e.target, 'previewDocumento', 'uploadDocumento');
-    });
+    if (fichaCliente) {
+        fichaCliente.addEventListener('change', function(e) {
+            previewImagem(e.target, 'previewFicha', 'uploadFicha');
+        });
+    }
+    
+    if (documentoCliente) {
+        documentoCliente.addEventListener('change', function(e) {
+            previewImagem(e.target, 'previewDocumento', 'uploadDocumento');
+        });
+    }
     
     // Máscaras para campos de nome (apenas letras e acentos, maiúsculo)
-    document.getElementById('nome').addEventListener('input', function(e) {
-        mascaraNome(e);
-        // Atualizar nome do beneficiário se for mesmo titular
-        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
-        if (tipoBeneficiario && tipoBeneficiario.value === 'mesmo_titular') {
-            document.getElementById('nomeBeneficiario').value = this.value;
-        }
-    });
-    
-    // Garantir que o nome do beneficiário seja atualizado quando o campo nome perder o foco
-    document.getElementById('nome').addEventListener('blur', function() {
-        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
-        if (tipoBeneficiario && tipoBeneficiario.value === 'mesmo_titular') {
-            document.getElementById('nomeBeneficiario').value = this.value;
-        }
+    const nomeInput = document.getElementById('nome');
+    if (nomeInput) {
+        nomeInput.addEventListener('input', function(e) {
+            mascaraNome(e);
+            // Atualizar nome do beneficiário se for mesmo titular
+            const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
+            if (tipoBeneficiario && tipoBeneficiario.value === 'mesmo_titular') {
+                const nomeBeneficiario = document.getElementById('nomeBeneficiario');
+                if (nomeBeneficiario) nomeBeneficiario.value = this.value;
+            }
+        });
         
-        // Validação do nome
-        const nome = this.value.trim();
-        if (nome.length < 3) {
-            this.classList.add('is-invalid');
-            mostrarStatus('Nome do cliente deve ter pelo menos 3 caracteres!', 'warning');
-        } else if (!validarNome(nome)) {
-            this.classList.add('is-invalid');
-            mostrarStatus('Nome do cliente contém caracteres inválidos!', 'warning');
-        } else {
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        }
-    });
+        nomeInput.addEventListener('blur', function() {
+            const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
+            if (tipoBeneficiario && tipoBeneficiario.value === 'mesmo_titular') {
+                const nomeBeneficiario = document.getElementById('nomeBeneficiario');
+                if (nomeBeneficiario) nomeBeneficiario.value = this.value;
+            }
+            
+            // Validação do nome
+            const nome = this.value.trim();
+            if (nome.length < 3) {
+                this.classList.add('is-invalid');
+                mostrarStatus('Nome do cliente deve ter pelo menos 3 caracteres!', 'warning');
+            } else if (!validarNome(nome)) {
+                this.classList.add('is-invalid');
+                mostrarStatus('Nome do cliente contém caracteres inválidos!', 'warning');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    }
     
-    document.getElementById('nomeBeneficiario').addEventListener('input', mascaraNome);
+    const nomeBeneficiario = document.getElementById('nomeBeneficiario');
+    if (nomeBeneficiario) {
+        nomeBeneficiario.addEventListener('input', mascaraNome);
+    }
     
     // Máscaras CPF
-    document.getElementById('cpf').addEventListener('input', mascaraCPF);
-    document.getElementById('cpf').addEventListener('blur', function() {
-        const cpf = this.value.replace(/\D/g, '');
-        if (cpf.length === 11 && !validarCPF(cpf)) {
-            this.classList.add('is-invalid');
-            document.getElementById('cpfFeedback').textContent = 'CPF inválido!';
-        } else if (cpf.length === 11) {
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        }
-    });
-    
-    // Validação de CPF de terceiros
-    document.getElementById('cpfTerceiros').addEventListener('input', mascaraCPF);
-    document.getElementById('cpfTerceiros').addEventListener('blur', function() {
-        const cpf = this.value.replace(/\D/g, '');
-        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
-        
-        if (tipoBeneficiario && tipoBeneficiario.value === 'terceiros') {
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput) {
+        cpfInput.addEventListener('input', mascaraCPF);
+        cpfInput.addEventListener('blur', function() {
+            const cpf = this.value.replace(/\D/g, '');
             if (cpf.length === 11 && !validarCPF(cpf)) {
                 this.classList.add('is-invalid');
-                document.getElementById('cpfTerceirosFeedback').textContent = 'CPF inválido!';
+                const cpfFeedback = document.getElementById('cpfFeedback');
+                if (cpfFeedback) cpfFeedback.textContent = 'CPF inválido!';
             } else if (cpf.length === 11) {
                 this.classList.remove('is-invalid');
                 this.classList.add('is-valid');
             }
-        }
-    });
+        });
+    }
+    
+    // Validação de CPF de terceiros
+    const cpfTerceirosInput = document.getElementById('cpfTerceiros');
+    if (cpfTerceirosInput) {
+        cpfTerceirosInput.addEventListener('input', mascaraCPF);
+        cpfTerceirosInput.addEventListener('blur', function() {
+            const cpf = this.value.replace(/\D/g, '');
+            const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
+            
+            if (tipoBeneficiario && tipoBeneficiario.value === 'terceiros') {
+                if (cpf.length === 11 && !validarCPF(cpf)) {
+                    this.classList.add('is-invalid');
+                    const cpfTerceirosFeedback = document.getElementById('cpfTerceirosFeedback');
+                    if (cpfTerceirosFeedback) cpfTerceirosFeedback.textContent = 'CPF inválido!';
+                } else if (cpf.length === 11) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                }
+            }
+        });
+    }
     
     // Máscara telefone
-    document.getElementById('numero').addEventListener('input', mascaraTelefone);
+    const numeroInput = document.getElementById('numero');
+    if (numeroInput) {
+        numeroInput.addEventListener('input', mascaraTelefone);
+    }
     
     // Máscara CEP
-    document.getElementById('cep').addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
-        e.target.value = value;
-    });
+    const cepInput = document.getElementById('cep');
+    if (cepInput) {
+        cepInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+            e.target.value = value;
+        });
+    }
     
     // Tipo de venda - ajustar parcelas automaticamente
-    document.getElementById('tipoVenda').addEventListener('change', function() {
-        const tipo = this.value;
-        const parcelasInput = document.getElementById('parcelas');
-        if (tipo === 'cartao_credito_vista') {
-            parcelasInput.value = 1;
-            parcelasInput.readOnly = true;
-        } else {
-            parcelasInput.readOnly = false;
-        }
-        calcularValorParcela();
-    });
+    const tipoVendaSelect = document.getElementById('tipoVenda');
+    if (tipoVendaSelect) {
+        tipoVendaSelect.addEventListener('change', function() {
+            const tipo = this.value;
+            const parcelasInput = document.getElementById('parcelas');
+            if (parcelasInput) {
+                if (tipo === 'cartao_credito_vista') {
+                    parcelasInput.value = 1;
+                    parcelasInput.readOnly = true;
+                } else {
+                    parcelasInput.readOnly = false;
+                }
+            }
+            calcularValorParcela();
+        });
+    }
     
     // Validação de parcelas (apenas números inteiros, máximo 120)
-    document.getElementById('parcelas').addEventListener('input', function(e) {
-        let value = e.target.value;
-        value = value.replace(/\D/g, '');
-        
-        if (value) {
-            let numValue = parseInt(value);
-            if (numValue > 120) numValue = 120;
-            e.target.value = numValue;
-        }
-        
-        calcularValorParcela();
-    });
+    const parcelasInput = document.getElementById('parcelas');
+    if (parcelasInput) {
+        parcelasInput.addEventListener('input', function(e) {
+            let value = e.target.value;
+            value = value.replace(/\D/g, '');
+            
+            if (value) {
+                let numValue = parseInt(value);
+                if (numValue > 120) numValue = 120;
+                e.target.value = numValue;
+            }
+            
+            calcularValorParcela();
+        });
+    }
     
     // Validação de valores (apenas duas casas decimais)
     ['valorCartao', 'valorEmprestado'].forEach(id => {
-        document.getElementById(id).addEventListener('input', function(e) {
-            let value = e.target.value;
-            value = value.replace(/[^\d.]/g, '');
-            
-            const parts = value.split('.');
-            if (parts.length > 2) {
-                value = parts[0] + '.' + parts.slice(1).join('');
-            }
-            
-            if (parts.length === 2 && parts[1].length > 2) {
-                value = parts[0] + '.' + parts[1].substring(0, 2);
-            }
-            
-            e.target.value = value;
-            if (id === 'valorCartao') calcularValorParcela();
-        });
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', function(e) {
+                let value = e.target.value;
+                value = value.replace(/[^\d.]/g, '');
+                
+                const parts = value.split('.');
+                if (parts.length > 2) {
+                    value = parts[0] + '.' + parts.slice(1).join('');
+                }
+                
+                if (parts.length === 2 && parts[1].length > 2) {
+                    value = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+                
+                e.target.value = value;
+                if (id === 'valorCartao') calcularValorParcela();
+            });
+        }
     });
     
     // Flag endereço manual
-    document.getElementById('flagEnderecoManual').addEventListener('change', toggleEnderecoManual);
+    const flagEnderecoManual = document.getElementById('flagEnderecoManual');
+    if (flagEnderecoManual) {
+        flagEnderecoManual.addEventListener('change', toggleEnderecoManual);
+    }
     
     // Radio buttons tipo pagamento
     document.querySelectorAll('input[name="tipoPagamento"]').forEach(radio => {
@@ -458,11 +517,14 @@ function setupEventListeners() {
     });
     
     // Busca CEP
-    document.getElementById('cep').addEventListener('blur', function() {
-        if (!document.getElementById('flagEnderecoManual').checked) {
-            buscarCEP();
-        }
-    });
+    if (cepInput) {
+        cepInput.addEventListener('blur', function() {
+            const flagManual = document.getElementById('flagEnderecoManual');
+            if (flagManual && !flagManual.checked) {
+                buscarCEP();
+            }
+        });
+    }
     
     // Bloquear navegação entre abas se organização inativa
     document.querySelectorAll('#myTab .nav-link').forEach(tab => {
@@ -476,37 +538,31 @@ function setupEventListeners() {
         });
     });
     
-    // Bloquear navegação via Bootstrap Tab API (com verificação de elemento)
-    const consultaTab = document.getElementById('consulta-tab');
-    const relatoriosTab = document.getElementById('relatorios-tab');
-    
-    if (consultaTab) {
-        consultaTab.addEventListener('show.bs.tab', function(e) {
-            if (!organizacaoAtiva) {
+    // Bloquear navegação via Bootstrap Tab API
+    document.querySelectorAll('#myTab button[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('show.bs.tab', function(e) {
+            if (!organizacaoAtiva && this.id !== 'cadastro-tab') {
                 e.preventDefault();
                 mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
             }
-        });
-    }
-    
-    if (relatoriosTab) {
-        relatoriosTab.addEventListener('show.bs.tab', function(e) {
-            if (!organizacaoAtiva) {
-                e.preventDefault();
-                mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
-            }
-        });
-    }
-    
-    // Busca em tempo real
-    document.querySelectorAll('#searchCPF, #searchNome, #searchTelefone, #searchContrato').forEach(input => {
-        input.addEventListener('input', function() {
-            clearTimeout(window.timeoutBusca);
-            window.timeoutBusca = setTimeout(buscarContratos, 500);
         });
     });
     
-    document.getElementById('searchCartaoRetido').addEventListener('change', buscarContratos);
+    // Busca em tempo real
+    document.querySelectorAll('#searchCPF, #searchNome, #searchTelefone, #searchContrato').forEach(input => {
+        if (input) {
+            input.addEventListener('input', function() {
+                clearTimeout(window.timeoutBusca);
+                window.timeoutBusca = setTimeout(buscarContratos, 500);
+            });
+        }
+    });
+    
+    // Busca por cartão retido
+    const searchCartaoRetido = document.getElementById('searchCartaoRetido');
+    if (searchCartaoRetido) {
+        searchCartaoRetido.addEventListener('change', buscarContratos);
+    }
 }
 
 // ========== PREVIEW DE IMAGENS ==========
