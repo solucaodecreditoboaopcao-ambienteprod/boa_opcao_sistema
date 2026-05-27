@@ -672,3 +672,53 @@ tr.cartao-retido-row:hover {
 .dropdown-item i {
     margin-right: 0.5rem;
 }
+
+/* Adicionar ao final do style.css existente */
+
+/* Status Valor Cartão */
+.status-cartao-processamento {
+    background: linear-gradient(135deg, #00b0ff, #40c4ff);
+    color: white;
+}
+
+.status-cartao-recebido {
+    background: linear-gradient(135deg, #00c853, #69f0ae);
+    color: white;
+}
+
+.status-cartao-cancelado {
+    background: linear-gradient(135deg, #ff1744, #ff5252);
+    color: white;
+}
+
+/* Status Valor Emprestado */
+.status-emprestado-processamento {
+    background: linear-gradient(135deg, #ff9800, #ffb74d);
+    color: white;
+}
+
+.status-emprestado-pago {
+    background: linear-gradient(135deg, #00c853, #69f0ae);
+    color: white;
+}
+
+.status-emprestado-cancelado {
+    background: linear-gradient(135deg, #ff1744, #ff5252);
+    color: white;
+}
+
+/* Dropdown header */
+.dropdown-header {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #e65100;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    background: var(--orange-light);
+    border-bottom: 1px solid var(--orange-medium);
+}
+
+/* Ajuste no dropdown para acomodar mais itens */
+.dropdown-menu {
+    min-width: 200px;
+}
