@@ -242,87 +242,137 @@
                                     </div>
                                     
                                     <div class="row g-3 mb-4">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold">Chave PIX</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="bi bi-qr-code"></i></span>
-                                                <input type="text" class="form-control" id="pix" placeholder="Chave PIX">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold">Nome do Beneficiário</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="bi bi-person-check"></i></span>
-                                                <input type="text" class="form-control" id="nomeBeneficiario" placeholder="Nome do beneficiário">
-                                            </div>
-                                            <div class="mt-2">
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="tipoBeneficiario" id="radioMesmoTitular" value="mesmo_titular" checked onchange="toggleTipoBeneficiario()">
-                                                    <label class="form-check-label" for="radioMesmoTitular">
-                                                        <i class="bi bi-credit-card"></i> Mesmo titular do cartão
+                                        <!-- Tipo de Pagamento -->
+                                        <div class="col-12">
+                                            <label class="form-label fw-bold">Modalidade de Pagamento</label>
+                                            <div class="d-flex gap-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="tipoPagamento" id="radioPix" value="pix" checked onchange="toggleTipoPagamento()">
+                                                    <label class="form-check-label" for="radioPix">
+                                                        <i class="bi bi-qr-code"></i> PIX
                                                     </label>
                                                 </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="tipoBeneficiario" id="radioTerceiros" value="terceiros" onchange="toggleTipoBeneficiario()">
-                                                    <label class="form-check-label" for="radioTerceiros">
-                                                        <i class="bi bi-people"></i> Terceiros
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="tipoPagamento" id="radioTransferencia" value="transferencia" onchange="toggleTipoPagamento()">
+                                                    <label class="form-check-label" for="radioTransferencia">
+                                                        <i class="bi bi-bank"></i> Transferência Bancária
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6" id="divCpfTerceiros" style="display: none;">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="cpfTerceiros" placeholder="000.000.000-00" maxlength="14">
-                                                <label for="cpfTerceiros">CPF do Terceiro</label>
-                                                <div class="invalid-feedback" id="cpfTerceirosFeedback"></div>
+                                    
+                                        <!-- Campos PIX (visíveis por padrão) -->
+                                        <div id="divPixCampos">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-bold">Chave PIX</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="bi bi-qr-code"></i></span>
+                                                        <input type="text" class="form-control" id="pix" placeholder="Chave PIX">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-bold">Nome do Beneficiário</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="bi bi-person-check"></i></span>
+                                                        <input type="text" class="form-control" id="nomeBeneficiario" placeholder="Nome do beneficiário">
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" name="tipoBeneficiario" id="radioMesmoTitular" value="mesmo_titular" checked onchange="toggleTipoBeneficiario()">
+                                                            <label class="form-check-label" for="radioMesmoTitular">
+                                                                <i class="bi bi-credit-card"></i> Mesmo titular do cartão
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" name="tipoBeneficiario" id="radioTerceiros" value="terceiros" onchange="toggleTipoBeneficiario()">
+                                                            <label class="form-check-label" for="radioTerceiros">
+                                                                <i class="bi bi-people"></i> Terceiros
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" id="divCpfTerceiros" style="display: none;">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="cpfTerceiros" placeholder="000.000.000-00" maxlength="14">
+                                                        <label for="cpfTerceiros">CPF do Terceiro</label>
+                                                        <div class="invalid-feedback" id="cpfTerceirosFeedback"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="banco" required onchange="toggleBancoOutros()">
-                                                    <option value="">Selecione...</option>
-                                                    <option value="001">Banco do Brasil</option>
-                                                    <option value="104">Caixa Econômica</option>
-                                                    <option value="237">Bradesco</option>
-                                                    <option value="341">Itaú</option>
-                                                    <option value="033">Santander</option>
-                                                    <option value="260">Nubank</option>
-                                                    <option value="077">Inter</option>
-                                                    <option value="336">C6 Bank</option>
-                                                    <option value="outros">OUTROS</option>
-                                                </select>
-                                                <label for="banco">Banco *</label>
+                                    
+                                        <!-- Campos Transferência (oculto por padrão) -->
+                                        <div id="divTransferenciaCampos" style="display: none;">
+                                            <div class="row g-3">
+                                                <div class="col-12">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="dadosTransferencia" placeholder="Detalhes da transferência">
+                                                        <label for="dadosTransferencia">
+                                                            <i class="bi bi-pencil"></i> Detalhes da Transferência (Banco, Agência, Conta, Tipo, etc.)
+                                                        </label>
+                                                        <div class="form-text text-muted">
+                                                            <i class="bi bi-info-circle"></i> 
+                                                            Informe: Banco, Agência, Nº da Conta, Tipo de Conta, Titular e demais informações relevantes para a transferência.
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6" id="divBancoOutros" style="display: none;">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="bancoOutros" placeholder="Digite o nome do banco">
-                                                <label for="bancoOutros">Qual banco?</label>
+                                    
+                                        <!-- Campos comuns (Banco) -->
+                                        <div class="row g-3 mt-2">
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="banco" required onchange="toggleBancoOutros()">
+                                                        <option value="">Selecione...</option>
+                                                        <option value="001">Banco do Brasil</option>
+                                                        <option value="104">Caixa Econômica</option>
+                                                        <option value="237">Bradesco</option>
+                                                        <option value="341">Itaú</option>
+                                                        <option value="033">Santander</option>
+                                                        <option value="260">Nubank</option>
+                                                        <option value="077">Inter</option>
+                                                        <option value="336">C6 Bank</option>
+                                                        <option value="outros">OUTROS</option>
+                                                    </select>
+                                                    <label for="banco">Banco *</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6" id="divBancoOutros" style="display: none;">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="bancoOutros" placeholder="Digite o nome do banco">
+                                                    <label for="bancoOutros">Qual banco?</label>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="number" class="form-control" id="valorCartao" required placeholder="0.00" step="0.01" min="0" onchange="calcularValorParcela()">
-                                                <label for="valorCartao">Valor do Cartão (R$) *</label>
+                                    
+                                        <!-- Valores -->
+                                        <div class="row g-3 mt-2">
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="number" class="form-control" id="valorCartao" required placeholder="0.00" step="0.01" min="0" onchange="calcularValorParcela()">
+                                                    <label for="valorCartao">Valor do Cartão (R$) *</label>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="number" class="form-control" id="parcelas" required placeholder="Quantidade" min="1" max="120" onchange="calcularValorParcela()">
-                                                <label for="parcelas">QTD Parcelas *</label>
-                                                <div class="form-text">Máximo 120 parcelas</div>
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="number" class="form-control" id="parcelas" required placeholder="Quantidade" min="1" max="120" onchange="calcularValorParcela()">
+                                                    <label for="parcelas">QTD Parcelas *</label>
+                                                    <div class="form-text">Máximo 120 parcelas</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="valorParcelas" readonly>
-                                                <label for="valorParcelas">Valor Parcelas (R$)</label>
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="valorParcelas" readonly>
+                                                    <label for="valorParcelas">Valor Parcelas (R$)</label>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <div class="form-floating">
-                                                <input type="number" class="form-control" id="valorEmprestado" required placeholder="0.00" step="0.01" min="0">
-                                                <label for="valorEmprestado">Valor Emprestado (R$) *</label>
+                                            <div class="col-md-12">
+                                                <div class="form-floating">
+                                                    <input type="number" class="form-control" id="valorEmprestado" required placeholder="0.00" step="0.01" min="0">
+                                                    <label for="valorEmprestado">Valor Emprestado (R$) *</label>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
