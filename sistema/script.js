@@ -54,7 +54,7 @@ async function verificarOrganizacao() {
             
             if (!organizacaoAtiva) {
                 mostrarStatus('⚠️ Organização inativa! Contate o administrador.', 'danger');
-                desabilitarFormulario();
+                desabilitarSistema();
             }
         }
     } catch (error) {
@@ -416,6 +416,33 @@ function setupEventListeners() {
     document.getElementById('cep').addEventListener('blur', function() {
         if (!document.getElementById('flagEnderecoManual').checked) {
             buscarCEP();
+        }
+    });
+    
+    // Bloquear navegação entre abas se organização inativa
+    document.querySelectorAll('#myTab .nav-link').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            if (!organizacaoAtiva && this.id !== 'cadastro-tab') {
+                e.preventDefault();
+                e.stopPropagation();
+                mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
+                return false;
+            }
+        });
+    });
+    
+    // Bloquear navegação via Bootstrap Tab API
+    document.getElementById('consulta-tab').addEventListener('show.bs.tab', function(e) {
+        if (!organizacaoAtiva) {
+            e.preventDefault();
+            mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
+        }
+    });
+    
+    document.getElementById('relatorios-tab').addEventListener('show.bs.tab', function(e) {
+        if (!organizacaoAtiva) {
+            e.preventDefault();
+            mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
         }
     });
     
@@ -868,24 +895,24 @@ async function buscarContratos() {
                             <button class="btn btn-info" onclick="verDetalhes('${doc.id}')" title="Ver detalhes">
                                 <i class="bi bi-eye"></i>
                             </button>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown" title="Alterar status">
+                            <div class="btn-group btn-group-sm dropend">
+                                <button class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false" title="Alterar status">
                                     <i class="bi bi-arrow-repeat"></i>
                                 </button>
-                                <ul class="dropdown-menu">
+                                <ul class="dropdown-menu dropdown-menu-end" style="position: absolute; z-index: 9999;">
                                     <li><h6 class="dropdown-header">Status Valor Cartão</h6></li>
-                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusCartao('${doc.id}', 'recebido')">
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); atualizarStatusCartao('${doc.id}', 'recebido')">
                                         <i class="bi bi-check-circle text-success"></i> Marcar como Recebido
                                     </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusCartao('${doc.id}', 'cancelado')">
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); atualizarStatusCartao('${doc.id}', 'cancelado')">
                                         <i class="bi bi-x-circle text-danger"></i> Cancelar Cartão
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header">Status Valor Emprestado</h6></li>
-                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusEmprestado('${doc.id}', 'pago')">
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); atualizarStatusEmprestado('${doc.id}', 'pago')">
                                         <i class="bi bi-check-circle text-success"></i> Marcar como Pago
                                     </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusEmprestado('${doc.id}', 'cancelado')">
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); atualizarStatusEmprestado('${doc.id}', 'cancelado')">
                                         <i class="bi bi-x-circle text-danger"></i> Cancelar Empréstimo
                                     </a></li>
                                 </ul>
@@ -1361,7 +1388,53 @@ function limparFormulario() {
     gerarNumeroContrato();
 }
 
+// ========== DESABILITAR SISTEMA COMPLETO ==========
+function desabilitarSistema() {
+    // Desabilitar navegação das abas
+    const tabButtons = document.querySelectorAll('#myTab .nav-link');
+    tabButtons.forEach(button => {
+        if (button.id !== 'cadastro-tab') {
+            button.classList.add('disabled');
+            button.setAttribute('disabled', 'disabled');
+            button.style.pointerEvents = 'none';
+            button.style.opacity = '0.5';
+        }
+    });
+    
+    // Forçar navegação para aba de cadastro
+    const cadastroTab = document.getElementById('cadastro-tab');
+    const bsTab = new bootstrap.Tab(cadastroTab);
+    bsTab.show();
+    
+    // Desabilitar todos os campos do formulário
+    desabilitarFormulario();
+    
+    // Desabilitar botões de busca nas outras abas
+    document.querySelectorAll('#consulta button, #relatorios button').forEach(btn => {
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.5';
+    });
+    
+    // Desabilitar inputs de busca
+    document.querySelectorAll('#consulta input, #consulta select, #relatorios input, #relatorios select').forEach(input => {
+        input.disabled = true;
+        input.style.pointerEvents = 'none';
+        input.style.opacity = '0.5';
+    });
+}
+
 function desabilitarFormulario() {
-    const inputs = document.querySelectorAll('#formEmprestimo input, #formEmprestimo select, #formEmprestimo button');
-    inputs.forEach(input => input.disabled = true);
+    const inputs = document.querySelectorAll('#formEmprestimo input, #formEmprestimo select, #formEmprestimo button, #formEmprestimo textarea');
+    inputs.forEach(input => {
+        input.disabled = true;
+        input.style.pointerEvents = 'none';
+    });
+    
+    // Desabilitar upload areas
+    document.querySelectorAll('.upload-area').forEach(area => {
+        area.style.pointerEvents = 'none';
+        area.style.opacity = '0.5';
+        area.style.cursor = 'not-allowed';
+    });
 }
