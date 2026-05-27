@@ -302,7 +302,6 @@ function toggleEnderecoManual() {
 }
 
 // ========== SETUP EVENT LISTENERS ==========
-// ========== SETUP EVENT LISTENERS ==========
 function setupEventListeners() {
     // Form submit
     document.getElementById('formEmprestimo').addEventListener('submit', salvarContrato);
@@ -477,20 +476,27 @@ function setupEventListeners() {
         });
     });
     
-    // Bloquear navegação via Bootstrap Tab API
-    document.getElementById('consulta-tab').addEventListener('show.bs.tab', function(e) {
-        if (!organizacaoAtiva) {
-            e.preventDefault();
-            mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
-        }
-    });
+    // Bloquear navegação via Bootstrap Tab API (com verificação de elemento)
+    const consultaTab = document.getElementById('consulta-tab');
+    const relatoriosTab = document.getElementById('relatorios-tab');
     
-    document.getElementById('relatorios-tab').addEventListener('show.bs.tab', function(e) {
-        if (!organizacaoAtiva) {
-            e.preventDefault();
-            mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
-        }
-    });
+    if (consultaTab) {
+        consultaTab.addEventListener('show.bs.tab', function(e) {
+            if (!organizacaoAtiva) {
+                e.preventDefault();
+                mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
+            }
+        });
+    }
+    
+    if (relatoriosTab) {
+        relatoriosTab.addEventListener('show.bs.tab', function(e) {
+            if (!organizacaoAtiva) {
+                e.preventDefault();
+                mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
+            }
+        });
+    }
     
     // Busca em tempo real
     document.querySelectorAll('#searchCPF, #searchNome, #searchTelefone, #searchContrato').forEach(input => {
