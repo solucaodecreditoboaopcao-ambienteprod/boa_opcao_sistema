@@ -181,6 +181,39 @@ function toggleBandeiraOutros() {
     }
 }
 
+// ========== TOGGLE TIPO BENEFICIÁRIO ==========
+function toggleTipoBeneficiario() {
+    const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
+    const nomeBeneficiario = document.getElementById('nomeBeneficiario');
+    const divCpfTerceiros = document.getElementById('divCpfTerceiros');
+    const cpfTerceiros = document.getElementById('cpfTerceiros');
+    
+    if (tipoBeneficiario === 'mesmo_titular') {
+        // Modo: Mesmo titular do cartão
+        nomeBeneficiario.value = document.getElementById('nome').value;
+        nomeBeneficiario.readOnly = true;
+        nomeBeneficiario.style.backgroundColor = '#f8f9fa';
+        
+        // Esconder CPF de terceiros
+        divCpfTerceiros.style.display = 'none';
+        cpfTerceiros.value = '';
+        cpfTerceiros.required = false;
+        cpfTerceiros.classList.remove('is-invalid');
+        cpfTerceiros.classList.remove('is-valid');
+        
+    } else if (tipoBeneficiario === 'terceiros') {
+        // Modo: Terceiros
+        nomeBeneficiario.readOnly = false;
+        nomeBeneficiario.style.backgroundColor = '';
+        nomeBeneficiario.value = '';
+        nomeBeneficiario.focus();
+        
+        // Mostrar CPF de terceiros
+        divCpfTerceiros.style.display = 'block';
+        cpfTerceiros.required = true;
+    }
+}
+
 // ========== TOGGLE ENDEREÇO MANUAL ==========
 function toggleEnderecoManual() {
     const manual = document.getElementById('flagEnderecoManual').checked;
@@ -196,22 +229,6 @@ function toggleEnderecoManual() {
             elemento.style.backgroundColor = '#f8f9fa';
         }
     });
-}
-
-// ========== TOGGLE MESMO TITULAR ==========
-function toggleMesmoTitular() {
-    const mesmoTitular = document.getElementById('flagMesmoTitular').checked;
-    const nomeBeneficiario = document.getElementById('nomeBeneficiario');
-    
-    if (mesmoTitular) {
-        nomeBeneficiario.value = document.getElementById('nome').value;
-        nomeBeneficiario.readOnly = true;
-        nomeBeneficiario.style.backgroundColor = '#f8f9fa';
-    } else {
-        nomeBeneficiario.readOnly = false;
-        nomeBeneficiario.style.backgroundColor = '';
-        nomeBeneficiario.value = '';
-    }
 }
 
 // ========== SETUP EVENT LISTENERS ==========
@@ -247,6 +264,23 @@ function setupEventListeners() {
         } else if (cpf.length === 11) {
             this.classList.remove('is-invalid');
             this.classList.add('is-valid');
+        }
+    });
+    
+    // Validação de CPF de terceiros
+    document.getElementById('cpfTerceiros').addEventListener('input', mascaraCPF);
+    document.getElementById('cpfTerceiros').addEventListener('blur', function() {
+        const cpf = this.value.replace(/\D/g, '');
+        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
+        
+        if (tipoBeneficiario === 'terceiros') {
+            if (cpf.length === 11 && !validarCPF(cpf)) {
+                this.classList.add('is-invalid');
+                document.getElementById('cpfTerceirosFeedback').textContent = 'CPF inválido!';
+            } else if (cpf.length === 11) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
         }
     });
     
@@ -312,10 +346,15 @@ function setupEventListeners() {
     // Flag endereço manual
     document.getElementById('flagEnderecoManual').addEventListener('change', toggleEnderecoManual);
     
-    // Flag mesmo titular
-    document.getElementById('flagMesmoTitular').addEventListener('change', toggleMesmoTitular);
+    // Radio buttons tipo beneficiário
+    document.querySelectorAll('input[name="tipoBeneficiario"]').forEach(radio => {
+        radio.addEventListener('change', toggleTipoBeneficiario);
+    });
+    
+    // Atualizar nome do beneficiário quando mudar o nome do cliente
     document.getElementById('nome').addEventListener('input', function() {
-        if (document.getElementById('flagMesmoTitular').checked) {
+        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
+        if (tipoBeneficiario === 'mesmo_titular') {
             document.getElementById('nomeBeneficiario').value = this.value;
         }
     });
@@ -450,12 +489,39 @@ async function salvarContrato(e) {
         return;
     }
     
-    // Validar CPF
+    // Validar CPF do cliente
     const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
     if (!validarCPF(cpf)) {
-        mostrarStatus('CPF inválido! Verifique e tente novamente.', 'danger');
+        mostrarStatus('CPF do cliente inválido! Verifique e tente novamente.', 'danger');
         document.getElementById('cpf').focus();
         return;
+    }
+    
+    // Validar CPF de terceiros (se selecionado)
+    const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
+    let cpfTerceiros = '';
+    
+    if (tipoBeneficiario === 'terceiros') {
+        cpfTerceiros = document.getElementById('cpfTerceiros').value.replace(/\D/g, '');
+        
+        if (!cpfTerceiros) {
+            mostrarStatus('CPF do terceiro é obrigatório!', 'danger');
+            document.getElementById('cpfTerceiros').focus();
+            return;
+        }
+        
+        if (!validarCPF(cpfTerceiros)) {
+            mostrarStatus('CPF do terceiro inválido! Verifique e tente novamente.', 'danger');
+            document.getElementById('cpfTerceiros').focus();
+            return;
+        }
+        
+        // Verificar se CPF do terceiro é igual ao do cliente
+        if (cpfTerceiros === cpf) {
+            mostrarStatus('O CPF do terceiro não pode ser igual ao CPF do cliente!', 'danger');
+            document.getElementById('cpfTerceiros').focus();
+            return;
+        }
     }
     
     // Validar parcelas
@@ -510,6 +576,16 @@ async function salvarContrato(e) {
         const valorParcelas = valorCartao / parcelasCount;
         const valorEmprestado = parseFloat(document.getElementById('valorEmprestado').value) || 0;
         
+        // Montar dados do beneficiário
+        const dadosBeneficiario = {
+            tipo: tipoBeneficiario,
+            nome: document.getElementById('nomeBeneficiario').value
+        };
+        
+        if (tipoBeneficiario === 'terceiros') {
+            dadosBeneficiario.cpf = cpfTerceiros;
+        }
+        
         const dadosContrato = {
             numeroContrato: document.getElementById('numeroContrato').value,
             statusValorCartao: document.getElementById('statusValorCartao').value,
@@ -522,8 +598,7 @@ async function salvarContrato(e) {
             telefone: document.getElementById('numero').value.replace(/\D/g, ''),
             endereco: enderecoCompleto,
             pix: document.getElementById('pix').value,
-            nomeBeneficiario: document.getElementById('nomeBeneficiario').value,
-            mesmoTitular: document.getElementById('flagMesmoTitular').checked,
+            beneficiario: dadosBeneficiario,
             banco: bancoFinal,
             valorCartao: valorCartao,
             parcelas: parcelasCount,
@@ -568,15 +643,46 @@ async function salvarContrato(e) {
     }
 }
 
-// ========== ATUALIZAR STATUS DO CONTRATO ==========
-async function atualizarStatusContrato(id, novoStatus) {
+// ========== ATUALIZAR STATUS DO CARTÃO ==========
+async function atualizarStatusCartao(id, novoStatus) {
+    const statusTexto = {
+        'recebido': 'Recebido',
+        'cancelado': 'Cancelado'
+    }[novoStatus];
+    
+    if (!confirm(`Confirmar alteração do status do cartão para "${statusTexto}"?`)) return;
+    
     try {
         await db.collection('contratos').doc(id).update({
-            status: novoStatus,
+            statusValorCartao: novoStatus,
             dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        mostrarStatus(`✅ Status atualizado para "${novoStatus}" com sucesso!`, 'success');
+        mostrarStatus(`✅ Status do cartão atualizado para "${statusTexto}" com sucesso!`, 'success');
+        buscarContratos();
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarStatus('❌ Erro ao atualizar status: ' + error.message, 'danger');
+    }
+}
+
+// ========== ATUALIZAR STATUS DO EMPRÉSTIMO ==========
+async function atualizarStatusEmprestado(id, novoStatus) {
+    const statusTexto = {
+        'pago': 'Pago',
+        'cancelado': 'Cancelado'
+    }[novoStatus];
+    
+    if (!confirm(`Confirmar alteração do status do empréstimo para "${statusTexto}"?`)) return;
+    
+    try {
+        await db.collection('contratos').doc(id).update({
+            statusValorEmprestado: novoStatus,
+            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        mostrarStatus(`✅ Status do empréstimo atualizado para "${statusTexto}" com sucesso!`, 'success');
         buscarContratos();
         
     } catch (error) {
@@ -759,55 +865,6 @@ async function registrarDevolucao(id) {
     }
 }
 
-// ========== ATUALIZAR STATUS DO CARTÃO ==========
-async function atualizarStatusCartao(id, novoStatus) {
-    const statusTexto = {
-        'recebido': 'Recebido',
-        'cancelado': 'Cancelado'
-    }[novoStatus];
-    
-    if (!confirm(`Confirmar alteração do status do cartão para "${statusTexto}"?`)) return;
-    
-    try {
-        await db.collection('contratos').doc(id).update({
-            statusValorCartao: novoStatus,
-            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        mostrarStatus(`✅ Status do cartão atualizado para "${statusTexto}" com sucesso!`, 'success');
-        buscarContratos();
-        
-    } catch (error) {
-        console.error('Erro:', error);
-        mostrarStatus('❌ Erro ao atualizar status: ' + error.message, 'danger');
-    }
-}
-
-// ========== ATUALIZAR STATUS DO EMPRÉSTIMO ==========
-async function atualizarStatusEmprestado(id, novoStatus) {
-    const statusTexto = {
-        'pago': 'Pago',
-        'cancelado': 'Cancelado'
-    }[novoStatus];
-    
-    if (!confirm(`Confirmar alteração do status do empréstimo para "${statusTexto}"?`)) return;
-    
-    try {
-        await db.collection('contratos').doc(id).update({
-            statusValorEmprestado: novoStatus,
-            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        mostrarStatus(`✅ Status do empréstimo atualizado para "${statusTexto}" com sucesso!`, 'success');
-        buscarContratos();
-        
-    } catch (error) {
-        console.error('Erro:', error);
-        mostrarStatus('❌ Erro ao atualizar status: ' + error.message, 'danger');
-    }
-}
-
-
 // ========== VER DETALHES ==========
 async function verDetalhes(id) {
     try {
@@ -872,8 +929,9 @@ async function verDetalhes(id) {
                     </div>
                     <div class="card-body">
                         <p><strong>Chave PIX:</strong> ${dados.pix}</p>
-                        <p><strong>Beneficiário:</strong> ${dados.nomeBeneficiario || 'N/A'}</p>
-                        <p><strong>Mesmo titular:</strong> ${dados.mesmoTitular ? 'Sim' : 'Não'}</p>
+                        <p><strong>Tipo Beneficiário:</strong> ${dados.beneficiario?.tipo === 'terceiros' ? 'Terceiros' : 'Mesmo titular do cartão'}</p>
+                        <p><strong>Beneficiário:</strong> ${dados.beneficiario?.nome || 'N/A'}</p>
+                        ${dados.beneficiario?.tipo === 'terceiros' && dados.beneficiario?.cpf ? `<p><strong>CPF Terceiro:</strong> ${mascararCPF(dados.beneficiario.cpf)}</p>` : ''}
                     </div>
                 </div>
             ` : '';
@@ -1098,8 +1156,9 @@ function exportarParaExcel() {
         'Valor Emprestado': c.valorEmprestado,
         'Lucro': c.lucro || 0,
         'Chave PIX': c.pix || '',
-        'Beneficiário PIX': c.nomeBeneficiario || '',
-        'Mesmo Titular': c.mesmoTitular ? 'Sim' : 'Não',
+        'Tipo Beneficiário': c.beneficiario?.tipo === 'terceiros' ? 'Terceiros' : 'Mesmo Titular',
+        'Beneficiário PIX': c.beneficiario?.nome || '',
+        'CPF Terceiro': c.beneficiario?.cpf || '',
         'Banco': c.banco || '',
         'Status Cartão': c.statusValorCartao || 'processamento',
         'Status Empréstimo': c.statusValorEmprestado || 'processamento',
@@ -1170,7 +1229,6 @@ function mostrarStatus(mensagem, tipo) {
     }, 5000);
 }
 
-// ========== LIMPAR FORMULÁRIO ==========
 function limparFormulario() {
     document.getElementById('formEmprestimo').reset();
     document.getElementById('previewFicha').style.display = 'none';
@@ -1184,17 +1242,24 @@ function limparFormulario() {
     document.getElementById('divDataRetirada').style.display = 'none';
     document.getElementById('divObservacaoCartao').style.display = 'none';
     document.getElementById('divBancoOutros').style.display = 'none';
+    document.getElementById('divCpfTerceiros').style.display = 'none';
     
     document.getElementById('parcelas').readOnly = false;
     document.getElementById('cpf').classList.remove('is-valid', 'is-invalid');
+    document.getElementById('cpfTerceiros').classList.remove('is-valid', 'is-invalid');
     
     // Resetar flags
     document.getElementById('flagEnderecoManual').checked = false;
-    document.getElementById('flagMesmoTitular').checked = true;
+    document.getElementById('radioMesmoTitular').checked = true;
     
     // Resetar status para padrão "processamento"
     document.getElementById('statusValorCartao').value = 'processamento';
     document.getElementById('statusValorEmprestado').value = 'processamento';
+    
+    // Limpar campo de terceiros
+    document.getElementById('cpfTerceiros').value = '';
+    document.getElementById('nomeBeneficiario').readOnly = true;
+    document.getElementById('nomeBeneficiario').style.backgroundColor = '#f8f9fa';
     
     gerarNumeroContrato();
 }
