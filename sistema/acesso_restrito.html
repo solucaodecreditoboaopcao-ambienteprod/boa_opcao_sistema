@@ -78,7 +78,7 @@
                                 <form id="formEmprestimo">
                                     <!-- Número do Contrato, Status e Tipo de Venda -->
                                     <div class="row mb-4">
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-floating">
                                                 <input type="text" class="form-control" id="numeroContrato" readonly>
                                                 <label for="numeroContrato">
@@ -86,7 +86,21 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
+                                            <div class="form-floating">
+                                                <select class="form-select" id="tipoVenda" required>
+                                                    <option value="">Selecione...</option>
+                                                    <option value="cartao_alimentacao">Cartão Alimentação</option>
+                                                    <option value="cartao_refeicao">Cartão Refeição</option>
+                                                    <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
+                                                    <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
+                                                </select>
+                                                <label for="tipoVenda">
+                                                    <i class="bi bi-tag"></i> Tipo de Venda *
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
                                             <div class="form-floating">
                                                 <select class="form-select" id="statusValorCartao" required>
                                                     <option value="processamento">Processamento</option>
@@ -98,7 +112,7 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-floating">
                                                 <select class="form-select" id="statusValorEmprestado" required>
                                                     <option value="processamento">Processamento</option>
@@ -111,6 +125,7 @@
                                             </div>
                                         </div>
                                     </div>
+
                                     
                                     <!-- Data do Contrato -->
                                     <div class="row mb-4">
