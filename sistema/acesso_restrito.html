@@ -86,12 +86,9 @@
                                         <div class="col-md-4">
                                             <div class="form-floating">
                                                 <select class="form-select" id="statusContrato" required>
-                                                    <option value="">Selecione...</option>
-                                                    <option value="pago">Pago / Concluído</option>
-                                                    <option value="pendente_documento">Pendente Documento</option>
-                                                    <option value="estornado">Estornado / Cancelado</option>
-                                                    <option value="ativo">Ativo</option>
-                                                    <option value="atrasado">Atrasado</option>
+                                                    <option value="processamento">Processamento</option>
+                                                    <option value="pago">Pago</option>
+                                                    <option value="cancelado">Cancelado</option>
                                                 </select>
                                                 <label for="statusContrato">
                                                     <i class="bi bi-flag"></i> Status do Contrato
@@ -142,6 +139,7 @@
                                             <div class="form-floating">
                                                 <input type="text" class="form-control" id="cpf" required placeholder="000.000.000-00" maxlength="14">
                                                 <label for="cpf">CPF *</label>
+                                                <div class="invalid-feedback" id="cpfFeedback"></div>
                                             </div>
                                         </div>
                                         <div class="col-md-3">
@@ -158,10 +156,19 @@
                                     </div>
                                     
                                     <div class="row g-3 mb-4">
+                                        <div class="col-12 mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="flagEnderecoManual">
+                                                <label class="form-check-label fw-bold" for="flagEnderecoManual">
+                                                    <i class="bi bi-pencil"></i> Digitar endereço manualmente
+                                                </label>
+                                            </div>
+                                        </div>
                                         <div class="col-md-3">
                                             <div class="form-floating">
-                                                <input type="text" class="form-control" id="cep" placeholder="00000-000" maxlength="9" onblur="buscarCEP()">
+                                                <input type="text" class="form-control" id="cep" placeholder="00000-000" maxlength="9">
                                                 <label for="cep">CEP</label>
+                                                <div id="cepFeedback" class="form-text" style="display:none;"></div>
                                             </div>
                                         </div>
                                         <div class="col-md-7">
@@ -238,14 +245,28 @@
                                     
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-6">
-                                            <div class="form-floating">
+                                            <label class="form-label fw-bold">Chave PIX</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-qr-code"></i></span>
                                                 <input type="text" class="form-control" id="pix" placeholder="Chave PIX">
-                                                <label for="pix">Chave PIX</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Nome do Beneficiário</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-person-check"></i></span>
+                                                <input type="text" class="form-control" id="nomeBeneficiario" placeholder="Nome do beneficiário">
+                                            </div>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="flagMesmoTitular" checked>
+                                                <label class="form-check-label" for="flagMesmoTitular">
+                                                    <i class="bi bi-credit-card"></i> Mesmo titular do cartão
+                                                </label>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-floating">
-                                                <select class="form-select" id="banco" required>
+                                                <select class="form-select" id="banco" required onchange="toggleBancoOutros()">
                                                     <option value="">Selecione...</option>
                                                     <option value="001">Banco do Brasil</option>
                                                     <option value="104">Caixa Econômica</option>
@@ -255,23 +276,37 @@
                                                     <option value="260">Nubank</option>
                                                     <option value="077">Inter</option>
                                                     <option value="336">C6 Bank</option>
+                                                    <option value="outros">OUTROS</option>
                                                 </select>
                                                 <label for="banco">Banco *</label>
                                             </div>
                                         </div>
+                                        <div class="col-md-6" id="divBancoOutros" style="display: none;">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="bancoOutros" placeholder="Digite o nome do banco">
+                                                <label for="bancoOutros">Qual banco?</label>
+                                            </div>
+                                        </div>
                                         <div class="col-md-4">
                                             <div class="form-floating">
-                                                <input type="number" class="form-control" id="valorCartao" required placeholder="0.00" step="0.01" min="0">
+                                                <input type="number" class="form-control" id="valorCartao" required placeholder="0.00" step="0.01" min="0" onchange="calcularValorParcela()">
                                                 <label for="valorCartao">Valor do Cartão (R$) *</label>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div class="form-floating">
-                                                <input type="number" class="form-control" id="parcelas" required placeholder="Quantidade" min="1" max="96">
-                                                <label for="parcelas">Parcelas *</label>
+                                                <input type="number" class="form-control" id="parcelas" required placeholder="Quantidade" min="1" max="120" onchange="calcularValorParcela()">
+                                                <label for="parcelas">QTD Parcelas *</label>
+                                                <div class="form-text">Máximo 120 parcelas</div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="valorParcelas" readonly>
+                                                <label for="valorParcelas">Valor Parcelas (R$)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
                                             <div class="form-floating">
                                                 <input type="number" class="form-control" id="valorEmprestado" required placeholder="0.00" step="0.01" min="0">
                                                 <label for="valorEmprestado">Valor Emprestado (R$) *</label>
@@ -295,7 +330,7 @@
                                         </div>
                                         <div class="col-md-4" id="divBandeiraCartao" style="display: none;">
                                             <div class="form-floating">
-                                                <select class="form-select" id="bandeiraCartao">
+                                                <select class="form-select" id="bandeiraCartao" onchange="toggleBandeiraOutros()">
                                                     <option value="">Selecione...</option>
                                                     <option value="Visa">Visa</option>
                                                     <option value="Mastercard">Mastercard</option>
@@ -311,6 +346,12 @@
                                                     <option value="Outros">Outros</option>
                                                 </select>
                                                 <label for="bandeiraCartao">Bandeira do Cartão</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4" id="divBandeiraOutros" style="display: none;">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="bandeiraOutros" placeholder="Digite a bandeira">
+                                                <label for="bandeiraOutros">Qual bandeira?</label>
                                             </div>
                                         </div>
                                         <div class="col-md-4" id="divUltimosDigitos" style="display: none;">
@@ -421,11 +462,9 @@
                                     <div class="form-floating">
                                         <select class="form-select" id="searchStatus">
                                             <option value="">Todos os Status</option>
-                                            <option value="pago">Pago / Concluído</option>
-                                            <option value="pendente_documento">Pendente Documento</option>
-                                            <option value="estornado">Estornado / Cancelado</option>
-                                            <option value="ativo">Ativo</option>
-                                            <option value="atrasado">Atrasado</option>
+                                            <option value="processamento">Processamento</option>
+                                            <option value="pago">Pago</option>
+                                            <option value="cancelado">Cancelado</option>
                                         </select>
                                         <label for="searchStatus">Status</label>
                                     </div>
@@ -483,8 +522,9 @@
                                         <th>Telefone</th>
                                         <th>Tipo Venda</th>
                                         <th>Valor Cartão</th>
+                                        <th>Valor Parcela</th>
                                         <th>Valor Emprestado</th>
-                                        <th>Parcelas</th>
+                                        <th>QTD Parcelas</th>
                                         <th>Cartão</th>
                                         <th>Status</th>
                                         <th>Data</th>
@@ -632,6 +672,7 @@
                                         <th>CPF</th>
                                         <th>Tipo Venda</th>
                                         <th>Valor Cartão</th>
+                                        <th>Valor Parcela</th>
                                         <th>Valor Emprestado</th>
                                         <th>Lucro</th>
                                         <th>Cartão Retido</th>
