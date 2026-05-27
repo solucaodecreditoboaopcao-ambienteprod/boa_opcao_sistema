@@ -104,9 +104,7 @@ body::before {
     transform: scale(1.05) rotate(-5deg);
 }
 
-.slogan {
-    text-align: right;
-}
+.slogan { text-align: right; }
 
 .org-title {
     font-size: 2.5rem;
@@ -163,9 +161,7 @@ body::before {
     transition: var(--transition);
 }
 
-.custom-tabs .nav-link:hover::before {
-    width: 80%;
-}
+.custom-tabs .nav-link:hover::before { width: 80%; }
 
 .custom-tabs .nav-link.active {
     background: linear-gradient(135deg, #e65100, #ff6f00);
@@ -179,6 +175,21 @@ body::before {
     font-size: 1.1rem;
 }
 
+/* Tabs desabilitadas */
+.nav-link.disabled {
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+    background-color: #e9ecef !important;
+    color: #6c757d !important;
+    pointer-events: none !important;
+}
+
+.nav-link.disabled:hover {
+    background-color: #e9ecef !important;
+    color: #6c757d !important;
+    transform: none !important;
+}
+
 .custom-tab-content {
     background: rgba(255, 255, 255, 0.98);
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
@@ -187,6 +198,7 @@ body::before {
     backdrop-filter: blur(10px);
     position: relative;
     z-index: 1;
+    overflow: visible !important;
 }
 
 /* ========== CARDS ========== */
@@ -209,6 +221,10 @@ body::before {
     padding-bottom: 1rem;
 }
 
+#consulta .card-body {
+    overflow: visible !important;
+}
+
 /* ========== FORMULÁRIOS ========== */
 .form-floating > .form-control,
 .form-floating > .form-select {
@@ -228,6 +244,23 @@ body::before {
 .form-floating > label {
     color: var(--gray-700);
     font-weight: 500;
+}
+
+.form-control.is-valid {
+    border-color: #00c853 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 200, 83, 0.15) !important;
+}
+
+.form-control.is-invalid {
+    border-color: #ff1744 !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 23, 68, 0.15) !important;
+}
+
+.invalid-feedback {
+    display: block;
+    color: #ff1744;
+    font-size: 0.8rem;
+    font-weight: 600;
 }
 
 .section-title {
@@ -331,9 +364,7 @@ body::before {
     color: white;
 }
 
-.btn-info:hover {
-    background: linear-gradient(135deg, #ffa000, #ff8f00);
-}
+.btn-info:hover { background: linear-gradient(135deg, #ffa000, #ff8f00); }
 
 .btn-success {
     background: linear-gradient(135deg, #00c853, #69f0ae);
@@ -351,30 +382,73 @@ body::before {
     color: #e65100;
 }
 
+.btn-group.dropend { position: relative; }
+
 /* ========== TABELAS ========== */
-.table {
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
+/* Container da tabela com scroll - CONSOLIDADO */
+#consulta .table-responsive {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 8px;
+    -webkit-overflow-scrolling: touch;
+    display: block !important;
+    scrollbar-width: thin;
+    scrollbar-color: #ff6f00 #f1f1f1;
 }
 
-.table thead th {
-    background: linear-gradient(135deg, #e65100, #ff6f00);
-    color: white;
-    border: none;
+/* Tabela de contratos - CONSOLIDADO */
+#tabelaContratos {
+    width: auto !important;
+    min-width: 100% !important;
+    white-space: nowrap !important;
+    font-size: 0.85rem;
+    table-layout: auto !important;
+}
+
+#tabelaContratos th {
+    background: linear-gradient(135deg, #e65100, #ff6f00) !important;
+    color: white !important;
     font-weight: 600;
-    padding: 1rem;
-    font-size: 0.9rem;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+    white-space: nowrap !important;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
-.table tbody tr {
-    transition: var(--transition);
+#tabelaContratos td {
+    padding: 0.5rem;
+    vertical-align: middle;
+    white-space: nowrap !important;
 }
 
-.table tbody tr:hover {
-    background: var(--orange-light);
-    transform: scale(1.01);
+#tabelaContratos td:last-child {
+    overflow: visible !important;
+    position: relative;
 }
+
+#tabelaContratos tbody tr:hover {
+    background: #fff3e0 !important;
+}
+
+/* Linha de cartão retido */
+tr.cartao-retido-row {
+    background: rgba(255, 23, 68, 0.05) !important;
+    border-left: 4px solid var(--danger);
+}
+
+tr.cartao-retido-row:hover {
+    background: rgba(255, 23, 68, 0.1) !important;
+}
+
+/* Scrollbar personalizada - CONSOLIDADO */
+#consulta .table-responsive::-webkit-scrollbar { height: 10px !important; }
+#consulta .table-responsive::-webkit-scrollbar-track { background: #f1f1f1 !important; border-radius: 5px; }
+#consulta .table-responsive::-webkit-scrollbar-thumb { background: #ff6f00 !important; border-radius: 5px; }
+#consulta .table-responsive::-webkit-scrollbar-thumb:hover { background: #e65100 !important; }
 
 /* ========== STATUS BADGES ========== */
 .badge-status {
@@ -385,30 +459,22 @@ body::before {
     white-space: nowrap;
 }
 
-.status-pago {
-    background: linear-gradient(135deg, #00c853, #69f0ae);
-    color: white;
-}
+/* Status Valor Cartão */
+.status-cartao-processamento { background: linear-gradient(135deg, #ff6f00, #ff9800) !important; color: white !important; }
+.status-cartao-recebido { background: linear-gradient(135deg, #00c853, #69f0ae) !important; color: white !important; }
+.status-cartao-cancelado { background: linear-gradient(135deg, #ff1744, #ff5252) !important; color: white !important; }
 
-.status-pendente_documento {
-    background: linear-gradient(135deg, #ffd600, #ffee58);
-    color: #333;
-}
+/* Status Valor Emprestado */
+.status-emprestado-processamento { background: linear-gradient(135deg, #ff6f00, #ff9800) !important; color: white !important; }
+.status-emprestado-pago { background: linear-gradient(135deg, #00c853, #69f0ae) !important; color: white !important; }
+.status-emprestado-cancelado { background: linear-gradient(135deg, #ff1744, #ff5252) !important; color: white !important; }
 
-.status-estornado {
-    background: linear-gradient(135deg, #ff1744, #ff5252);
-    color: white;
-}
-
-.status-ativo {
-    background: linear-gradient(135deg, #00b0ff, #40c4ff);
-    color: white;
-}
-
-.status-atrasado {
-    background: linear-gradient(135deg, #e65100, #ff6f00);
-    color: white;
-}
+/* Status antigos (mantidos para compatibilidade) */
+.status-pago { background: linear-gradient(135deg, #00c853, #69f0ae); color: white; }
+.status-pendente_documento { background: linear-gradient(135deg, #ffd600, #ffee58); color: #333; }
+.status-estornado { background: linear-gradient(135deg, #ff1744, #ff5252); color: white; }
+.status-ativo { background: linear-gradient(135deg, #00b0ff, #40c4ff); color: white; }
+.status-atrasado { background: linear-gradient(135deg, #e65100, #ff6f00); color: white; }
 
 /* ========== TIPO DE VENDA BADGES ========== */
 .tipo-venda-badge {
@@ -419,37 +485,14 @@ body::before {
     white-space: nowrap;
 }
 
-/* Tipo de Venda - cores neutras para não confundir com status */
-.tipo-cartao_alimentacao {
-    background: linear-gradient(135deg, #6c757d, #adb5bd);
-    color: white;
-}
-
-.tipo-cartao_refeicao {
-    background: linear-gradient(135deg, #495057, #6c757d);
-    color: white;
-}
-
-.tipo-cartao_credito_parcelado {
-    background: linear-gradient(135deg, #7952b3, #a98eda);
-    color: white;
-}
-
-.tipo-cartao_credito_vista {
-    background: linear-gradient(135deg, #0d6efd, #6ea8fe);
-    color: white;
-}
+.tipo-cartao_alimentacao { background: linear-gradient(135deg, #6c757d, #adb5bd); color: white; }
+.tipo-cartao_refeicao { background: linear-gradient(135deg, #495057, #6c757d); color: white; }
+.tipo-cartao_credito_parcelado { background: linear-gradient(135deg, #7952b3, #a98eda); color: white; }
+.tipo-cartao_credito_vista { background: linear-gradient(135deg, #0d6efd, #6ea8fe); color: white; }
 
 /* ========== CARTÃO RETIDO ========== */
-.form-check-input:checked {
-    background-color: var(--danger);
-    border-color: var(--danger);
-}
-
-.form-check-input:focus {
-    border-color: var(--danger);
-    box-shadow: 0 0 0 0.2rem rgba(255, 23, 68, 0.25);
-}
+.form-check-input:checked { background-color: var(--danger); border-color: var(--danger); }
+.form-check-input:focus { border-color: var(--danger); box-shadow: 0 0 0 0.2rem rgba(255, 23, 68, 0.25); }
 
 .cartao-retido-badge {
     background: linear-gradient(135deg, #ff1744, #ff5252);
@@ -462,9 +505,7 @@ body::before {
     white-space: nowrap;
 }
 
-.cartao-retido-badge i {
-    margin-right: 5px;
-}
+.cartao-retido-badge i { margin-right: 5px; }
 
 .cartao-devolvido-badge {
     background: linear-gradient(135deg, #00c853, #69f0ae);
@@ -474,15 +515,6 @@ body::before {
     font-weight: 600;
     font-size: 0.85rem;
     white-space: nowrap;
-}
-
-tr.cartao-retido-row {
-    background: rgba(255, 23, 68, 0.05) !important;
-    border-left: 4px solid var(--danger);
-}
-
-tr.cartao-retido-row:hover {
-    background: rgba(255, 23, 68, 0.1) !important;
 }
 
 .card-cartoes-retidos {
@@ -505,6 +537,39 @@ tr.cartao-retido-row:hover {
     font-size: 4rem;
     opacity: 0.3;
 }
+
+/* ========== DROPDOWN ========== */
+.dropdown-menu {
+    border: none !important;
+    box-shadow: var(--shadow-lg) !important;
+    border-radius: var(--radius-md) !important;
+    min-width: 200px !important;
+    z-index: 99999 !important;
+    position: absolute !important;
+}
+
+.dropdown-menu.show {
+    z-index: 99999 !important;
+    display: block !important;
+}
+
+.dropdown-header {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #e65100;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    background: var(--orange-light);
+    border-bottom: 1px solid var(--orange-medium);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: var(--transition);
+}
+
+.dropdown-item:hover { background: var(--orange-light); }
+.dropdown-item i { margin-right: 0.5rem; }
 
 /* ========== SEARCH FILTERS ========== */
 .search-filters {
@@ -533,113 +598,12 @@ tr.cartao-retido-row:hover {
     animation: slideDown 0.5s ease;
 }
 
-@keyframes slideDown {
-    from {
-        transform: translateY(-100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-/* ========== ANIMAÇÕES ========== */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-/* ========== ENDEREÇO ========== */
-.endereco-completo {
-    font-size: 0.85rem;
-    line-height: 1.4;
-}
-
 /* ========== MODAL ========== */
-.modal-header.bg-primary {
-    background: linear-gradient(135deg, #e65100, #ff6f00) !important;
-}
+.modal { z-index: 10555 !important; }
+.modal-backdrop { z-index: 10550 !important; }
+.modal-header.bg-primary { background: linear-gradient(135deg, #e65100, #ff6f00) !important; }
 
-/* ========== RESPONSIVIDADE ========== */
-@media (max-width: 768px) {
-    .org-title {
-        font-size: 2rem;
-    }
-    
-    .org-subtitle {
-        font-size: 1rem;
-        letter-spacing: 4px;
-    }
-    
-    .logo-grande {
-        max-width: 180px;
-    }
-    
-    .slogan {
-        text-align: center;
-        margin-top: 1rem;
-    }
-    
-    .custom-tabs .nav-link {
-        padding: 0.75rem 1rem;
-        font-size: 0.9rem;
-    }
-    
-    .custom-tab-content {
-        padding: 1rem;
-    }
-    
-    .btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-    }
-    
-    .table {
-        font-size: 0.8rem;
-    }
-}
-
-/* Scrollbar personalizada */
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--orange-light);
-}
-
-::-webkit-scrollbar-thumb {
-    background: #ff6f00;
-    border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #e65100;
-}
-
-/* Adicionar ao final do style.css existente */
-
-/* Feedback de validação */
-.form-control.is-valid {
-    border-color: #00c853 !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 200, 83, 0.15) !important;
-}
-
-.form-control.is-invalid {
-    border-color: #ff1744 !important;
-    box-shadow: 0 0 0 0.2rem rgba(255, 23, 68, 0.15) !important;
-}
-
-.invalid-feedback {
-    display: block;
-    color: #ff1744;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-/* Campo calculado */
+/* ========== CAMPOS ESPECIAIS ========== */
 #valorParcelas {
     background-color: #f8f9fa;
     font-weight: 700;
@@ -647,86 +611,23 @@ tr.cartao-retido-row:hover {
     font-size: 1.1rem;
 }
 
-/* Input group */
 .input-group-text {
     background: linear-gradient(135deg, #e65100, #ff6f00);
     color: white;
     border: none;
 }
 
-/* Dropdown menu */
-.dropdown-menu {
-    border: none;
-    box-shadow: var(--shadow-lg);
-    border-radius: var(--radius-md);
+#dadosTransferencia {
+    min-height: 120px;
+    font-family: monospace;
 }
 
-.dropdown-item {
-    padding: 0.5rem 1rem;
-    transition: var(--transition);
+.form-floating > .form-control#dadosTransferencia {
+    padding-top: 2rem;
+    line-height: 1.6;
 }
 
-.dropdown-item:hover {
-    background: var(--orange-light);
-}
-
-.dropdown-item i {
-    margin-right: 0.5rem;
-}
-
-/* Adicionar ao final do style.css existente */
-
-/* Status Valor Cartão */
-.status-cartao-processamento {
-    background: linear-gradient(135deg, #ff6f00, #ff9800) !important;
-    color: white !important;
-}
-
-.status-cartao-recebido {
-    background: linear-gradient(135deg, #00c853, #69f0ae) !important;
-    color: white !important;
-}
-
-.status-cartao-cancelado {
-    background: linear-gradient(135deg, #ff1744, #ff5252) !important;
-    color: white !important;
-}
-
-/* Status Valor Emprestado */
-.status-emprestado-processamento {
-    background: linear-gradient(135deg, #ff6f00, #ff9800) !important;
-    color: white !important;
-}
-
-.status-emprestado-pago {
-    background: linear-gradient(135deg, #00c853, #69f0ae) !important;
-    color: white !important;
-}
-
-.status-emprestado-cancelado {
-    background: linear-gradient(135deg, #ff1744, #ff5252) !important;
-    color: white !important;
-}
-
-/* Dropdown header */
-.dropdown-header {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #e65100;
-    text-transform: uppercase;
-    padding: 0.5rem 1rem;
-    background: var(--orange-light);
-    border-bottom: 1px solid var(--orange-medium);
-}
-
-/* Ajuste no dropdown para acomodar mais itens */
-.dropdown-menu {
-    min-width: 200px;
-}
-
-/* Adicionar ao style.css */
-
-/* Radio buttons de pagamento */
+/* ========== RADIO BUTTONS ========== */
 .form-check-input[type="radio"] {
     width: 1.2em;
     height: 1.2em;
@@ -751,25 +652,13 @@ tr.cartao-retido-row:hover {
     transition: var(--transition);
 }
 
-.form-check-label i {
-    margin-right: 0.3rem;
-}
+.form-check-label i { margin-right: 0.3rem; }
 
-/* Div Transferência */
-#dadosTransferencia {
-    min-height: 120px;
-    font-family: monospace;
-}
+/* ========== BADGES ========== */
+.badge.bg-info { background: linear-gradient(135deg, #00b0ff, #40c4ff) !important; font-size: 0.9rem; padding: 0.4rem 0.8rem; }
+.badge.bg-primary { background: linear-gradient(135deg, #1565c0, #1976d2) !important; font-size: 0.9rem; padding: 0.4rem 0.8rem; }
 
-#divTransferenciaCampos {
-    animation: slideDown 0.3s ease;
-}
-
-#divPixCampos {
-    animation: slideDown 0.3s ease;
-}
-
-/* Pre formatado para detalhes da transferência */
+/* ========== UTILITÁRIOS ========== */
 pre {
     background: #f8f9fa;
     padding: 1rem;
@@ -777,311 +666,47 @@ pre {
     border: 1px solid #dee2e6;
 }
 
-/* Badge para modalidade */
-.badge.bg-info {
-    background: linear-gradient(135deg, #00b0ff, #40c4ff) !important;
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
-}
+.d-flex.gap-3 { gap: 2rem !important; }
+.form-text i { margin-right: 0.3rem; }
+.endereco-completo { font-size: 0.85rem; line-height: 1.4; }
 
-.badge.bg-primary {
-    background: linear-gradient(135deg, #1565c0, #1976d2) !important;
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
-}
-
-/* Campo de transferência com ícone */
-.form-floating > .form-control#dadosTransferencia {
-    padding-top: 2rem;
-    line-height: 1.6;
-}
-
-/* Animação slide */
+/* ========== ANIMAÇÕES ========== */
 @keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
-/* D-flex gap */
-.d-flex.gap-3 {
-    gap: 2rem !important;
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
-/* Form text info */
-.form-text i {
-    margin-right: 0.3rem;
-}
+#divTransferenciaCampos { animation: slideDown 0.3s ease; }
+#divPixCampos { animation: slideDown 0.3s ease; }
 
-/* Adicionar ao style.css */
+/* ========== SCROLLBAR GLOBAL ========== */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--orange-light); }
+::-webkit-scrollbar-thumb { background: #ff6f00; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #e65100; }
 
-/* Garantir que dropdowns apareçam na frente de tudo */
-.dropdown-menu {
-    z-index: 9999 !important;
-    position: absolute !important;
-}
-
-/* Garantir que o container da tabela não esconda dropdowns */
-.table-responsive {
-    overflow-x: visible !important;
-    overflow-y: visible !important;
-}
-
-/* Se necessário, garantir que o card não corte o dropdown */
-.card-body {
-    overflow: visible !important;
-}
-
-/* Garantir que a célula da tabela não corte o dropdown */
-#tabelaContratos td:last-child {
-    overflow: visible !important;
-    position: relative;
-}
-
-/* Ajustar o z-index do dropdown do Bootstrap */
-.dropdown-menu.show {
-    z-index: 1050 !important;
-}
-
-/* Garantir que o container da tab não esconda dropdowns */
-.tab-pane {
-    overflow: visible !important;
-}
-
-.custom-tab-content {
-    overflow: visible !important;
-}
-
-/* Ajustar posicionamento do dropdown na tabela */
-#resultadosBusca .dropdown {
-    position: relative;
-}
-
-#resultadosBusca .dropdown-menu {
-    position: absolute !important;
-    z-index: 1050 !important;
-}
-
-/* Garantir que o modal tenha z-index menor que dropdowns */
-.modal {
-    z-index: 1040 !important;
-}
-
-.modal-backdrop {
-    z-index: 1030 !important;
-}
-
-/* Tabs desabilitadas */
-.nav-link.disabled {
-    cursor: not-allowed !important;
-    opacity: 0.5 !important;
-    background-color: #e9ecef !important;
-    color: #6c757d !important;
-}
-
-.nav-link.disabled:hover {
-    background-color: #e9ecef !important;
-    color: #6c757d !important;
-    transform: none !important;
-}
-
-.nav-link.disabled i {
-    opacity: 0.5;
-}
-
-/* Tabela com scroll horizontal */
-#tabelaContratos {
-    min-width: 1400px;
-}
-
-#tabelaContratos th,
-#tabelaContratos td {
-    white-space: nowrap;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-}
-
-#tabelaContratos th {
-    font-size: 0.8rem;
-    padding: 0.5rem;
-}
-
-/* Scrollbar personalizada para a tabela */
-.table-responsive::-webkit-scrollbar {
-    height: 8px;
-}
-
-.table-responsive::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-    background: #ff6f00;
-    border-radius: 4px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb:hover {
-    background: #e65100;
-}
-
-/* Container da tabela com scroll */
-#consulta .table-responsive {
-    overflow-x: auto;
-    overflow-y: visible;
-    width: 100%;
-    max-width: 100%;
-    border-radius: 8px;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Tabela de contratos */
-#tabelaContratos {
-    width: auto;
-    min-width: 100%;
-    white-space: nowrap;
-    font-size: 0.85rem;
-}
-
-#tabelaContratos th {
-    background: linear-gradient(135deg, #e65100, #ff6f00);
-    color: white;
-    font-weight: 600;
-    padding: 0.6rem 0.5rem;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
-#tabelaContratos td {
-    padding: 0.5rem;
-    vertical-align: middle;
-    white-space: nowrap;
-}
-
-/* Scrollbar personalizada */
-#consulta .table-responsive::-webkit-scrollbar {
-    height: 10px;
-}
-
-#consulta .table-responsive::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 5px;
-}
-
-#consulta .table-responsive::-webkit-scrollbar-thumb {
-    background: #ff6f00;
-    border-radius: 5px;
-}
-
-#consulta .table-responsive::-webkit-scrollbar-thumb:hover {
-    background: #e65100;
-}
-
-/* Ajuste para telas menores */
+/* ========== RESPONSIVIDADE ========== */
 @media (max-width: 768px) {
-    #tabelaContratos {
-        font-size: 0.75rem;
-    }
+    .org-title { font-size: 2rem; }
+    .org-subtitle { font-size: 1rem; letter-spacing: 4px; }
+    .logo-grande { max-width: 180px; }
+    .slogan { text-align: center; margin-top: 1rem; }
+    .custom-tabs .nav-link { padding: 0.75rem 1rem; font-size: 0.9rem; }
+    .custom-tab-content { padding: 1rem; }
+    .btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
     
-    #tabelaContratos th,
-    #tabelaContratos td {
-        padding: 0.3rem 0.4rem;
-    }
+    #tabelaContratos { font-size: 0.75rem; }
+    #tabelaContratos th, #tabelaContratos td { padding: 0.3rem 0.4rem; }
 }
 
-/* Container da tabela com scroll - CORRIGIDO */
-#consulta .table-responsive {
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 8px;
-    -webkit-overflow-scrolling: touch;
-    display: block !important;
-}
-
-/* Tabela de contratos - CORRIGIDO */
-#tabelaContratos {
-    width: auto !important;
-    min-width: 100% !important;
-    white-space: nowrap !important;
-    font-size: 0.85rem;
-    table-layout: auto !important;
-}
-
-#tabelaContratos th {
-    background: linear-gradient(135deg, #e65100, #ff6f00) !important;
-    color: white !important;
-    font-weight: 600;
-    padding: 0.6rem 0.5rem;
-    font-size: 0.8rem;
-    white-space: nowrap !important;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-}
-
-#tabelaContratos td {
-    padding: 0.5rem;
-    vertical-align: middle;
-    white-space: nowrap !important;
-}
-
-#tabelaContratos tbody tr:hover {
-    background: #fff3e0 !important;
-}
-
-/* Scrollbar personalizada - CORRIGIDO */
-#consulta .table-responsive::-webkit-scrollbar {
-    height: 10px !important;
-}
-
-#consulta .table-responsive::-webkit-scrollbar-track {
-    background: #f1f1f1 !important;
-    border-radius: 5px;
-}
-
-#consulta .table-responsive::-webkit-scrollbar-thumb {
-    background: #ff6f00 !important;
-    border-radius: 5px;
-}
-
-#consulta .table-responsive::-webkit-scrollbar-thumb:hover {
-    background: #e65100 !important;
-}
-
-/* Firefox scrollbar */
-#consulta .table-responsive {
-    scrollbar-width: thin;
-    scrollbar-color: #ff6f00 #f1f1f1;
-}
-
-/* Ajuste para telas menores */
-@media (max-width: 768px) {
-    #tabelaContratos {
-        font-size: 0.75rem;
-    }
-    
-    #tabelaContratos th,
-    #tabelaContratos td {
-        padding: 0.3rem 0.4rem;
-    }
-}
-
-/* Garantir que o card-body não limite a tabela */
-#consulta .card-body {
-    overflow: visible !important;
-}
-
-/* Garantir que a tab-pane não limite */
-#consulta.tab-pane {
-    overflow: visible !important;
-}
+/* ========== GARANTIR OVERFLOW CORRETO ========== */
+.tab-pane { overflow: visible !important; }
+#consulta.tab-pane { overflow: visible !important; }
+#resultadosBusca .dropdown { position: relative; }
+#resultadosBusca .dropdown-menu { position: absolute !important; z-index: 99999 !important; }
