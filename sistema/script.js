@@ -151,6 +151,25 @@ function calcularValorParcela() {
     }
 }
 
+// ========== VALIDAÇÃO E MÁSCARA DE NOME ==========
+function validarNome(nome) {
+    // Permite apenas letras (incluindo acentos), espaços e apóstrofos
+    const regex = /^[A-ZÀ-Ú\s']+$/;
+    return regex.test(nome);
+}
+
+function mascaraNome(e) {
+    let value = e.target.value;
+    
+    // Remove caracteres não permitidos (apenas letras, acentos, espaços e apóstrofos)
+    value = value.replace(/[^a-zA-ZÀ-ÿ\s']/g, '');
+    
+    // Converte para maiúsculo
+    value = value.toUpperCase();
+    
+    e.target.value = value;
+}
+
 // ========== TOGGLE BANCO OUTROS ==========
 function toggleBancoOutros() {
     const banco = document.getElementById('banco').value;
@@ -230,6 +249,7 @@ function toggleTipoPagamento() {
 }
 
 // ========== TOGGLE TIPO BENEFICIÁRIO ==========
+// ========== TOGGLE TIPO BENEFICIÁRIO ==========
 function toggleTipoBeneficiario() {
     const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
     const nomeBeneficiario = document.getElementById('nomeBeneficiario');
@@ -238,7 +258,9 @@ function toggleTipoBeneficiario() {
     
     if (tipoBeneficiario === 'mesmo_titular') {
         // Modo: Mesmo titular do cartão
-        nomeBeneficiario.value = document.getElementById('nome').value;
+        // ATUALIZAÇÃO: Pegar o nome atual do cliente e aplicar ao beneficiário
+        const nomeCliente = document.getElementById('nome').value;
+        nomeBeneficiario.value = nomeCliente;
         nomeBeneficiario.readOnly = true;
         nomeBeneficiario.style.backgroundColor = '#f8f9fa';
         
@@ -280,6 +302,7 @@ function toggleEnderecoManual() {
 }
 
 // ========== SETUP EVENT LISTENERS ==========
+// ========== SETUP EVENT LISTENERS ==========
 function setupEventListeners() {
     // Form submit
     document.getElementById('formEmprestimo').addEventListener('submit', salvarContrato);
@@ -302,7 +325,40 @@ function setupEventListeners() {
         previewImagem(e.target, 'previewDocumento', 'uploadDocumento');
     });
     
-    // Máscaras
+    // Máscaras para campos de nome (apenas letras e acentos, maiúsculo)
+    document.getElementById('nome').addEventListener('input', function(e) {
+        mascaraNome(e);
+        // Atualizar nome do beneficiário se for mesmo titular
+        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
+        if (tipoBeneficiario && tipoBeneficiario.value === 'mesmo_titular') {
+            document.getElementById('nomeBeneficiario').value = this.value;
+        }
+    });
+    
+    // Garantir que o nome do beneficiário seja atualizado quando o campo nome perder o foco
+    document.getElementById('nome').addEventListener('blur', function() {
+        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
+        if (tipoBeneficiario && tipoBeneficiario.value === 'mesmo_titular') {
+            document.getElementById('nomeBeneficiario').value = this.value;
+        }
+        
+        // Validação do nome
+        const nome = this.value.trim();
+        if (nome.length < 3) {
+            this.classList.add('is-invalid');
+            mostrarStatus('Nome do cliente deve ter pelo menos 3 caracteres!', 'warning');
+        } else if (!validarNome(nome)) {
+            this.classList.add('is-invalid');
+            mostrarStatus('Nome do cliente contém caracteres inválidos!', 'warning');
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        }
+    });
+    
+    document.getElementById('nomeBeneficiario').addEventListener('input', mascaraNome);
+    
+    // Máscaras CPF
     document.getElementById('cpf').addEventListener('input', mascaraCPF);
     document.getElementById('cpf').addEventListener('blur', function() {
         const cpf = this.value.replace(/\D/g, '');
@@ -332,7 +388,10 @@ function setupEventListeners() {
         }
     });
     
+    // Máscara telefone
     document.getElementById('numero').addEventListener('input', mascaraTelefone);
+    
+    // Máscara CEP
     document.getElementById('cep').addEventListener('input', function(e) {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
@@ -355,10 +414,8 @@ function setupEventListeners() {
     // Validação de parcelas (apenas números inteiros, máximo 120)
     document.getElementById('parcelas').addEventListener('input', function(e) {
         let value = e.target.value;
-        // Remove qualquer caractere não numérico
         value = value.replace(/\D/g, '');
         
-        // Converte para número e limita a 120
         if (value) {
             let numValue = parseInt(value);
             if (numValue > 120) numValue = 120;
@@ -372,16 +429,13 @@ function setupEventListeners() {
     ['valorCartao', 'valorEmprestado'].forEach(id => {
         document.getElementById(id).addEventListener('input', function(e) {
             let value = e.target.value;
-            // Remove caracteres não numéricos exceto ponto
             value = value.replace(/[^\d.]/g, '');
             
-            // Garante apenas um ponto decimal
             const parts = value.split('.');
             if (parts.length > 2) {
                 value = parts[0] + '.' + parts.slice(1).join('');
             }
             
-            // Limita a duas casas decimais
             if (parts.length === 2 && parts[1].length > 2) {
                 value = parts[0] + '.' + parts[1].substring(0, 2);
             }
@@ -402,14 +456,6 @@ function setupEventListeners() {
     // Radio buttons tipo beneficiário
     document.querySelectorAll('input[name="tipoBeneficiario"]').forEach(radio => {
         radio.addEventListener('change', toggleTipoBeneficiario);
-    });
-    
-    // Atualizar nome do beneficiário quando mudar o nome do cliente
-    document.getElementById('nome').addEventListener('input', function() {
-        const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
-        if (tipoBeneficiario && tipoBeneficiario.value === 'mesmo_titular') {
-            document.getElementById('nomeBeneficiario').value = this.value;
-        }
     });
     
     // Busca CEP
