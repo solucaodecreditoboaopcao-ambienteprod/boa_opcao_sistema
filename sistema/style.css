@@ -816,3 +816,79 @@ pre {
 .form-text i {
     margin-right: 0.3rem;
 }
+
+/* Adicionar ao style.css */
+
+/* Garantir que dropdowns apareçam na frente de tudo */
+.dropdown-menu {
+    z-index: 9999 !important;
+    position: absolute !important;
+}
+
+/* Garantir que o container da tabela não esconda dropdowns */
+.table-responsive {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+}
+
+/* Se necessário, garantir que o card não corte o dropdown */
+.card-body {
+    overflow: visible !important;
+}
+
+/* Garantir que a célula da tabela não corte o dropdown */
+#tabelaContratos td:last-child {
+    overflow: visible !important;
+    position: relative;
+}
+
+/* Ajustar o z-index do dropdown do Bootstrap */
+.dropdown-menu.show {
+    z-index: 1050 !important;
+}
+
+/* Garantir que o container da tab não esconda dropdowns */
+.tab-pane {
+    overflow: visible !important;
+}
+
+.custom-tab-content {
+    overflow: visible !important;
+}
+
+/* Ajustar posicionamento do dropdown na tabela */
+#resultadosBusca .dropdown {
+    position: relative;
+}
+
+#resultadosBusca .dropdown-menu {
+    position: absolute !important;
+    z-index: 1050 !important;
+}
+
+/* Garantir que o modal tenha z-index menor que dropdowns */
+.modal {
+    z-index: 1040 !important;
+}
+
+.modal-backdrop {
+    z-index: 1030 !important;
+}
+
+/* Tabs desabilitadas */
+.nav-link.disabled {
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+    background-color: #e9ecef !important;
+    color: #6c757d !important;
+}
+
+.nav-link.disabled:hover {
+    background-color: #e9ecef !important;
+    color: #6c757d !important;
+    transform: none !important;
+}
+
+.nav-link.disabled i {
+    opacity: 0.5;
+}
