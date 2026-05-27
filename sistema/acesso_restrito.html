@@ -85,32 +85,30 @@
                                         </div>
                                         <div class="col-md-4">
                                             <div class="form-floating">
-                                                <select class="form-select" id="statusContrato" required>
+                                                <select class="form-select" id="statusValorCartao" required>
                                                     <option value="processamento">Processamento</option>
-                                                    <option value="pago">Pago</option>
+                                                    <option value="recebido">Recebido</option>
                                                     <option value="cancelado">Cancelado</option>
                                                 </select>
-                                                <label for="statusContrato">
-                                                    <i class="bi bi-flag"></i> Status do Contrato
+                                                <label for="statusValorCartao">
+                                                    <i class="bi bi-credit-card"></i> Status Valor Cartão
                                                 </label>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div class="form-floating">
-                                                <select class="form-select" id="tipoVenda" required>
-                                                    <option value="">Selecione...</option>
-                                                    <option value="cartao_alimentacao">Cartão Alimentação</option>
-                                                    <option value="cartao_refeicao">Cartão Refeição</option>
-                                                    <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
-                                                    <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
+                                                <select class="form-select" id="statusValorEmprestado" required>
+                                                    <option value="processamento">Processamento</option>
+                                                    <option value="pago">Pago</option>
+                                                    <option value="cancelado">Cancelado</option>
                                                 </select>
-                                                <label for="tipoVenda">
-                                                    <i class="bi bi-tag"></i> Tipo de Venda *
+                                                <label for="statusValorEmprestado">
+                                                    <i class="bi bi-cash"></i> Status Valor Emprestado
                                                 </label>
                                             </div>
                                         </div>
                                     </div>
-
+                                    
                                     <!-- Data do Contrato -->
                                     <div class="row mb-4">
                                         <div class="col-md-4">
@@ -460,13 +458,24 @@
                             <div class="row g-2 mt-2">
                                 <div class="col-md-3">
                                     <div class="form-floating">
-                                        <select class="form-select" id="searchStatus">
-                                            <option value="">Todos os Status</option>
+                                        <select class="form-select" id="searchStatusCartao">
+                                            <option value="">Status Cartão</option>
+                                            <option value="processamento">Processamento</option>
+                                            <option value="recebido">Recebido</option>
+                                            <option value="cancelado">Cancelado</option>
+                                        </select>
+                                        <label for="searchStatusCartao">Status Cartão</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="searchStatusEmprestado">
+                                            <option value="">Status Empréstimo</option>
                                             <option value="processamento">Processamento</option>
                                             <option value="pago">Pago</option>
                                             <option value="cancelado">Cancelado</option>
                                         </select>
-                                        <label for="searchStatus">Status</label>
+                                        <label for="searchStatusEmprestado">Status Empréstimo</label>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -487,14 +496,14 @@
                                         <label for="searchDataInicio">Data Início</label>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="row g-2 mt-2">
                                 <div class="col-md-3">
                                     <div class="form-floating">
                                         <input type="date" class="form-control" id="searchDataFim">
                                         <label for="searchDataFim">Data Fim</label>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row g-2 mt-2">
                                 <div class="col-md-3">
                                     <div class="form-check form-switch mt-3">
                                         <input class="form-check-input" type="checkbox" id="searchCartaoRetido">
@@ -503,14 +512,14 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-md-9">
+                                <div class="col-md-6">
                                     <button class="btn btn-info btn-lg w-100" onclick="buscarContratos()">
                                         <i class="bi bi-search"></i> Buscar Contratos
                                     </button>
                                 </div>
                             </div>
                         </div>
-
+                        
                         <!-- Resultados -->
                         <div class="table-responsive">
                             <table class="table table-hover" id="tabelaContratos">
@@ -526,7 +535,8 @@
                                         <th>Valor Emprestado</th>
                                         <th>QTD Parcelas</th>
                                         <th>Cartão</th>
-                                        <th>Status</th>
+                                        <th>Status Cartão</th>
+                                        <th>Status Empréstimo</th>
                                         <th>Data</th>
                                         <th>Ações</th>
                                     </tr>
