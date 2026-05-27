@@ -20,6 +20,7 @@ const db = firebase.firestore();
 let imgbbApiKey = '';
 let organizacaoAtiva = false;
 let contratoAtualId = null;
+let contratosExistentes = [];
 
 // Mapeamento de tipo de venda
 const tipoVendaMap = {
@@ -33,7 +34,8 @@ const tipoVendaMap = {
 document.addEventListener('DOMContentLoaded', async function() {
     await verificarOrganizacao();
     await carregarImgBBApiKey();
-    gerarNumeroContrato();
+    await carregarContratosExistentes();
+    await gerarNumeroContrato();
     setupEventListeners();
     atualizarCamposRelatorio();
 });
@@ -71,12 +73,145 @@ async function carregarImgBBApiKey() {
     }
 }
 
-// ========== GERAR NÚMERO DO CONTRATO ==========
-function gerarNumeroContrato() {
-    const ano = new Date().getFullYear();
-    const aleatorio = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
-    const numero = `CT-${ano}-${aleatorio}`;
+async function carregarContratosExistentes() {
+    try {
+        const snapshot = await db.collection('contratos').get();
+        contratosExistentes = snapshot.docs.map(doc => doc.data().numeroContrato);
+    } catch (error) {
+        console.error('Erro ao carregar contratos:', error);
+    }
+}
+
+// ========== GERAR NÚMERO DO CONTRATO ÚNICO ==========
+async function gerarNumeroContrato() {
+    let numero;
+    let tentativas = 0;
+    
+    do {
+        const ano = new Date().getFullYear();
+        const aleatorio = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+        numero = `CT-${ano}-${aleatorio}`;
+        tentativas++;
+        
+        // Verificar se o número já existe no Firestore
+        const snapshot = await db.collection('contratos')
+            .where('numeroContrato', '==', numero)
+            .get();
+        
+        if (snapshot.empty && !contratosExistentes.includes(numero)) {
+            break;
+        }
+    } while (tentativas < 100);
+    
     document.getElementById('numeroContrato').value = numero;
+}
+
+// ========== VALIDAÇÃO DE CPF ==========
+function validarCPF(cpf) {
+    cpf = cpf.replace(/[^\d]/g, '');
+    
+    if (cpf.length !== 11) return false;
+    
+    // Verificar se todos os dígitos são iguais
+    if (/^(\d)\1{10}$/.test(cpf)) return false;
+    
+    // Validar primeiro dígito verificador
+    let soma = 0;
+    for (let i = 0; i < 9; i++) {
+        soma += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+    let resto = 11 - (soma % 11);
+    let digitoVerificador1 = resto > 9 ? 0 : resto;
+    
+    if (parseInt(cpf.charAt(9)) !== digitoVerificador1) return false;
+    
+    // Validar segundo dígito verificador
+    soma = 0;
+    for (let i = 0; i < 10; i++) {
+        soma += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+    resto = 11 - (soma % 11);
+    let digitoVerificador2 = resto > 9 ? 0 : resto;
+    
+    if (parseInt(cpf.charAt(10)) !== digitoVerificador2) return false;
+    
+    return true;
+}
+
+// ========== CÁLCULO DO VALOR DA PARCELA ==========
+function calcularValorParcela() {
+    const valorCartao = parseFloat(document.getElementById('valorCartao').value) || 0;
+    const parcelas = parseInt(document.getElementById('parcelas').value) || 0;
+    
+    if (valorCartao > 0 && parcelas > 0) {
+        const valorParcela = valorCartao / parcelas;
+        document.getElementById('valorParcelas').value = valorParcela.toFixed(2);
+    } else {
+        document.getElementById('valorParcelas').value = '';
+    }
+}
+
+// ========== TOGGLE BANCO OUTROS ==========
+function toggleBancoOutros() {
+    const banco = document.getElementById('banco').value;
+    const divBancoOutros = document.getElementById('divBancoOutros');
+    
+    if (banco === 'outros') {
+        divBancoOutros.style.display = 'block';
+        document.getElementById('bancoOutros').required = true;
+    } else {
+        divBancoOutros.style.display = 'none';
+        document.getElementById('bancoOutros').value = '';
+        document.getElementById('bancoOutros').required = false;
+    }
+}
+
+// ========== TOGGLE BANDEIRA OUTROS ==========
+function toggleBandeiraOutros() {
+    const bandeira = document.getElementById('bandeiraCartao').value;
+    const divBandeiraOutros = document.getElementById('divBandeiraOutros');
+    
+    if (bandeira === 'Outros') {
+        divBandeiraOutros.style.display = 'block';
+        document.getElementById('bandeiraOutros').required = true;
+    } else {
+        divBandeiraOutros.style.display = 'none';
+        document.getElementById('bandeiraOutros').value = '';
+        document.getElementById('bandeiraOutros').required = false;
+    }
+}
+
+// ========== TOGGLE ENDEREÇO MANUAL ==========
+function toggleEnderecoManual() {
+    const manual = document.getElementById('flagEnderecoManual').checked;
+    const camposEndereco = ['endereco', 'numeroEndereco', 'bairro', 'complemento', 'cidade', 'estado'];
+    
+    camposEndereco.forEach(campo => {
+        const elemento = document.getElementById(campo);
+        if (manual) {
+            elemento.readOnly = false;
+            elemento.style.backgroundColor = '';
+        } else {
+            elemento.readOnly = true;
+            elemento.style.backgroundColor = '#f8f9fa';
+        }
+    });
+}
+
+// ========== TOGGLE MESMO TITULAR ==========
+function toggleMesmoTitular() {
+    const mesmoTitular = document.getElementById('flagMesmoTitular').checked;
+    const nomeBeneficiario = document.getElementById('nomeBeneficiario');
+    
+    if (mesmoTitular) {
+        nomeBeneficiario.value = document.getElementById('nome').value;
+        nomeBeneficiario.readOnly = true;
+        nomeBeneficiario.style.backgroundColor = '#f8f9fa';
+    } else {
+        nomeBeneficiario.readOnly = false;
+        nomeBeneficiario.style.backgroundColor = '';
+        nomeBeneficiario.value = '';
+    }
 }
 
 // ========== SETUP EVENT LISTENERS ==========
@@ -104,6 +239,17 @@ function setupEventListeners() {
     
     // Máscaras
     document.getElementById('cpf').addEventListener('input', mascaraCPF);
+    document.getElementById('cpf').addEventListener('blur', function() {
+        const cpf = this.value.replace(/\D/g, '');
+        if (cpf.length === 11 && !validarCPF(cpf)) {
+            this.classList.add('is-invalid');
+            document.getElementById('cpfFeedback').textContent = 'CPF inválido!';
+        } else if (cpf.length === 11) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        }
+    });
+    
     document.getElementById('numero').addEventListener('input', mascaraTelefone);
     document.getElementById('cep').addEventListener('input', function(e) {
         let value = e.target.value.replace(/\D/g, '');
@@ -120,6 +266,64 @@ function setupEventListeners() {
             parcelasInput.readOnly = true;
         } else {
             parcelasInput.readOnly = false;
+        }
+        calcularValorParcela();
+    });
+    
+    // Validação de parcelas (apenas números inteiros, máximo 120)
+    document.getElementById('parcelas').addEventListener('input', function(e) {
+        let value = e.target.value;
+        // Remove qualquer caractere não numérico
+        value = value.replace(/\D/g, '');
+        
+        // Converte para número e limita a 120
+        if (value) {
+            let numValue = parseInt(value);
+            if (numValue > 120) numValue = 120;
+            e.target.value = numValue;
+        }
+        
+        calcularValorParcela();
+    });
+    
+    // Validação de valores (apenas duas casas decimais)
+    ['valorCartao', 'valorEmprestado'].forEach(id => {
+        document.getElementById(id).addEventListener('input', function(e) {
+            let value = e.target.value;
+            // Remove caracteres não numéricos exceto ponto
+            value = value.replace(/[^\d.]/g, '');
+            
+            // Garante apenas um ponto decimal
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            
+            // Limita a duas casas decimais
+            if (parts.length === 2 && parts[1].length > 2) {
+                value = parts[0] + '.' + parts[1].substring(0, 2);
+            }
+            
+            e.target.value = value;
+            if (id === 'valorCartao') calcularValorParcela();
+        });
+    });
+    
+    // Flag endereço manual
+    document.getElementById('flagEnderecoManual').addEventListener('change', toggleEnderecoManual);
+    
+    // Flag mesmo titular
+    document.getElementById('flagMesmoTitular').addEventListener('change', toggleMesmoTitular);
+    document.getElementById('nome').addEventListener('input', function() {
+        if (document.getElementById('flagMesmoTitular').checked) {
+            document.getElementById('nomeBeneficiario').value = this.value;
+        }
+    });
+    
+    // Busca CEP
+    document.getElementById('cep').addEventListener('blur', function() {
+        if (!document.getElementById('flagEnderecoManual').checked) {
+            buscarCEP();
         }
     });
     
@@ -183,37 +387,55 @@ function toggleCartaoRetido() {
     
     if (!isRetido) {
         document.getElementById('bandeiraCartao').value = '';
+        document.getElementById('bandeiraOutros').value = '';
         document.getElementById('ultimosDigitos').value = '';
         document.getElementById('dataRetirada').value = '';
         document.getElementById('observacaoCartao').value = '';
+        document.getElementById('divBandeiraOutros').style.display = 'none';
     }
 }
 
 // ========== BUSCAR CEP ==========
 async function buscarCEP() {
     const cep = document.getElementById('cep').value.replace(/\D/g, '');
+    const feedback = document.getElementById('cepFeedback');
     
     if (cep.length !== 8) return;
     
     try {
         document.getElementById('cep').disabled = true;
+        feedback.style.display = 'block';
+        feedback.textContent = 'Buscando...';
+        feedback.className = 'form-text text-info';
         
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const data = await response.json();
         
         if (data.erro) {
-            mostrarStatus('CEP não encontrado!', 'warning');
+            feedback.textContent = 'CEP não encontrado!';
+            feedback.className = 'form-text text-danger';
             return;
         }
         
+        // Preencher campos
         document.getElementById('endereco').value = data.logradouro || '';
         document.getElementById('bairro').value = data.bairro || '';
         document.getElementById('cidade').value = data.localidade || '';
         document.getElementById('estado').value = data.uf || '';
         document.getElementById('numeroEndereco').focus();
         
+        feedback.textContent = 'CEP encontrado!';
+        feedback.className = 'form-text text-success';
+        
+        // Permitir edição após busca
+        if (!document.getElementById('flagEnderecoManual').checked) {
+            toggleEnderecoManual();
+        }
+        
     } catch (error) {
         console.error('Erro ao buscar CEP:', error);
+        feedback.textContent = 'Erro ao buscar CEP';
+        feedback.className = 'form-text text-danger';
     } finally {
         document.getElementById('cep').disabled = false;
     }
@@ -225,6 +447,22 @@ async function salvarContrato(e) {
     
     if (!organizacaoAtiva) {
         mostrarStatus('Organização inativa. Não é possível cadastrar.', 'danger');
+        return;
+    }
+    
+    // Validar CPF
+    const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
+    if (!validarCPF(cpf)) {
+        mostrarStatus('CPF inválido! Verifique e tente novamente.', 'danger');
+        document.getElementById('cpf').focus();
+        return;
+    }
+    
+    // Validar parcelas
+    const parcelas = parseInt(document.getElementById('parcelas').value);
+    if (isNaN(parcelas) || parcelas < 1 || parcelas > 120) {
+        mostrarStatus('Quantidade de parcelas deve ser entre 1 e 120!', 'danger');
+        document.getElementById('parcelas').focus();
         return;
     }
     
@@ -245,9 +483,13 @@ async function salvarContrato(e) {
         };
         
         const cartaoRetido = document.getElementById('cartaoRetido').checked;
+        const bandeiraSelecionada = document.getElementById('bandeiraCartao').value;
+        const bandeiraFinal = bandeiraSelecionada === 'Outros' ? 
+            document.getElementById('bandeiraOutros').value : bandeiraSelecionada;
+        
         const dadosCartaoRetido = cartaoRetido ? {
             retido: true,
-            bandeira: document.getElementById('bandeiraCartao').value,
+            bandeira: bandeiraFinal,
             ultimosDigitos: document.getElementById('ultimosDigitos').value,
             dataRetirada: document.getElementById('dataRetirada').value,
             observacao: document.getElementById('observacaoCartao').value,
@@ -258,6 +500,15 @@ async function salvarContrato(e) {
         };
         
         const tipoVenda = document.getElementById('tipoVenda').value;
+        const bancoSelecionado = document.getElementById('banco').value;
+        const bancoFinal = bancoSelecionado === 'outros' ? 
+            document.getElementById('bancoOutros').value : 
+            document.getElementById('banco').options[document.getElementById('banco').selectedIndex].text;
+        
+        const valorCartao = parseFloat(document.getElementById('valorCartao').value) || 0;
+        const parcelasCount = parseInt(document.getElementById('parcelas').value) || 0;
+        const valorParcelas = valorCartao / parcelasCount;
+        const valorEmprestado = parseFloat(document.getElementById('valorEmprestado').value) || 0;
         
         const dadosContrato = {
             numeroContrato: document.getElementById('numeroContrato').value,
@@ -266,16 +517,18 @@ async function salvarContrato(e) {
             tipoVendaNome: tipoVendaMap[tipoVenda] || tipoVenda,
             dataContrato: document.getElementById('dataContrato').value,
             nome: document.getElementById('nome').value.toUpperCase(),
-            cpf: document.getElementById('cpf').value.replace(/\D/g, ''),
+            cpf: cpf,
             telefone: document.getElementById('numero').value.replace(/\D/g, ''),
             endereco: enderecoCompleto,
             pix: document.getElementById('pix').value,
-            banco: document.getElementById('banco').value,
-            bancoNome: document.getElementById('banco').options[document.getElementById('banco').selectedIndex].text,
-            valorCartao: parseFloat(document.getElementById('valorCartao').value) || 0,
-            parcelas: parseInt(document.getElementById('parcelas').value) || 0,
-            valorEmprestado: parseFloat(document.getElementById('valorEmprestado').value) || 0,
-            lucro: (parseFloat(document.getElementById('valorCartao').value) || 0) - (parseFloat(document.getElementById('valorEmprestado').value) || 0),
+            nomeBeneficiario: document.getElementById('nomeBeneficiario').value,
+            mesmoTitular: document.getElementById('flagMesmoTitular').checked,
+            banco: bancoFinal,
+            valorCartao: valorCartao,
+            parcelas: parcelasCount,
+            valorParcelas: valorParcelas,
+            valorEmprestado: valorEmprestado,
+            lucro: valorCartao - valorEmprestado,
             cartaoRetido: dadosCartaoRetido,
             dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
             dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
@@ -293,6 +546,9 @@ async function salvarContrato(e) {
         
         await db.collection('contratos').add(dadosContrato);
         
+        // Adicionar à lista de contratos existentes
+        contratosExistentes.push(dadosContrato.numeroContrato);
+        
         if (cartaoRetido) {
             mostrarStatus('✅ Contrato cadastrado! Cartão registrado como RETIDO.', 'warning');
         } else {
@@ -308,6 +564,23 @@ async function salvarContrato(e) {
     } finally {
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = '<i class="bi bi-check-circle"></i> Cadastrar Contrato';
+    }
+}
+
+// ========== ATUALIZAR STATUS DO CONTRATO ==========
+async function atualizarStatusContrato(id, novoStatus) {
+    try {
+        await db.collection('contratos').doc(id).update({
+            status: novoStatus,
+            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        mostrarStatus(`✅ Status atualizado para "${novoStatus}" com sucesso!`, 'success');
+        buscarContratos();
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarStatus('❌ Erro ao atualizar status: ' + error.message, 'danger');
     }
 }
 
@@ -343,7 +616,7 @@ async function buscarContratos() {
         tbody.innerHTML = '';
         
         if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="12" class="text-center py-4">Nenhum contrato encontrado</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="13" class="text-center py-4">Nenhum contrato encontrado</td></tr>';
             return;
         }
         
@@ -353,11 +626,9 @@ async function buscarContratos() {
             const dados = doc.data();
             const statusClass = `status-${dados.status}`;
             const statusTexto = {
+                'processamento': 'Processamento',
                 'pago': 'Pago',
-                'pendente_documento': 'Pend. Doc.',
-                'estornado': 'Estornado',
-                'ativo': 'Ativo',
-                'atrasado': 'Atrasado'
+                'cancelado': 'Cancelado'
             }[dados.status] || dados.status;
             
             totalCartoes += dados.valorCartao || 0;
@@ -389,6 +660,7 @@ async function buscarContratos() {
                     <td class="tel-mask">${mascararTelefone(dados.telefone)}</td>
                     <td><span class="tipo-venda-badge ${tipoVendaClass}">${tipoVendaNome}</span></td>
                     <td>R$ ${(dados.valorCartao || 0).toFixed(2)}</td>
+                    <td>R$ ${(dados.valorParcelas || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
                     <td>${dados.parcelas || 0}x</td>
                     <td>${cartaoInfo}</td>
@@ -399,6 +671,19 @@ async function buscarContratos() {
                             <button class="btn btn-info" onclick="verDetalhes('${doc.id}')" title="Ver detalhes">
                                 <i class="bi bi-eye"></i>
                             </button>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown" title="Alterar status">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusContrato('${doc.id}', 'pago')">
+                                        <i class="bi bi-check-circle text-success"></i> Marcar como Pago
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="atualizarStatusContrato('${doc.id}', 'cancelado')">
+                                        <i class="bi bi-x-circle text-danger"></i> Cancelar Contrato
+                                    </a></li>
+                                </ul>
+                            </div>
                             ${dados.cartaoRetido?.retido && dados.cartaoRetido?.statusDevolucao === 'retido' ? `
                                 <button class="btn btn-success" onclick="registrarDevolucao('${doc.id}')" title="Registrar devolução">
                                     <i class="bi bi-check-circle"></i>
@@ -414,6 +699,7 @@ async function buscarContratos() {
             <tr class="table-active fw-bold">
                 <td colspan="5">TOTAIS (${snapshot.size} contratos | ${totalCartoesRetidos} cartões retidos)</td>
                 <td>R$ ${totalCartoes.toFixed(2)}</td>
+                <td></td>
                 <td>R$ ${totalEmprestado.toFixed(2)}</td>
                 <td></td>
                 <td></td>
@@ -460,6 +746,12 @@ async function verDetalhes(id) {
             const tipoVendaNome = dados.tipoVendaNome || dados.tipoVenda || 'N/A';
             const tipoVendaClass = dados.tipoVenda ? `tipo-${dados.tipoVenda}` : '';
             
+            const statusTexto = {
+                'processamento': 'Processamento',
+                'pago': 'Pago',
+                'cancelado': 'Cancelado'
+            }[dados.status] || dados.status;
+            
             const enderecoHTML = dados.endereco?.logradouro ? `
                 <div class="card mb-3">
                     <div class="card-header bg-light">
@@ -491,11 +783,24 @@ async function verDetalhes(id) {
                 </div>
             ` : '';
             
+            const pixHTML = dados.pix ? `
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <i class="bi bi-qr-code"></i> <strong>Dados PIX</strong>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Chave PIX:</strong> ${dados.pix}</p>
+                        <p><strong>Beneficiário:</strong> ${dados.nomeBeneficiario || 'N/A'}</p>
+                        <p><strong>Mesmo titular:</strong> ${dados.mesmoTitular ? 'Sim' : 'Não'}</p>
+                    </div>
+                </div>
+            ` : '';
+            
             modalBody.innerHTML = `
                 <div class="row">
                     <div class="col-md-6">
                         <h6 class="text-primary">Contrato: ${dados.numeroContrato}</h6>
-                        <p><strong>Status:</strong> ${dados.status}</p>
+                        <p><strong>Status:</strong> <span class="badge badge-status status-${dados.status}">${statusTexto}</span></p>
                         <p><strong>Tipo de Venda:</strong> <span class="tipo-venda-badge ${tipoVendaClass}">${tipoVendaNome}</span></p>
                         <p><strong>Data:</strong> ${dados.dataContrato}</p>
                         <p><strong>Nome:</strong> ${dados.nome}</p>
@@ -503,14 +808,15 @@ async function verDetalhes(id) {
                         <p><strong>Telefone:</strong> ${mascararTelefone(dados.telefone)}</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Banco:</strong> ${dados.bancoNome}</p>
-                        <p><strong>PIX:</strong> ${dados.pix || 'N/A'}</p>
+                        <p><strong>Banco:</strong> ${dados.banco || 'N/A'}</p>
                         <p><strong>Valor Cartão:</strong> R$ ${(dados.valorCartao || 0).toFixed(2)}</p>
-                        <p><strong>Valor Emprestado:</strong> R$ ${(dados.valorEmprestado || 0).toFixed(2)}</p>
                         <p><strong>Parcelas:</strong> ${dados.parcelas || 0}x</p>
+                        <p><strong>Valor Parcela:</strong> R$ ${(dados.valorParcelas || 0).toFixed(2)}</p>
+                        <p><strong>Valor Emprestado:</strong> R$ ${(dados.valorEmprestado || 0).toFixed(2)}</p>
                         <p><strong>Lucro:</strong> R$ ${(dados.lucro || 0).toFixed(2)}</p>
                     </div>
                 </div>
+                ${pixHTML}
                 ${enderecoHTML}
                 ${cartaoHTML}
                 ${dados.fichaUrl ? `<div class="mb-3"><strong>Ficha do Cliente:</strong><br><img src="${dados.fichaUrl}" class="img-fluid mt-2 rounded" alt="Ficha"></div>` : ''}
@@ -582,7 +888,13 @@ async function gerarRelatorio() {
             // Agrupamento
             const tv = dados.tipoVenda || 'outros';
             if (!porTipoVenda[tv]) {
-                porTipoVenda[tv] = { nome: dados.tipoVendaNome || tv, quantidade: 0, valorCartao: 0, valorEmprestado: 0, lucro: 0 };
+                porTipoVenda[tv] = { 
+                    nome: dados.tipoVendaNome || tv, 
+                    quantidade: 0, 
+                    valorCartao: 0, 
+                    valorEmprestado: 0, 
+                    lucro: 0 
+                };
             }
             porTipoVenda[tv].quantidade++;
             porTipoVenda[tv].valorCartao += dados.valorCartao || 0;
@@ -602,6 +914,11 @@ async function gerarRelatorio() {
             }
             
             const tipoVendaNome = dados.tipoVendaNome || dados.tipoVenda || 'N/A';
+            const statusTexto = {
+                'processamento': 'Processamento',
+                'pago': 'Pago',
+                'cancelado': 'Cancelado'
+            }[dados.status] || dados.status;
             
             tbody.innerHTML += `
                 <tr>
@@ -610,10 +927,11 @@ async function gerarRelatorio() {
                     <td>${mascararCPF(dados.cpf)}</td>
                     <td>${tipoVendaNome}</td>
                     <td>R$ ${(dados.valorCartao || 0).toFixed(2)}</td>
+                    <td>R$ ${(dados.valorParcelas || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.lucro || 0).toFixed(2)}</td>
                     <td>${cartaoInfo}</td>
-                    <td>${dados.status}</td>
+                    <td>${statusTexto}</td>
                     <td>${dados.dataContrato}</td>
                 </tr>
             `;
@@ -623,7 +941,7 @@ async function gerarRelatorio() {
         if (tipo === 'completo' && Object.keys(porTipoVenda).length > 0) {
             tbody.innerHTML += `
                 <tr class="table-secondary fw-bold">
-                    <td colspan="10">RESUMO POR TIPO DE VENDA</td>
+                    <td colspan="11">RESUMO POR TIPO DE VENDA</td>
                 </tr>
             `;
             Object.values(porTipoVenda).forEach(tv => {
@@ -633,6 +951,7 @@ async function gerarRelatorio() {
                         <td>${tv.quantidade} contrato(s)</td>
                         <td></td>
                         <td>R$ ${tv.valorCartao.toFixed(2)}</td>
+                        <td></td>
                         <td>R$ ${tv.valorEmprestado.toFixed(2)}</td>
                         <td>R$ ${tv.lucro.toFixed(2)}</td>
                         <td colspan="3"></td>
@@ -684,9 +1003,14 @@ function exportarParaExcel() {
         'Cidade': c.endereco?.cidade || '',
         'Estado': c.endereco?.estado || '',
         'Valor Cartão': c.valorCartao,
+        'Parcelas': c.parcelas,
+        'Valor Parcela': c.valorParcelas || 0,
         'Valor Emprestado': c.valorEmprestado,
         'Lucro': c.lucro || 0,
-        'Parcelas': c.parcelas,
+        'Chave PIX': c.pix || '',
+        'Beneficiário PIX': c.nomeBeneficiario || '',
+        'Mesmo Titular': c.mesmoTitular ? 'Sim' : 'Não',
+        'Banco': c.banco || '',
         'Cartão Retido': c.cartaoRetido?.retido ? 'SIM' : 'NÃO',
         'Bandeira Cartão': c.cartaoRetido?.bandeira || '',
         'Últimos Dígitos': c.cartaoRetido?.ultimosDigitos || '',
@@ -694,9 +1018,7 @@ function exportarParaExcel() {
         'Data Retirada': c.cartaoRetido?.dataRetirada || '',
         'Data Devolução': c.cartaoRetido?.dataDevolucao || '',
         'Status': c.status,
-        'Data Contrato': c.dataContrato,
-        'Banco': c.bancoNome,
-        'PIX': c.pix || ''
+        'Data Contrato': c.dataContrato
     }));
     
     const ws = XLSX.utils.json_to_sheet(dados);
@@ -765,11 +1087,18 @@ function limparFormulario() {
     document.querySelectorAll('.upload-area p').forEach(p => p.style.display = 'block');
     
     document.getElementById('divBandeiraCartao').style.display = 'none';
+    document.getElementById('divBandeiraOutros').style.display = 'none';
     document.getElementById('divUltimosDigitos').style.display = 'none';
     document.getElementById('divDataRetirada').style.display = 'none';
     document.getElementById('divObservacaoCartao').style.display = 'none';
+    document.getElementById('divBancoOutros').style.display = 'none';
     
     document.getElementById('parcelas').readOnly = false;
+    document.getElementById('cpf').classList.remove('is-valid', 'is-invalid');
+    
+    // Resetar flags
+    document.getElementById('flagEnderecoManual').checked = false;
+    document.getElementById('flagMesmoTitular').checked = true;
     
     gerarNumeroContrato();
 }
