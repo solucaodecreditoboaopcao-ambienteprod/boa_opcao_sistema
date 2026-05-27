@@ -930,4 +930,69 @@ pre {
     background: #e65100;
 }
 
+/* Container da tabela com scroll */
+#consulta .table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 8px;
+    -webkit-overflow-scrolling: touch;
+}
 
+/* Tabela de contratos */
+#tabelaContratos {
+    width: auto;
+    min-width: 100%;
+    white-space: nowrap;
+    font-size: 0.85rem;
+}
+
+#tabelaContratos th {
+    background: linear-gradient(135deg, #e65100, #ff6f00);
+    color: white;
+    font-weight: 600;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+#tabelaContratos td {
+    padding: 0.5rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Scrollbar personalizada */
+#consulta .table-responsive::-webkit-scrollbar {
+    height: 10px;
+}
+
+#consulta .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 5px;
+}
+
+#consulta .table-responsive::-webkit-scrollbar-thumb {
+    background: #ff6f00;
+    border-radius: 5px;
+}
+
+#consulta .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #e65100;
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 768px) {
+    #tabelaContratos {
+        font-size: 0.75rem;
+    }
+    
+    #tabelaContratos th,
+    #tabelaContratos td {
+        padding: 0.3rem 0.4rem;
+    }
+}
