@@ -694,106 +694,141 @@ async function salvarContrato(e) {
         return;
     }
     
+    // Função auxiliar para pegar valor com segurança
+    function getValue(id, defaultValue = '') {
+        const element = document.getElementById(id);
+        return element ? element.value : defaultValue;
+    }
+    
+    // Função auxiliar para pegar elemento com segurança
+    function getElement(id) {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.error(`Elemento com ID "${id}" não encontrado`);
+        }
+        return element;
+    }
+    
     // Validar CPF do cliente
-    const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
+    const cpf = getValue('cpf').replace(/\D/g, '');
     if (!validarCPF(cpf)) {
         mostrarStatus('CPF do cliente inválido! Verifique e tente novamente.', 'danger');
-        document.getElementById('cpf').focus();
+        const cpfElement = getElement('cpf');
+        if (cpfElement) cpfElement.focus();
         return;
     }
     
     // Validar tipo de pagamento
-    const tipoPagamento = document.querySelector('input[name="tipoPagamento"]:checked').value;
+    const tipoPagamentoRadio = document.querySelector('input[name="tipoPagamento"]:checked');
+    const tipoPagamento = tipoPagamentoRadio ? tipoPagamentoRadio.value : 'pix';
     
     // Validar CPF de terceiros (apenas se for PIX e terceiros)
-    const tipoBeneficiario = tipoPagamento === 'pix' ? 
-        document.querySelector('input[name="tipoBeneficiario"]:checked').value : null;
+    const tipoBeneficiarioRadio = document.querySelector('input[name="tipoBeneficiario"]:checked');
+    const tipoBeneficiario = (tipoPagamento === 'pix' && tipoBeneficiarioRadio) ? tipoBeneficiarioRadio.value : null;
     let cpfTerceiros = '';
     
     if (tipoPagamento === 'pix' && tipoBeneficiario === 'terceiros') {
-        cpfTerceiros = document.getElementById('cpfTerceiros').value.replace(/\D/g, '');
+        cpfTerceiros = getValue('cpfTerceiros').replace(/\D/g, '');
         
         if (!cpfTerceiros) {
             mostrarStatus('CPF do terceiro é obrigatório!', 'danger');
-            document.getElementById('cpfTerceiros').focus();
+            const cpfTerceirosElement = getElement('cpfTerceiros');
+            if (cpfTerceirosElement) cpfTerceirosElement.focus();
             return;
         }
         
         if (!validarCPF(cpfTerceiros)) {
             mostrarStatus('CPF do terceiro inválido! Verifique e tente novamente.', 'danger');
-            document.getElementById('cpfTerceiros').focus();
+            const cpfTerceirosElement = getElement('cpfTerceiros');
+            if (cpfTerceirosElement) cpfTerceirosElement.focus();
             return;
         }
         
-        // Verificar se CPF do terceiro é igual ao do cliente
         if (cpfTerceiros === cpf) {
             mostrarStatus('O CPF do terceiro não pode ser igual ao CPF do cliente!', 'danger');
-            document.getElementById('cpfTerceiros').focus();
+            const cpfTerceirosElement = getElement('cpfTerceiros');
+            if (cpfTerceirosElement) cpfTerceirosElement.focus();
             return;
         }
     }
     
     // Validar dados da transferência se for o caso
     if (tipoPagamento === 'transferencia') {
-        const dadosTransferencia = document.getElementById('dadosTransferencia').value.trim();
+        const dadosTransferencia = getValue('dadosTransferencia').trim();
         if (!dadosTransferencia) {
             mostrarStatus('Informe os detalhes da transferência!', 'danger');
-            document.getElementById('dadosTransferencia').focus();
+            const dadosTransferenciaElement = getElement('dadosTransferencia');
+            if (dadosTransferenciaElement) dadosTransferenciaElement.focus();
             return;
         }
     }
     
     // Validar parcelas
-    const parcelas = parseInt(document.getElementById('parcelas').value);
+    const parcelasValue = getValue('parcelas');
+    const parcelas = parseInt(parcelasValue);
     if (isNaN(parcelas) || parcelas < 1 || parcelas > 120) {
         mostrarStatus('Quantidade de parcelas deve ser entre 1 e 120!', 'danger');
-        document.getElementById('parcelas').focus();
+        const parcelasElement = getElement('parcelas');
+        if (parcelasElement) parcelasElement.focus();
         return;
     }
     
-    const btnSubmit = document.getElementById('btnSubmit');
-    btnSubmit.disabled = true;
-    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
+    // Validar nome do cliente
+    const nome = getValue('nome').trim();
+    if (!nome || nome.length < 3) {
+        mostrarStatus('Nome do cliente é obrigatório e deve ter pelo menos 3 caracteres!', 'danger');
+        const nomeElement = getElement('nome');
+        if (nomeElement) nomeElement.focus();
+        return;
+    }
+    
+    const btnSubmit = getElement('btnSubmit');
+    if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
+    }
     
     try {
         const enderecoCompleto = {
-            cep: document.getElementById('cep').value,
-            logradouro: document.getElementById('endereco').value,
-            numero: document.getElementById('numeroEndereco').value,
-            bairro: document.getElementById('bairro').value,
-            complemento: document.getElementById('complemento').value,
-            cidade: document.getElementById('cidade').value,
-            estado: document.getElementById('estado').value,
-            completo: `${document.getElementById('endereco').value}, ${document.getElementById('numeroEndereco').value} - ${document.getElementById('bairro').value}, ${document.getElementById('cidade').value}/${document.getElementById('estado').value}`
+            cep: getValue('cep'),
+            logradouro: getValue('endereco'),
+            numero: getValue('numeroEndereco'),
+            bairro: getValue('bairro'),
+            complemento: getValue('complemento'),
+            cidade: getValue('cidade'),
+            estado: getValue('estado'),
+            completo: `${getValue('endereco')}, ${getValue('numeroEndereco')} - ${getValue('bairro')}, ${getValue('cidade')}/${getValue('estado')}`
         };
         
-        const cartaoRetido = document.getElementById('cartaoRetido').checked;
-        const bandeiraSelecionada = document.getElementById('bandeiraCartao').value;
+        const cartaoRetidoCheckbox = getElement('cartaoRetido');
+        const cartaoRetido = cartaoRetidoCheckbox ? cartaoRetidoCheckbox.checked : false;
+        const bandeiraSelecionada = getValue('bandeiraCartao');
         const bandeiraFinal = bandeiraSelecionada === 'Outros' ? 
-            document.getElementById('bandeiraOutros').value : bandeiraSelecionada;
+            getValue('bandeiraOutros') : bandeiraSelecionada;
         
         const dadosCartaoRetido = cartaoRetido ? {
             retido: true,
             bandeira: bandeiraFinal,
-            ultimosDigitos: document.getElementById('ultimosDigitos').value,
-            dataRetirada: document.getElementById('dataRetirada').value,
-            observacao: document.getElementById('observacaoCartao').value,
+            ultimosDigitos: getValue('ultimosDigitos'),
+            dataRetirada: getValue('dataRetirada'),
+            observacao: getValue('observacaoCartao'),
             dataDevolucao: null,
             statusDevolucao: 'retido'
         } : {
             retido: false
         };
         
-        const tipoVenda = document.getElementById('tipoVenda').value;
-        const bancoSelecionado = document.getElementById('banco').value;
+        const tipoVenda = getValue('tipoVenda');
+        const bancoSelecionado = getValue('banco');
+        const bancoElement = getElement('banco');
         const bancoFinal = bancoSelecionado === 'outros' ? 
-            document.getElementById('bancoOutros').value : 
-            document.getElementById('banco').options[document.getElementById('banco').selectedIndex].text;
+            getValue('bancoOutros') : 
+            (bancoElement ? bancoElement.options[bancoElement.selectedIndex]?.text : '');
         
-        const valorCartao = parseFloat(document.getElementById('valorCartao').value) || 0;
-        const parcelasCount = parseInt(document.getElementById('parcelas').value) || 0;
-        const valorParcelas = valorCartao / parcelasCount;
-        const valorEmprestado = parseFloat(document.getElementById('valorEmprestado').value) || 0;
+        const valorCartao = parseFloat(getValue('valorCartao')) || 0;
+        const parcelasCount = parseInt(getValue('parcelas')) || 0;
+        const valorParcelas = parcelasCount > 0 ? valorCartao / parcelasCount : 0;
+        const valorEmprestado = parseFloat(getValue('valorEmprestado')) || 0;
         
         // Montar dados de pagamento
         const dadosPagamento = {
@@ -801,31 +836,30 @@ async function salvarContrato(e) {
         };
         
         if (tipoPagamento === 'pix') {
-            dadosPagamento.pix = document.getElementById('pix').value;
+            dadosPagamento.pix = getValue('pix');
             
-            // Montar dados do beneficiário
             dadosPagamento.beneficiario = {
-                tipo: tipoBeneficiario,
-                nome: document.getElementById('nomeBeneficiario').value
+                tipo: tipoBeneficiario || 'mesmo_titular',
+                nome: getValue('nomeBeneficiario')
             };
             
             if (tipoBeneficiario === 'terceiros') {
                 dadosPagamento.beneficiario.cpf = cpfTerceiros;
             }
         } else if (tipoPagamento === 'transferencia') {
-            dadosPagamento.dadosTransferencia = document.getElementById('dadosTransferencia').value;
+            dadosPagamento.dadosTransferencia = getValue('dadosTransferencia');
         }
         
         const dadosContrato = {
-            numeroContrato: document.getElementById('numeroContrato').value,
-            statusValorCartao: document.getElementById('statusValorCartao').value,
-            statusValorEmprestado: document.getElementById('statusValorEmprestado').value,
+            numeroContrato: getValue('numeroContrato'),
+            statusValorCartao: getValue('statusValorCartao', 'processamento'),
+            statusValorEmprestado: getValue('statusValorEmprestado', 'processamento'),
             tipoVenda: tipoVenda,
             tipoVendaNome: tipoVendaMap[tipoVenda] || tipoVenda,
-            dataContrato: document.getElementById('dataContrato').value,
-            nome: document.getElementById('nome').value.toUpperCase(),
+            dataContrato: getValue('dataContrato'),
+            nome: nome.toUpperCase(),
             cpf: cpf,
-            telefone: document.getElementById('numero').value.replace(/\D/g, ''),
+            telefone: getValue('numero').replace(/\D/g, ''),
             endereco: enderecoCompleto,
             pagamento: dadosPagamento,
             banco: bancoFinal,
@@ -839,8 +873,8 @@ async function salvarContrato(e) {
             dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        const fichaFile = document.getElementById('fichaCliente').files[0];
-        const docFile = document.getElementById('documentoCliente').files[0];
+        const fichaFile = getElement('fichaCliente')?.files[0];
+        const docFile = getElement('documentoCliente')?.files[0];
         
         if (fichaFile) {
             dadosContrato.fichaUrl = await uploadImagemParaImgBB(fichaFile);
@@ -867,8 +901,10 @@ async function salvarContrato(e) {
         console.error('Erro:', error);
         mostrarStatus('❌ Erro ao cadastrar: ' + error.message, 'danger');
     } finally {
-        btnSubmit.disabled = false;
-        btnSubmit.innerHTML = '<i class="bi bi-check-circle"></i> Cadastrar Contrato';
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="bi bi-check-circle"></i> Cadastrar Contrato';
+        }
     }
 }
 
