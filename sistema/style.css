@@ -419,23 +419,24 @@ body::before {
     white-space: nowrap;
 }
 
+/* Tipo de Venda - cores neutras para não confundir com status */
 .tipo-cartao_alimentacao {
-    background: linear-gradient(135deg, #4caf50, #81c784);
+    background: linear-gradient(135deg, #6c757d, #adb5bd);
     color: white;
 }
 
 .tipo-cartao_refeicao {
-    background: linear-gradient(135deg, #2196f3, #64b5f6);
+    background: linear-gradient(135deg, #495057, #6c757d);
     color: white;
 }
 
 .tipo-cartao_credito_parcelado {
-    background: linear-gradient(135deg, #9c27b0, #ba68c8);
+    background: linear-gradient(135deg, #7952b3, #a98eda);
     color: white;
 }
 
 .tipo-cartao_credito_vista {
-    background: linear-gradient(135deg, #ff9800, #ffb74d);
+    background: linear-gradient(135deg, #0d6efd, #6ea8fe);
     color: white;
 }
 
@@ -677,34 +678,34 @@ tr.cartao-retido-row:hover {
 
 /* Status Valor Cartão */
 .status-cartao-processamento {
-    background: linear-gradient(135deg, #00b0ff, #40c4ff);
-    color: white;
+    background: linear-gradient(135deg, #ff6f00, #ff9800) !important;
+    color: white !important;
 }
 
 .status-cartao-recebido {
-    background: linear-gradient(135deg, #00c853, #69f0ae);
-    color: white;
+    background: linear-gradient(135deg, #00c853, #69f0ae) !important;
+    color: white !important;
 }
 
 .status-cartao-cancelado {
-    background: linear-gradient(135deg, #ff1744, #ff5252);
-    color: white;
+    background: linear-gradient(135deg, #ff1744, #ff5252) !important;
+    color: white !important;
 }
 
 /* Status Valor Emprestado */
 .status-emprestado-processamento {
-    background: linear-gradient(135deg, #ff9800, #ffb74d);
-    color: white;
+    background: linear-gradient(135deg, #ff6f00, #ff9800) !important;
+    color: white !important;
 }
 
 .status-emprestado-pago {
-    background: linear-gradient(135deg, #00c853, #69f0ae);
-    color: white;
+    background: linear-gradient(135deg, #00c853, #69f0ae) !important;
+    color: white !important;
 }
 
 .status-emprestado-cancelado {
-    background: linear-gradient(135deg, #ff1744, #ff5252);
-    color: white;
+    background: linear-gradient(135deg, #ff1744, #ff5252) !important;
+    color: white !important;
 }
 
 /* Dropdown header */
@@ -892,3 +893,41 @@ pre {
 .nav-link.disabled i {
     opacity: 0.5;
 }
+
+/* Tabela com scroll horizontal */
+#tabelaContratos {
+    min-width: 1400px;
+}
+
+#tabelaContratos th,
+#tabelaContratos td {
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+#tabelaContratos th {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+}
+
+/* Scrollbar personalizada para a tabela */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #ff6f00;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #e65100;
+}
+
+
