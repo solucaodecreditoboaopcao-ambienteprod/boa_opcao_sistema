@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOA OPÇÃO - Sistema de Empréstimos</title>
+    <title>BOA OPÇÃO - Soluções de Crédito</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- SheetJS -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Portfolio CSS -->
+    <link rel="stylesheet" href="css/portfolio.css">
 </head>
 <body>
     <!-- Header com Logo -->
@@ -20,668 +18,264 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-4 text-center text-md-start">
-                    <img src="imagens/logo.png" alt="BOA OPÇÃO" class="logo-grande">
+                    <img src="imagens_portfolio/logo.png" alt="BOA OPÇÃO" class="logo-grande">
                 </div>
                 <div class="col-md-8 text-center text-md-end">
                     <div class="slogan">
-                        <h2 class="org-title" id="orgName">BOA OPÇÃO</h2>
-                        <p class="org-subtitle" id="orgSubName">SOLUÇÕES DE CRÉDITO</p>
+                        <h2 class="org-title">BOA OPÇÃO</h2>
+                        <p class="org-subtitle">SOLUÇÕES DE CRÉDITO</p>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Status da Organização -->
-    <div class="container mt-3">
-        <div id="statusOrg" class="alert alert-dismissible fade show" style="display: none;">
-            <span id="statusMessage"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    </div>
-
-    <!-- Sistema de Abas -->
-    <div class="container mt-4">
-        <ul class="nav nav-tabs custom-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="cadastro-tab" data-bs-toggle="tab" data-bs-target="#cadastro" type="button" role="tab">
-                    <i class="bi bi-plus-circle-fill"></i> Novo Contrato
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="consulta-tab" data-bs-toggle="tab" data-bs-target="#consulta" type="button" role="tab">
-                    <i class="bi bi-search"></i> Consultar Contratos
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="relatorios-tab" data-bs-toggle="tab" data-bs-target="#relatorios" type="button" role="tab">
-                    <i class="bi bi-file-earmark-spreadsheet"></i> Relatórios
-                </button>
-            </li>
-        </ul>
-
-        <div class="tab-content custom-tab-content" id="myTabContent">
-            <!-- Aba 1: Novo Contrato -->
-            <div class="tab-pane fade show active" id="cadastro" role="tabpanel">
-                <div class="row justify-content-center">
-                    <div class="col-lg-10">
-                        <div class="card shadow-lg border-0">
-                            <div class="card-body p-4">
-                                <h4 class="card-title mb-4">
-                                    <i class="bi bi-file-earmark-plus text-primary"></i> 
-                                    Novo Contrato de Empréstimo
-                                </h4>
-                                
-                                <form id="formEmprestimo">
-                                    <!-- Número do Contrato, Status e Tipo de Venda -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="numeroContrato" readonly>
-                                                <label for="numeroContrato">
-                                                    <i class="bi bi-hash"></i> Nº Contrato
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="statusContrato" required>
-                                                    <option value="">Selecione...</option>
-                                                    <option value="pago">Pago / Concluído</option>
-                                                    <option value="pendente_documento">Pendente Documento</option>
-                                                    <option value="estornado">Estornado / Cancelado</option>
-                                                    <option value="ativo">Ativo</option>
-                                                    <option value="atrasado">Atrasado</option>
-                                                </select>
-                                                <label for="statusContrato">
-                                                    <i class="bi bi-flag"></i> Status do Contrato
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="tipoVenda" required>
-                                                    <option value="">Selecione...</option>
-                                                    <option value="cartao_alimentacao">Cartão Alimentação</option>
-                                                    <option value="cartao_refeicao">Cartão Refeição</option>
-                                                    <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
-                                                    <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
-                                                </select>
-                                                <label for="tipoVenda">
-                                                    <i class="bi bi-tag"></i> Tipo de Venda *
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Data do Contrato -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="date" class="form-control" id="dataContrato" required>
-                                                <label for="dataContrato">
-                                                    <i class="bi bi-calendar"></i> Data do Contrato
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Dados do Cliente -->
-                                    <div class="section-title">
-                                        <i class="bi bi-person-badge"></i> Dados do Cliente
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="nome" required placeholder="Nome completo">
-                                                <label for="nome">Nome Completo *</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="cpf" required placeholder="000.000.000-00" maxlength="14">
-                                                <label for="cpf">CPF *</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <input type="tel" class="form-control" id="numero" required placeholder="(00) 00000-0000">
-                                                <label for="numero">Telefone *</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Endereço -->
-                                    <div class="section-title">
-                                        <i class="bi bi-geo-alt"></i> Endereço
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="cep" placeholder="00000-000" maxlength="9" onblur="buscarCEP()">
-                                                <label for="cep">CEP</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-7">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="endereco" placeholder="Rua, Avenida...">
-                                                <label for="endereco">Logradouro</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="numeroEndereco" placeholder="Nº">
-                                                <label for="numeroEndereco">Número</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="bairro" placeholder="Bairro">
-                                                <label for="bairro">Bairro</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="complemento" placeholder="Apto, Bloco, etc.">
-                                                <label for="complemento">Complemento</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="cidade" placeholder="Cidade">
-                                                <label for="cidade">Cidade</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="estado">
-                                                    <option value="">UF</option>
-                                                    <option value="AC">AC</option>
-                                                    <option value="AL">AL</option>
-                                                    <option value="AP">AP</option>
-                                                    <option value="AM">AM</option>
-                                                    <option value="BA">BA</option>
-                                                    <option value="CE">CE</option>
-                                                    <option value="DF">DF</option>
-                                                    <option value="ES">ES</option>
-                                                    <option value="GO">GO</option>
-                                                    <option value="MA">MA</option>
-                                                    <option value="MT">MT</option>
-                                                    <option value="MS">MS</option>
-                                                    <option value="MG">MG</option>
-                                                    <option value="PA">PA</option>
-                                                    <option value="PB">PB</option>
-                                                    <option value="PR">PR</option>
-                                                    <option value="PE">PE</option>
-                                                    <option value="PI">PI</option>
-                                                    <option value="RJ">RJ</option>
-                                                    <option value="RN">RN</option>
-                                                    <option value="RS">RS</option>
-                                                    <option value="RO">RO</option>
-                                                    <option value="RR">RR</option>
-                                                    <option value="SC">SC</option>
-                                                    <option value="SP">SP</option>
-                                                    <option value="SE">SE</option>
-                                                    <option value="TO">TO</option>
-                                                </select>
-                                                <label for="estado">Estado</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Dados Financeiros -->
-                                    <div class="section-title">
-                                        <i class="bi bi-cash-stack"></i> Dados Financeiros
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="pix" placeholder="Chave PIX">
-                                                <label for="pix">Chave PIX</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="banco" required>
-                                                    <option value="">Selecione...</option>
-                                                    <option value="001">Banco do Brasil</option>
-                                                    <option value="104">Caixa Econômica</option>
-                                                    <option value="237">Bradesco</option>
-                                                    <option value="341">Itaú</option>
-                                                    <option value="033">Santander</option>
-                                                    <option value="260">Nubank</option>
-                                                    <option value="077">Inter</option>
-                                                    <option value="336">C6 Bank</option>
-                                                </select>
-                                                <label for="banco">Banco *</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="number" class="form-control" id="valorCartao" required placeholder="0.00" step="0.01" min="0">
-                                                <label for="valorCartao">Valor do Cartão (R$) *</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="number" class="form-control" id="parcelas" required placeholder="Quantidade" min="1" max="96">
-                                                <label for="parcelas">Parcelas *</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="number" class="form-control" id="valorEmprestado" required placeholder="0.00" step="0.01" min="0">
-                                                <label for="valorEmprestado">Valor Emprestado (R$) *</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Controle de Cartão Retido -->
-                                    <div class="section-title">
-                                        <i class="bi bi-credit-card"></i> Controle de Cartão
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-12">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="cartaoRetido" onchange="toggleCartaoRetido()">
-                                                <label class="form-check-label fw-bold" for="cartaoRetido">
-                                                    <i class="bi bi-lock"></i> Cartão Retido para Devolução
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4" id="divBandeiraCartao" style="display: none;">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="bandeiraCartao">
-                                                    <option value="">Selecione...</option>
-                                                    <option value="Visa">Visa</option>
-                                                    <option value="Mastercard">Mastercard</option>
-                                                    <option value="Elo">Elo</option>
-                                                    <option value="American Express">American Express</option>
-                                                    <option value="Hipercard">Hipercard</option>
-                                                    <option value="Diners">Diners Club</option>
-                                                    <option value="Discover">Discover</option>
-                                                    <option value="Sodexo">Sodexo</option>
-                                                    <option value="Ticket">Ticket</option>
-                                                    <option value="Alelo">Alelo</option>
-                                                    <option value="VR">VR</option>
-                                                    <option value="Outros">Outros</option>
-                                                </select>
-                                                <label for="bandeiraCartao">Bandeira do Cartão</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4" id="divUltimosDigitos" style="display: none;">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="ultimosDigitos" placeholder="0000" maxlength="4">
-                                                <label for="ultimosDigitos">Últimos 4 dígitos</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4" id="divDataRetirada" style="display: none;">
-                                            <div class="form-floating">
-                                                <input type="date" class="form-control" id="dataRetirada">
-                                                <label for="dataRetirada">Data da Retirada</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-12" id="divObservacaoCartao" style="display: none;">
-                                            <div class="form-floating">
-                                                <textarea class="form-control" id="observacaoCartao" style="height: 80px;" placeholder="Observações sobre o cartão"></textarea>
-                                                <label for="observacaoCartao">Observações</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Documentos -->
-                                    <div class="section-title">
-                                        <i class="bi bi-file-earmark-image"></i> Documentos do Cliente
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold">Ficha do Cliente</label>
-                                            <div class="upload-area" id="uploadFicha">
-                                                <input type="file" id="fichaCliente" accept="image/*" capture="environment" hidden>
-                                                <i class="bi bi-cloud-upload upload-icon"></i>
-                                                <p>Clique para upload da ficha</p>
-                                                <img id="previewFicha" class="preview-doc" style="display:none;">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold">Documento do Cliente</label>
-                                            <div class="upload-area" id="uploadDocumento">
-                                                <input type="file" id="documentoCliente" accept="image/*" capture="environment" hidden>
-                                                <i class="bi bi-cloud-upload upload-icon"></i>
-                                                <p>Clique para upload do documento</p>
-                                                <img id="previewDocumento" class="preview-doc" style="display:none;">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Botões -->
-                                    <div class="row">
-                                        <div class="col-md-6 mb-2">
-                                            <button type="submit" class="btn btn-primary btn-lg w-100" id="btnSubmit">
-                                                <i class="bi bi-check-circle"></i> Cadastrar Contrato
-                                            </button>
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <button type="button" class="btn btn-outline-secondary btn-lg w-100" onclick="limparFormulario()">
-                                                <i class="bi bi-arrow-counterclockwise"></i> Limpar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Aba 2: Consultar Contratos -->
-            <div class="tab-pane fade" id="consulta" role="tabpanel">
-                <div class="card shadow-lg border-0">
-                    <div class="card-body p-4">
-                        <h4 class="card-title mb-4">
-                            <i class="bi bi-search text-info"></i> 
-                            Consultar Contratos
-                        </h4>
-                        
-                        <!-- Filtros de Busca -->
-                        <div class="search-filters mb-4">
-                            <div class="row g-2">
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="searchCPF" placeholder="CPF">
-                                        <label for="searchCPF">CPF</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="searchNome" placeholder="Nome">
-                                        <label for="searchNome">Nome</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="searchTelefone" placeholder="Telefone">
-                                        <label for="searchTelefone">Telefone</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="searchContrato" placeholder="Nº Contrato">
-                                        <label for="searchContrato">Nº Contrato</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row g-2 mt-2">
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <select class="form-select" id="searchStatus">
-                                            <option value="">Todos os Status</option>
-                                            <option value="pago">Pago / Concluído</option>
-                                            <option value="pendente_documento">Pendente Documento</option>
-                                            <option value="estornado">Estornado / Cancelado</option>
-                                            <option value="ativo">Ativo</option>
-                                            <option value="atrasado">Atrasado</option>
-                                        </select>
-                                        <label for="searchStatus">Status</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <select class="form-select" id="searchTipoVenda">
-                                            <option value="">Todos os Tipos</option>
-                                            <option value="cartao_alimentacao">Cartão Alimentação</option>
-                                            <option value="cartao_refeicao">Cartão Refeição</option>
-                                            <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
-                                            <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
-                                        </select>
-                                        <label for="searchTipoVenda">Tipo de Venda</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="date" class="form-control" id="searchDataInicio">
-                                        <label for="searchDataInicio">Data Início</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="date" class="form-control" id="searchDataFim">
-                                        <label for="searchDataFim">Data Fim</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row g-2 mt-2">
-                                <div class="col-md-3">
-                                    <div class="form-check form-switch mt-3">
-                                        <input class="form-check-input" type="checkbox" id="searchCartaoRetido">
-                                        <label class="form-check-label fw-bold" for="searchCartaoRetido">
-                                            <i class="bi bi-credit-card"></i> Cartões Retidos
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-9">
-                                    <button class="btn btn-info btn-lg w-100" onclick="buscarContratos()">
-                                        <i class="bi bi-search"></i> Buscar Contratos
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Resultados -->
-                        <div class="table-responsive">
-                            <table class="table table-hover" id="tabelaContratos">
-                                <thead>
-                                    <tr>
-                                        <th>Contrato</th>
-                                        <th>Nome</th>
-                                        <th>CPF</th>
-                                        <th>Telefone</th>
-                                        <th>Tipo Venda</th>
-                                        <th>Valor Cartão</th>
-                                        <th>Valor Emprestado</th>
-                                        <th>Parcelas</th>
-                                        <th>Cartão</th>
-                                        <th>Status</th>
-                                        <th>Data</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="resultadosBusca">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Aba 3: Relatórios -->
-            <div class="tab-pane fade" id="relatorios" role="tabpanel">
-                <div class="card shadow-lg border-0">
-                    <div class="card-body p-4">
-                        <h4 class="card-title mb-4">
-                            <i class="bi bi-file-earmark-spreadsheet text-success"></i> 
-                            Relatórios
-                        </h4>
-                        
-                        <!-- Filtros do Relatório -->
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <select class="form-select" id="relatorioTipo" onchange="atualizarCamposRelatorio()">
-                                        <option value="mensal">Mensal</option>
-                                        <option value="periodo">Por Período</option>
-                                        <option value="tipo_venda">Por Tipo de Venda</option>
-                                        <option value="completo">Completo</option>
-                                    </select>
-                                    <label for="relatorioTipo">Tipo</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <input type="month" class="form-control" id="relatorioMes">
-                                    <label for="relatorioMes">Mês/Ano</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <input type="date" class="form-control" id="relatorioDataInicio" style="display:none;">
-                                    <label for="relatorioDataInicio">Data Início</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <input type="date" class="form-control" id="relatorioDataFim" style="display:none;">
-                                    <label for="relatorioDataFim">Data Fim</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2" id="divTipoVendaRelatorio" style="display:none;">
-                                <div class="form-floating">
-                                    <select class="form-select" id="relatorioTipoVenda">
-                                        <option value="">Todos</option>
-                                        <option value="cartao_alimentacao">Cartão Alimentação</option>
-                                        <option value="cartao_refeicao">Cartão Refeição</option>
-                                        <option value="cartao_credito_parcelado">Crédito Parcelado</option>
-                                        <option value="cartao_credito_vista">Crédito À Vista</option>
-                                    </select>
-                                    <label for="relatorioTipoVenda">Tipo de Venda</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-success btn-lg w-100 h-100" onclick="gerarRelatorio()">
-                                    <i class="bi bi-download"></i> Gerar
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Cards de Resumo -->
-                        <div class="row g-3 mb-4" id="cardsResumo">
-                            <div class="col-md-3">
-                                <div class="card bg-primary text-white">
-                                    <div class="card-body">
-                                        <h6>Total Contratos</h6>
-                                        <h3 id="totalContratos">0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body">
-                                        <h6>Valor Total Cartões</h6>
-                                        <h3 id="totalCartoes">R$ 0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-info text-white">
-                                    <div class="card-body">
-                                        <h6>Valor Total Emprestado</h6>
-                                        <h3 id="totalEmprestado">R$ 0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-warning text-white">
-                                    <div class="card-body">
-                                        <h6>Lucro Total</h6>
-                                        <h3 id="lucroTotal">R$ 0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Cards de Cartões Retidos -->
-                        <div class="row g-3 mb-4" id="cardsCartoesRetidos" style="display:none;">
-                            <div class="col-md-4">
-                                <div class="card card-cartoes-retidos">
-                                    <div class="card-body">
-                                        <h6><i class="bi bi-lock-fill"></i> Pendentes de Devolução</h6>
-                                        <h3 id="totalCartoesRetidosPendentes">0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body">
-                                        <h6><i class="bi bi-check-circle"></i> Cartões Devolvidos</h6>
-                                        <h3 id="totalCartoesDevolvidos">0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-info text-white">
-                                    <div class="card-body">
-                                        <h6><i class="bi bi-credit-card"></i> Total Cartões Retidos</h6>
-                                        <h3 id="totalCartoesRetidos">0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tabela de Relatório -->
-                        <div class="table-responsive" id="tabelaRelatorio" style="display:none;">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Contrato</th>
-                                        <th>Cliente</th>
-                                        <th>CPF</th>
-                                        <th>Tipo Venda</th>
-                                        <th>Valor Cartão</th>
-                                        <th>Valor Emprestado</th>
-                                        <th>Lucro</th>
-                                        <th>Cartão Retido</th>
-                                        <th>Status</th>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dadosRelatorio">
-                                </tbody>
-                            </table>
-                            <button class="btn btn-success mt-3" onclick="exportarParaExcel()">
-                                <i class="bi bi-file-earmark-excel"></i> Exportar para Excel
-                            </button>
-                        </div>
+    <!-- Seção Hero -->
+    <section class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-8">
+                    <h1 class="hero-title animate-fadeInUp">Soluções Financeiras<br>que Transformam Vidas</h1>
+                    <p class="hero-subtitle animate-fadeInUp delay-1">Crédito rápido, seguro e sem burocracia.<br>Realize seus sonhos com a BOA OPÇÃO!</p>
+                    <div class="hero-buttons animate-fadeInUp delay-2">
+                        <a href="#servicos" class="btn btn-hero-primary">
+                            <i class="bi bi-arrow-down-circle"></i> Nossos Serviços
+                        </a>
+                        <a href="https://wa.me/5511999999999" target="_blank" class="btn btn-hero-secondary">
+                            <i class="bi bi-whatsapp"></i> Fale Conosco
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+        <div class="scroll-indicator">
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </section>
+
+    <!-- Carrossel de Serviços -->
+    <section id="servicos" class="services-section">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">Nossos Serviços</h2>
+                <p class="section-subtitle">Conheça as soluções que oferecemos para você</p>
+                <div class="section-divider"></div>
+            </div>
+
+            <div id="carouselServicos" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000">
+                <!-- Indicadores -->
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#carouselServicos" data-bs-slide-to="0" class="active"></button>
+                    <button type="button" data-bs-target="#carouselServicos" data-bs-slide-to="1"></button>
+                    <button type="button" data-bs-target="#carouselServicos" data-bs-slide-to="2"></button>
+                    <button type="button" data-bs-target="#carouselServicos" data-bs-slide-to="3"></button>
+                    <button type="button" data-bs-target="#carouselServicos" data-bs-slide-to="4"></button>
+                    <button type="button" data-bs-target="#carouselServicos" data-bs-slide-to="5"></button>
+                </div>
+
+                <!-- Slides -->
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="service-card-wrapper">
+                            <div class="service-card">
+                                <img src="imagens_portfolio/img1.png" class="service-image" alt="Cartão de Crédito - Parcelado">
+                                <div class="service-overlay">
+                                    <div class="service-info">
+                                        <span class="service-badge">Novo</span>
+                                        <h3>Cartão de Crédito Parcelado</h3>
+                                        <p>Transforme seu limite em dinheiro com as melhores taxas do mercado</p>
+                                        <a href="https://wa.me/5511999999999" target="_blank" class="btn-service-more">
+                                            <i class="bi bi-whatsapp"></i> Saiba Mais
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="service-card-wrapper">
+                            <div class="service-card">
+                                <img src="imagens_portfolio/img2.png" class="service-image" alt="Cartão de Crédito - À Vista">
+                                <div class="service-overlay">
+                                    <div class="service-info">
+                                        <span class="service-badge">Popular</span>
+                                        <h3>Cartão de Crédito À Vista</h3>
+                                        <p>Dinheiro rápido na sua conta em até 24 horas</p>
+                                        <a href="https://wa.me/5511999999999" target="_blank" class="btn-service-more">
+                                            <i class="bi bi-whatsapp"></i> Saiba Mais
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="service-card-wrapper">
+                            <div class="service-card">
+                                <img src="imagens_portfolio/img3.png" class="service-image" alt="Cartão Alimentação">
+                                <div class="service-overlay">
+                                    <div class="service-info">
+                                        <span class="service-badge">Destaque</span>
+                                        <h3>Cartão Alimentação</h3>
+                                        <p>Crédito especial para suas compras de alimentação</p>
+                                        <a href="https://wa.me/5511999999999" target="_blank" class="btn-service-more">
+                                            <i class="bi bi-whatsapp"></i> Saiba Mais
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="service-card-wrapper">
+                            <div class="service-card">
+                                <img src="imagens_portfolio/img4.png" class="service-image" alt="Cartão Refeição">
+                                <div class="service-overlay">
+                                    <div class="service-info">
+                                        <span class="service-badge">Exclusivo</span>
+                                        <h3>Cartão Refeição</h3>
+                                        <p>Solução completa para seu vale-refeição com cashback</p>
+                                        <a href="https://wa.me/5511999999999" target="_blank" class="btn-service-more">
+                                            <i class="bi bi-whatsapp"></i> Saiba Mais
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="service-card-wrapper">
+                            <div class="service-card">
+                                <img src="imagens_portfolio/img5.png" class="service-image" alt="Empréstimo Consignado">
+                                <div class="service-overlay">
+                                    <div class="service-info">
+                                        <span class="service-badge">Oferta</span>
+                                        <h3>Empréstimo Consignado</h3>
+                                        <p>Taxas especiais para servidores públicos e aposentados</p>
+                                        <a href="https://wa.me/5511999999999" target="_blank" class="btn-service-more">
+                                            <i class="bi bi-whatsapp"></i> Saiba Mais
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="service-card-wrapper">
+                            <div class="service-card">
+                                <img src="imagens_portfolio/img6.png" class="service-image" alt="Crédito Pessoal">
+                                <div class="service-overlay">
+                                    <div class="service-info">
+                                        <span class="service-badge">Premium</span>
+                                        <h3>Crédito Pessoal</h3>
+                                        <p>Empréstimo pessoal sem garantia, aprovação rápida</p>
+                                        <a href="https://wa.me/5511999999999" target="_blank" class="btn-service-more">
+                                            <i class="bi bi-whatsapp"></i> Saiba Mais
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controles -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselServicos" data-bs-slide="prev">
+                    <span class="carousel-control-icon">
+                        <i class="bi bi-chevron-left"></i>
+                    </span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselServicos" data-bs-slide="next">
+                    <span class="carousel-control-icon">
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção de Benefícios -->
+    <section class="benefits-section">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">Por que escolher a BOA OPÇÃO?</h2>
+                <p class="section-subtitle">Compromisso com sua satisfação</p>
+                <div class="section-divider"></div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                        <h3>Rápido e Fácil</h3>
+                        <p>Aprovação em minutos e dinheiro na conta em até 24 horas úteis</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <i class="bi bi-shield-check-fill"></i>
+                        </div>
+                        <h3>100% Seguro</h3>
+                        <p>Seus dados protegidos com a mais alta tecnologia de segurança</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <i class="bi bi-heart-fill"></i>
+                        </div>
+                        <h3>Atendimento Humanizado</h3>
+                        <p>Equipe dedicada para entender sua necessidade e oferecer a melhor solução</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção de Contato -->
+    <section class="contact-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h2 class="contact-title">Vamos Conversar?</h2>
+                    <p class="contact-text">Estamos prontos para ajudar você a realizar seus objetivos financeiros. Entre em contato agora mesmo!</p>
+                    <div class="contact-buttons">
+                        <a href="https://wa.me/5511999999999" target="_blank" class="btn btn-whatsapp">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                        <a href="tel:+5511999999999" class="btn btn-phone">
+                            <i class="bi bi-telephone-fill"></i> Ligar Agora
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <img src="imagens_portfolio/logo.png" alt="BOA OPÇÃO" class="contact-logo">
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
-    <footer class="footer mt-5">
+    <footer class="footer">
         <div class="container">
-            <p class="mb-0">&copy; APPTECH - Todos os direitos reservados</p>
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">&copy; 2026 - Todos os direitos reservados</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="mb-0 developer-credit">Desenvolvido por APPTECH</p>
+                </div>
+            </div>
         </div>
     </footer>
 
-    <!-- Modal de Detalhes -->
-    <div class="modal fade" id="modalDetalhes" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-file-text"></i> Detalhes do Contrato
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="detalhesContrato">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="script.js"></script>
+    <!-- Portfolio JS -->
+    <script src="js/portfolio.js"></script>
 </body>
 </html>
