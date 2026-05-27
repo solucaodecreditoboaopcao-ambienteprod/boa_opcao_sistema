@@ -1153,36 +1153,45 @@ async function buscarContratos() {
                     <td><span class="badge badge-status ${statusCartaoClass}">${statusCartaoTexto}</span></td>
                     <td><span class="badge badge-status ${statusEmprestadoClass}">${statusEmprestadoTexto}</span></td>
                     <td>${data}</td>
-                    <td style="position: relative; overflow: visible !important;">
-                        <div class="btn-group btn-group-sm">
+                    <td style="white-space: nowrap;">
+                        <div class="d-flex gap-1 align-items-center">
                             <button class="btn btn-info btn-sm" onclick="verDetalhes('${doc.id}')" title="Ver detalhes">
                                 <i class="bi bi-eye"></i>
                             </button>
-                            <div class="dropdown" style="position: static;">
-                                <button class="btn btn-warning btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-reference="parent" aria-expanded="false" title="Alterar status">
-                                    <i class="bi bi-arrow-repeat"></i>
+                            
+                            <!-- Status Cartão -->
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-warning btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" title="Alterar Status Cartão">
+                                    <i class="bi bi-credit-card"></i>
                                 </button>
-                                <ul class="dropdown-menu" style="z-index: 99999 !important; position: absolute !important;">
-                                    <li><h6 class="dropdown-header">Status Valor Cartão</h6></li>
+                                <ul class="dropdown-menu" style="z-index: 99999 !important;">
                                     <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusCartao('${doc.id}', 'recebido'); return false;">
-                                        <i class="bi bi-check-circle text-success"></i> Marcar como Recebido
+                                        <i class="bi bi-check-circle text-success"></i> Recebido
                                     </a></li>
                                     <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusCartao('${doc.id}', 'cancelado'); return false;">
-                                        <i class="bi bi-x-circle text-danger"></i> Cancelar Cartão
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><h6 class="dropdown-header">Status Valor Emprestado</h6></li>
-                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusEmprestado('${doc.id}', 'pago'); return false;">
-                                        <i class="bi bi-check-circle text-success"></i> Marcar como Pago
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusEmprestado('${doc.id}', 'cancelado'); return false;">
-                                        <i class="bi bi-x-circle text-danger"></i> Cancelar Empréstimo
+                                        <i class="bi bi-x-circle text-danger"></i> Cancelar
                                     </a></li>
                                 </ul>
                             </div>
+                            
+                            <!-- Status Empréstimo -->
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" title="Alterar Status Empréstimo">
+                                    <i class="bi bi-cash"></i>
+                                </button>
+                                <ul class="dropdown-menu" style="z-index: 99999 !important;">
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusEmprestado('${doc.id}', 'pago'); return false;">
+                                        <i class="bi bi-check-circle text-success"></i> Pago
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); event.preventDefault(); atualizarStatusEmprestado('${doc.id}', 'cancelado'); return false;">
+                                        <i class="bi bi-x-circle text-danger"></i> Cancelar
+                                    </a></li>
+                                </ul>
+                            </div>
+                            
                             ${dados.cartaoRetido?.retido && dados.cartaoRetido?.statusDevolucao === 'retido' ? `
                                 <button class="btn btn-success btn-sm" onclick="registrarDevolucao('${doc.id}')" title="Registrar devolução">
-                                    <i class="bi bi-check-circle"></i>
+                                    <i class="bi bi-arrow-return-left"></i>
                                 </button>
                             ` : ''}
                         </div>
