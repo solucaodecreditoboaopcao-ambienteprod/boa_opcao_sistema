@@ -996,3 +996,92 @@ pre {
         padding: 0.3rem 0.4rem;
     }
 }
+
+/* Container da tabela com scroll - CORRIGIDO */
+#consulta .table-responsive {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 8px;
+    -webkit-overflow-scrolling: touch;
+    display: block !important;
+}
+
+/* Tabela de contratos - CORRIGIDO */
+#tabelaContratos {
+    width: auto !important;
+    min-width: 100% !important;
+    white-space: nowrap !important;
+    font-size: 0.85rem;
+    table-layout: auto !important;
+}
+
+#tabelaContratos th {
+    background: linear-gradient(135deg, #e65100, #ff6f00) !important;
+    color: white !important;
+    font-weight: 600;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+    white-space: nowrap !important;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+#tabelaContratos td {
+    padding: 0.5rem;
+    vertical-align: middle;
+    white-space: nowrap !important;
+}
+
+#tabelaContratos tbody tr:hover {
+    background: #fff3e0 !important;
+}
+
+/* Scrollbar personalizada - CORRIGIDO */
+#consulta .table-responsive::-webkit-scrollbar {
+    height: 10px !important;
+}
+
+#consulta .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 5px;
+}
+
+#consulta .table-responsive::-webkit-scrollbar-thumb {
+    background: #ff6f00 !important;
+    border-radius: 5px;
+}
+
+#consulta .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #e65100 !important;
+}
+
+/* Firefox scrollbar */
+#consulta .table-responsive {
+    scrollbar-width: thin;
+    scrollbar-color: #ff6f00 #f1f1f1;
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 768px) {
+    #tabelaContratos {
+        font-size: 0.75rem;
+    }
+    
+    #tabelaContratos th,
+    #tabelaContratos td {
+        padding: 0.3rem 0.4rem;
+    }
+}
+
+/* Garantir que o card-body não limite a tabela */
+#consulta .card-body {
+    overflow: visible !important;
+}
+
+/* Garantir que a tab-pane não limite */
+#consulta.tab-pane {
+    overflow: visible !important;
+}
