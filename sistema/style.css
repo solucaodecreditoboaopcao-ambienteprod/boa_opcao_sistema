@@ -722,3 +722,97 @@ tr.cartao-retido-row:hover {
 .dropdown-menu {
     min-width: 200px;
 }
+
+/* Adicionar ao style.css */
+
+/* Radio buttons de pagamento */
+.form-check-input[type="radio"] {
+    width: 1.2em;
+    height: 1.2em;
+    border: 2px solid #e65100;
+    cursor: pointer;
+}
+
+.form-check-input[type="radio"]:checked {
+    background-color: #e65100;
+    border-color: #e65100;
+    box-shadow: 0 0 0 0.2rem rgba(230, 81, 0, 0.15);
+}
+
+.form-check-input[type="radio"]:focus {
+    border-color: #ff6f00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 111, 0, 0.15);
+}
+
+.form-check-label {
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.form-check-label i {
+    margin-right: 0.3rem;
+}
+
+/* Div Transferência */
+#dadosTransferencia {
+    min-height: 120px;
+    font-family: monospace;
+}
+
+#divTransferenciaCampos {
+    animation: slideDown 0.3s ease;
+}
+
+#divPixCampos {
+    animation: slideDown 0.3s ease;
+}
+
+/* Pre formatado para detalhes da transferência */
+pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+/* Badge para modalidade */
+.badge.bg-info {
+    background: linear-gradient(135deg, #00b0ff, #40c4ff) !important;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+}
+
+.badge.bg-primary {
+    background: linear-gradient(135deg, #1565c0, #1976d2) !important;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+}
+
+/* Campo de transferência com ícone */
+.form-floating > .form-control#dadosTransferencia {
+    padding-top: 2rem;
+    line-height: 1.6;
+}
+
+/* Animação slide */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* D-flex gap */
+.d-flex.gap-3 {
+    gap: 2rem !important;
+}
+
+/* Form text info */
+.form-text i {
+    margin-right: 0.3rem;
+}
