@@ -273,40 +273,65 @@ body {
     border-radius: 2px;
 }
 
-/* ========== CARROSSEL SIMPLES E FUNCIONAL ========== */
+/* ========== CARROSSEL COM TAMANHO FIXO ========== */
 
-/* Container do carrossel */
+/* Container do carrossel - TAMANHO FIXO */
 #carouselServicos {
-    max-width: 550px;
+    width: 500px;
+    height: 667px;
     margin: 0 auto;
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    background: #f5f5f5;
 }
 
-/* Wrapper das imagens */
+/* Inner do carrossel - mesma altura */
+#carouselServicos .carousel-inner {
+    width: 100%;
+    height: 100%;
+}
+
+/* Cada item do carrossel */
+#carouselServicos .carousel-item {
+    width: 100%;
+    height: 100%;
+}
+
+/* Wrapper da imagem */
 .service-card-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: #f5f5f5;
-    padding: 0;
 }
 
 /* Card da imagem */
 .service-card {
+    width: 100%;
+    height: 100%;
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* IMAGEM - Mantém proporção original */
+/* IMAGEM - se ajusta ao campo sem cortar */
 .service-image {
     width: 100%;
-    height: auto;
-    display: block;
+    height: 100%;
+    object-fit: contain;
+    /* contain = imagem completa dentro do campo, sem cortes */
+    object-position: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Efeito hover */
 .service-card:hover .service-image {
-    transform: scale(1.05);
-    transition: transform 0.3s ease;
+    transform: scale(1.02);
 }
 
 /* Overlay (texto sobre a imagem) */
@@ -316,7 +341,7 @@ body {
     left: 0;
     right: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
-    padding: 1.5rem;
+    padding: 1.2rem;
     color: white;
     transition: all 0.3s ease;
 }
@@ -329,9 +354,9 @@ body {
     display: inline-block;
     background: #ff6f00;
     color: white;
-    padding: 0.3rem 1rem;
+    padding: 0.2rem 0.8rem;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -339,27 +364,27 @@ body {
 }
 
 .service-info h3 {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 700;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
 }
 
 .service-info p {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     opacity: 0.9;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.5rem;
 }
 
 .btn-service-more {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.3rem;
     background: #25D366;
     color: white;
-    padding: 0.5rem 1.2rem;
+    padding: 0.3rem 0.8rem;
     border-radius: 50px;
     text-decoration: none;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 600;
     transition: all 0.3s ease;
 }
@@ -375,12 +400,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
     background: rgba(255,255,255,0.9);
     border-radius: 50%;
     color: #e65100;
-    font-size: 1.2rem;
+    font-size: 1rem;
     transition: all 0.3s ease;
 }
 
@@ -392,13 +417,13 @@ body {
 }
 
 .carousel-indicators button {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #e65100;
     opacity: 0.5;
     border: none;
-    margin: 0 5px;
+    margin: 0 4px;
 }
 
 .carousel-indicators button.active {
@@ -680,16 +705,6 @@ body {
 }
 
 /* ========== RESPONSIVIDADE ========== */
-@media (max-width: 992px) {
-    .hero-title {
-        font-size: 2.5rem;
-    }
-    
-    #carouselServicos {
-        max-width: 500px;
-    }
-}
-
 @media (max-width: 768px) {
     .org-title {
         font-size: 2rem;
@@ -730,20 +745,10 @@ body {
         font-size: 2rem;
     }
     
+    /* Carrossel responsivo - diminui em telas menores */
     #carouselServicos {
-        max-width: 450px;
-    }
-    
-    .service-info h3 {
-        font-size: 1rem;
-    }
-    
-    .service-info p {
-        font-size: 0.75rem;
-    }
-    
-    .service-overlay {
-        padding: 1rem;
+        width: 400px;
+        height: 533px;
     }
     
     .contact-logo {
@@ -776,8 +781,22 @@ body {
         font-size: 0.9rem;
     }
     
+    /* Carrossel responsivo - tamanho menor para mobile */
     #carouselServicos {
-        max-width: 95%;
+        width: 320px;
+        height: 427px;
+    }
+    
+    .service-info h3 {
+        font-size: 0.85rem;
+    }
+    
+    .service-info p {
+        font-size: 0.65rem;
+    }
+    
+    .service-overlay {
+        padding: 0.8rem;
     }
     
     .map-container {
