@@ -284,11 +284,11 @@ function initMap() {
         return;
     }
     
-    // Coordenadas do endereço (Av. Paulista, 1000 - São Paulo)
-    const coordinates = [-23.564224, -46.651566];
+    // Coordenadas do endereço (R. Direta do Ypiranga, 15 E - Vila Canária, Salvador - BA)
+    const coordinates = [-12.944573, -38.435401];
     
     // Inicializar o mapa
-    const map = L.map('map').setView(coordinates, 16);
+    const map = L.map('map').setView(coordinates, 17);
     
     // Adicionar camada do mapa (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -303,8 +303,8 @@ function initMap() {
     marker.bindPopup(`
         <strong>BOA OPÇÃO</strong><br>
         Soluções de Crédito<br>
-        Av. Paulista, 1000 - Bela Vista<br>
-        São Paulo - SP
+        R. Direta do Ypiranga, 15 E - Vila Canária<br>
+        Salvador - BA, 41390-800
     `).openPopup();
     
     // Adicionar círculo de raio ao redor do marcador
