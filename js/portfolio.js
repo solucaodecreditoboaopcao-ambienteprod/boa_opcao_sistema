@@ -3,8 +3,8 @@
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar todas as funções
     initCarousel();
+    initCarouselNovidades();
     initSmoothScroll();
     initAnimations();
     initHeroParallax();
@@ -71,6 +71,56 @@ function initCarousel() {
         }
     });
 }
+
+// ========== INICIALIZAR CARROSSEL DE NOVIDADES ==========
+function initCarouselNovidades() {
+    const carousel = document.getElementById('carouselNovidades');
+    if (!carousel) return;
+    
+    // Inicializar Bootstrap Carousel
+    const bsCarousel = new bootstrap.Carousel(carousel, {
+        interval: 4000,
+        ride: 'carousel',
+        pause: 'hover',
+        wrap: true
+    });
+    
+    // Pausar carrossel quando não está visível na tela
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                bsCarousel.cycle();
+            } else {
+                bsCarousel.pause();
+            }
+        });
+    }, { threshold: 0.3 });
+    
+    observer.observe(carousel);
+    
+    // Suporte a gestos de swipe para mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    carousel.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    carousel.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) {
+                bsCarousel.next();
+            } else {
+                bsCarousel.prev();
+            }
+        }
+    });
+}
+
+
 
 // ========== SCROLL SUAVE ==========
 function initSmoothScroll() {
