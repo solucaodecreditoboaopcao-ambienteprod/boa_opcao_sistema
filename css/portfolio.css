@@ -108,8 +108,7 @@ body {
 /* ========== HERO SECTION ========== */
 .hero-section {
     position: relative;
-    height: 100vh;
-    min-height: 600px;
+    min-height: auto;
     background-image: url('../imagens_portfolio/imagem_fundo.png');
     background-size: cover;
     background-position: center;
@@ -118,6 +117,7 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    padding: 5rem 0;
 }
 
 .hero-overlay {
@@ -206,7 +206,7 @@ body {
 
 .scroll-indicator {
     position: absolute;
-    bottom: 30px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
@@ -215,14 +215,14 @@ body {
 
 .scroll-indicator i {
     color: white;
-    font-size: 2rem;
+    font-size: 1.5rem;
     opacity: 0.8;
 }
 
 @keyframes bounce {
     0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-    40% { transform: translateX(-50%) translateY(-20px); }
-    60% { transform: translateX(-50%) translateY(-10px); }
+    40% { transform: translateX(-50%) translateY(-15px); }
+    60% { transform: translateX(-50%) translateY(-8px); }
 }
 
 /* ========== ANIMAÇÕES ========== */
