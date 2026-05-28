@@ -521,7 +521,7 @@ body {
 /* ========== CONTACT SECTION ========== */
 .contact-section {
     padding: 5rem 0;
-    background: linear-gradient(135deg, #FF8200, #8A3911);
+    background: linear-gradient(135deg, #ac1900, #e65100);
     color: white;
     position: relative;
     overflow: hidden;
@@ -584,14 +584,14 @@ body {
 
 .btn-phone {
     background: white;
-    color: #FF8200;
+    color: #e65100;
 }
 
 .btn-phone:hover {
     background: #ffe0b2;
     transform: translateY(-3px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    color: #FF8200;
+    color: #e65100;
 }
 
 .contact-logo {
