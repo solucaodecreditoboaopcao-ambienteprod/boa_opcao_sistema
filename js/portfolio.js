@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof initAnimations === 'function') initAnimations();
     if (typeof initHeroParallax === 'function') initHeroParallax();
     if (typeof initMobileDetection === 'function') initMobileDetection();
+    
     initMap();
     initFooterModal();
     adjustCarouselImages();
@@ -229,6 +230,12 @@ function initLazyLoading() {
 function initMap() {
     const mapElement = document.getElementById('map');
     if (!mapElement) return;
+
+    // Verificar se o Leaflet está disponível
+    if (typeof L === 'undefined') {
+        console.error('Leaflet não carregado!');
+        return;
+    }
     
     // Coordenadas do endereço (Av. Paulista, 1000 - São Paulo)
     const coordinates = [-23.564224, -46.651566];
@@ -308,21 +315,29 @@ function adjustCarouselImages() {
         img.style.width = '100%';
         img.style.height = 'auto';
         img.style.aspectRatio = '780 / 1040';
-        img.style.objectFit = 'cover';
+        img.style.objectFit = 'cover'; // 'cover' preenche sem distorcer
     });
     
     // Ajustar altura do carrossel baseado na largura
     function resizeCarousel() {
         if (carouselContainer) {
-            const width = carouselContainer.offsetWidth;
-            const height = (width / 780) * 1040;
-            const activeItem = document.querySelector('#carouselServicos .carousel-item.active');
-            if (activeItem) {
-                activeItem.style.minHeight = height + 'px';
+            const carouselInner = carouselContainer.querySelector('.carousel-inner');
+            if (carouselInner) {
+                const width = carouselInner.offsetWidth;
+                const height = (width / 780) * 1040;
+                carouselInner.style.minHeight = height + 'px';
+                
+                // Ajustar todos os itens
+                const items = carouselContainer.querySelectorAll('.carousel-item');
+                items.forEach(item => {
+                    item.style.minHeight = height + 'px';
+                });
             }
         }
     }
     
+    // Executar após as imagens carregarem
+    window.addEventListener('load', resizeCarousel);
     window.addEventListener('resize', () => {
         setTimeout(resizeCarousel, 100);
     });
