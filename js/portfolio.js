@@ -3,11 +3,15 @@
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    initCarousel();
-    initSmoothScroll();
-    initAnimations();
-    initHeroParallax();
-    initMobileDetection();
+    // Manter as funções existentes
+    if (typeof initCarousel === 'function') initCarousel();
+    if (typeof initSmoothScroll === 'function') initSmoothScroll();
+    if (typeof initAnimations === 'function') initAnimations();
+    if (typeof initHeroParallax === 'function') initHeroParallax();
+    if (typeof initMobileDetection === 'function') initMobileDetection();
+    initMap();
+    initFooterModal();
+    adjustCarouselImages();
 });
 
 // ========== INICIALIZAR CARROSSEL ==========
@@ -220,5 +224,108 @@ function initLazyLoading() {
     images.forEach(img => imageObserver.observe(img));
 }
 
-console.log('🚀 BOA OPÇÃO - Portfólio carregado com sucesso!');
-console.log('📱 Sistema independente disponível em: /sistema/acesso_restrito.html');
+
+// ========== INICIALIZAR MAPA ==========
+function initMap() {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+    
+    // Coordenadas do endereço (Av. Paulista, 1000 - São Paulo)
+    const coordinates = [-23.564224, -46.651566];
+    
+    // Inicializar o mapa
+    const map = L.map('map').setView(coordinates, 16);
+    
+    // Adicionar camada do mapa (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(map);
+    
+    // Adicionar marcador
+    const marker = L.marker(coordinates).addTo(map);
+    
+    // Adicionar popup ao marcador
+    marker.bindPopup(`
+        <strong>BOA OPÇÃO</strong><br>
+        Soluções de Crédito<br>
+        Av. Paulista, 1000 - Bela Vista<br>
+        São Paulo - SP
+    `).openPopup();
+    
+    // Adicionar círculo de raio ao redor do marcador
+    L.circle(coordinates, {
+        color: '#e65100',
+        fillColor: '#ff6f00',
+        fillOpacity: 0.2,
+        radius: 100
+    }).addTo(map);
+}
+
+// ========== INICIALIZAR MODAL E EVENTOS DO FOOTER ==========
+function initFooterModal() {
+    const copyrightElement = document.getElementById('copyrightLink');
+    const logoElement = document.getElementById('logoApptech');
+    const modal = new bootstrap.Modal(document.getElementById('contatoModal'));
+    
+    // Abrir modal ao clicar no copyright ou na logo
+    if (copyrightElement) {
+        copyrightElement.addEventListener('click', function(e) {
+            // Evitar que o clique na logo dispare duas vezes
+            if (e.target === copyrightElement || e.target === copyrightElement.querySelector('span')) {
+                modal.show();
+            }
+        });
+    }
+    
+    if (logoElement) {
+        logoElement.addEventListener('click', function(e) {
+            e.stopPropagation();
+            modal.show();
+        });
+    }
+    
+    // Garantir que o link do WhatsApp no modal funcione
+    const whatsappLink = document.getElementById('whatsappLink');
+    if (whatsappLink) {
+        whatsappLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = 'https://wa.me/5571985101828';
+            window.open(url, '_blank');
+        });
+    }
+}
+
+// ========== AJUSTAR CARROSSEL PARA O TAMANHO ESPECÍFICO ==========
+function adjustCarouselImages() {
+    const carouselImages = document.querySelectorAll('.service-image');
+    const carouselContainer = document.querySelector('#carouselServicos');
+    
+    if (!carouselImages.length) return;
+    
+    // Garantir que todas as imagens mantenham a proporção 780x1040
+    carouselImages.forEach(img => {
+        img.style.width = '100%';
+        img.style.height = 'auto';
+        img.style.aspectRatio = '780 / 1040';
+        img.style.objectFit = 'cover';
+    });
+    
+    // Ajustar altura do carrossel baseado na largura
+    function resizeCarousel() {
+        if (carouselContainer) {
+            const width = carouselContainer.offsetWidth;
+            const height = (width / 780) * 1040;
+            const activeItem = document.querySelector('#carouselServicos .carousel-item.active');
+            if (activeItem) {
+                activeItem.style.minHeight = height + 'px';
+            }
+        }
+    }
+    
+    window.addEventListener('resize', () => {
+        setTimeout(resizeCarousel, 100);
+    });
+    
+    resizeCarousel();
+}
