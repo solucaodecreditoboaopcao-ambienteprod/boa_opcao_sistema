@@ -306,41 +306,35 @@ function initFooterModal() {
 // ========== AJUSTAR CARROSSEL PARA O TAMANHO ESPECÍFICO ==========
 function adjustCarouselImages() {
     const carouselImages = document.querySelectorAll('.service-image');
-    const carouselContainer = document.querySelector('#carouselServicos');
     
     if (!carouselImages.length) return;
     
-    // Garantir que todas as imagens mantenham a proporção 780x1040
+    // Apenas garantir que as imagens tenham aspecto vertical (3:4)
     carouselImages.forEach(img => {
         img.style.width = '100%';
         img.style.height = 'auto';
-        img.style.aspectRatio = '780 / 1040';
-        img.style.objectFit = 'cover'; // 'cover' preenche sem distorcer
+        img.style.aspectRatio = '3 / 4'; // Proporção vertical suave
+        img.style.objectFit = 'cover';
     });
     
-    // Ajustar altura do carrossel baseado na largura
-    function resizeCarousel() {
-        if (carouselContainer) {
-            const carouselInner = carouselContainer.querySelector('.carousel-inner');
-            if (carouselInner) {
-                const width = carouselInner.offsetWidth;
-                const height = (width / 780) * 1040;
-                carouselInner.style.minHeight = height + 'px';
-                
-                // Ajustar todos os itens
-                const items = carouselContainer.querySelectorAll('.carousel-item');
-                items.forEach(item => {
-                    item.style.minHeight = height + 'px';
-                });
-            }
+    // Limitar altura máxima do carrossel
+    const carousel = document.querySelector('#carouselServicos');
+    if (carousel) {
+        const maxHeight = window.innerHeight * 0.7; // 70% da altura da tela
+        
+        const carouselInner = carousel.querySelector('.carousel-inner');
+        if (carouselInner) {
+            carouselInner.style.maxHeight = maxHeight + 'px';
         }
+        
+        const items = carousel.querySelectorAll('.carousel-item');
+        items.forEach(item => {
+            item.style.maxHeight = maxHeight + 'px';
+        });
     }
-    
-    // Executar após as imagens carregarem
-    window.addEventListener('load', resizeCarousel);
-    window.addEventListener('resize', () => {
-        setTimeout(resizeCarousel, 100);
-    });
-    
-    resizeCarousel();
 }
+
+// Ajustar quando a janela for redimensionada
+window.addEventListener('resize', function() {
+    setTimeout(adjustCarouselImages, 100);
+});
