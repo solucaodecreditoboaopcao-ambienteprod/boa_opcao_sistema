@@ -3,16 +3,14 @@
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Manter as funções existentes
-    if (typeof initCarousel === 'function') initCarousel();
-    if (typeof initSmoothScroll === 'function') initSmoothScroll();
-    if (typeof initAnimations === 'function') initAnimations();
-    if (typeof initHeroParallax === 'function') initHeroParallax();
-    if (typeof initMobileDetection === 'function') initMobileDetection();
-    
+    // Inicializar todas as funções
+    initCarousel();
+    initSmoothScroll();
+    initAnimations();
+    initHeroParallax();
+    initMobileDetection();
     initMap();
     initFooterModal();
-    adjustCarouselImages();
 });
 
 // ========== INICIALIZAR CARROSSEL ==========
@@ -95,7 +93,7 @@ function initSmoothScroll() {
                     behavior: 'smooth'
                 });
                 
-                // Fechar navbar mobile se estiver aberta (não se aplica aqui, mas boa prática)
+                // Fechar navbar mobile se estiver aberta
                 const navbarToggler = document.querySelector('.navbar-toggler');
                 const navbarCollapse = document.querySelector('.navbar-collapse');
                 if (navbarToggler && navbarCollapse && navbarCollapse.classList.contains('show')) {
@@ -196,15 +194,15 @@ function isElementInViewport(el) {
     );
 }
 
-// Função para abrir WhatsApp (pode ser chamada de outros lugares)
+// Função para abrir WhatsApp
 function abrirWhatsApp(mensagem) {
-    const numero = '5511999999999'; // Substituir pelo número real
+    const numero = '5571983880643';
     const texto = mensagem || 'Olá! Gostaria de saber mais sobre os serviços da BOA OPÇÃO.';
     const url = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
     window.open(url, '_blank');
 }
 
-// Lazy loading para imagens (se necessário no futuro)
+// Lazy loading para imagens
 function initLazyLoading() {
     const images = document.querySelectorAll('img[data-src]');
     
@@ -224,7 +222,6 @@ function initLazyLoading() {
     
     images.forEach(img => imageObserver.observe(img));
 }
-
 
 // ========== INICIALIZAR MAPA ==========
 function initMap() {
@@ -273,18 +270,20 @@ function initMap() {
 function initFooterModal() {
     const copyrightElement = document.getElementById('copyrightLink');
     const logoElement = document.getElementById('logoApptech');
-    const modal = new bootstrap.Modal(document.getElementById('contatoModal'));
+    const modalElement = document.getElementById('contatoModal');
     
-    // Abrir modal ao clicar no copyright ou na logo
+    if (!modalElement) return;
+    
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Abrir modal ao clicar no copyright
     if (copyrightElement) {
         copyrightElement.addEventListener('click', function(e) {
-            // Evitar que o clique na logo dispare duas vezes
-            if (e.target === copyrightElement || e.target === copyrightElement.querySelector('span')) {
-                modal.show();
-            }
+            modal.show();
         });
     }
     
+    // Abrir modal ao clicar na logo
     if (logoElement) {
         logoElement.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -303,38 +302,21 @@ function initFooterModal() {
     }
 }
 
-// ========== AJUSTAR CARROSSEL PARA O TAMANHO ESPECÍFICO ==========
-function adjustCarouselImages() {
-    const carouselImages = document.querySelectorAll('.service-image');
-    
-    if (!carouselImages.length) return;
-    
-    // Apenas garantir que as imagens tenham aspecto vertical (3:4)
-    carouselImages.forEach(img => {
-        img.style.width = '100%';
-        img.style.height = 'auto';
-        img.style.aspectRatio = '3 / 4'; // Proporção vertical suave
-        img.style.objectFit = 'cover';
-    });
-    
-    // Limitar altura máxima do carrossel
-    const carousel = document.querySelector('#carouselServicos');
-    if (carousel) {
-        const maxHeight = window.innerHeight * 0.7; // 70% da altura da tela
-        
-        const carouselInner = carousel.querySelector('.carousel-inner');
-        if (carouselInner) {
-            carouselInner.style.maxHeight = maxHeight + 'px';
-        }
-        
-        const items = carousel.querySelectorAll('.carousel-item');
-        items.forEach(item => {
-            item.style.maxHeight = maxHeight + 'px';
-        });
-    }
-}
+// ========== AJUSTES ADICIONAIS ==========
 
-// Ajustar quando a janela for redimensionada
-window.addEventListener('resize', function() {
-    setTimeout(adjustCarouselImages, 100);
+// Garantir que imagens do carrossel carreguem corretamente
+window.addEventListener('load', function() {
+    // Pequeno ajuste para garantir que o carrossel funcione bem
+    const carousel = document.getElementById('carouselServicos');
+    if (carousel) {
+        // Forçar reflow para corrigir qualquer problema de layout
+        carousel.style.display = 'none';
+        setTimeout(() => {
+            carousel.style.display = '';
+        }, 10);
+    }
 });
+
+console.log('🚀 BOA OPÇÃO - Portfólio carregado com sucesso!');
+console.log('📱 Mapa e modal de contato integrados');
+console.log('📐 Carrossel configurado com CSS (sem JS de dimensionamento)');
