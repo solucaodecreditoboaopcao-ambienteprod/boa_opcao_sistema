@@ -198,6 +198,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     await gerarNumeroContrato();
     setupEventListeners();
     atualizarCamposRelatorio();
+    initFooterModal();
     
     // Enter para login
     const senhaInput = document.getElementById('senhaUsuario');
@@ -309,6 +310,41 @@ function validarCPF(cpf) {
     if (parseInt(cpf.charAt(10)) !== digitoVerificador2) return false;
     
     return true;
+}
+
+// ========== INICIALIZAR MODAL DO FOOTER ==========
+function initFooterModal() {
+    const copyrightElement = document.getElementById('copyrightLink');
+    const logoElement = document.getElementById('logoApptech');
+    const modalElement = document.getElementById('contatoModal');
+    
+    if (!modalElement) return;
+    
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Abrir modal ao clicar na logo AppTech
+    if (copyrightElement) {
+        copyrightElement.addEventListener('click', function(e) {
+            modal.show();
+        });
+    }
+    
+    // Também abrir ao clicar diretamente na logo
+    if (logoElement) {
+        logoElement.addEventListener('click', function(e) {
+            e.stopPropagation();
+            modal.show();
+        });
+    }
+    
+    // Garantir que o link do WhatsApp funcione
+    const whatsappLink = document.getElementById('whatsappLink');
+    if (whatsappLink) {
+        whatsappLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.open('https://wa.me/5571985101828', '_blank');
+        });
+    }
 }
 
 // ========== CÁLCULO DO VALOR DA PARCELA ==========
