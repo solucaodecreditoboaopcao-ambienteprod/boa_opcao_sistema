@@ -15,12 +15,17 @@ const firebaseConfig = {
 // Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Constantes de autenticação
+const EMAIL_DOMAIN = "@solucaodecreditoboaopcao.com.br";
 
 // Variáveis globais
 let imgbbApiKey = '';
 let organizacaoAtiva = false;
 let contratoAtualId = null;
 let contratosExistentes = [];
+let currentUser = null;
 
 // Mapeamento de tipo de venda
 const tipoVendaMap = {
@@ -30,6 +35,157 @@ const tipoVendaMap = {
     'cartao_credito_vista': 'Crédito À Vista'
 };
 
+// ========== SISTEMA DE AUTENTICAÇÃO ==========
+
+// Função para alternar visibilidade da senha
+function togglePassword() {
+    const senhaInput = document.getElementById('senhaUsuario');
+    const toggleBtn = document.querySelector('.toggle-password-btn');
+    
+    if (!senhaInput || !toggleBtn) return;
+    
+    if (senhaInput.type === 'password') {
+        senhaInput.type = 'text';
+        toggleBtn.textContent = '🙈';
+    } else {
+        senhaInput.type = 'password';
+        toggleBtn.textContent = '👁️';
+    }
+}
+
+// Função para fazer login
+async function fazerLogin() {
+    const loginInput = document.getElementById('loginUsuario');
+    const senhaInput = document.getElementById('senhaUsuario');
+    const errorDiv = document.getElementById('loginError');
+    const loginBtn = document.querySelector('.btn-login-action');
+    
+    if (!loginInput || !senhaInput || !errorDiv || !loginBtn) {
+        console.error('Elementos de login não encontrados');
+        return;
+    }
+    
+    const login = loginInput.value.trim();
+    const senha = senhaInput.value;
+    
+    errorDiv.textContent = '';
+    
+    if (!login) {
+        errorDiv.textContent = '⚠️ Digite o login';
+        loginInput.focus();
+        return;
+    }
+    
+    if (!senha) {
+        errorDiv.textContent = '⚠️ Digite a senha';
+        senhaInput.focus();
+        return;
+    }
+    
+    loginBtn.disabled = true;
+    const originalText = loginBtn.innerHTML;
+    loginBtn.innerHTML = '<span class="login-loading"></span> Entrando...';
+    
+    try {
+        const email = `${login}${EMAIL_DOMAIN}`;
+        const userCredential = await auth.signInWithEmailAndPassword(email, senha);
+        currentUser = userCredential.user;
+        errorDiv.textContent = '';
+    } catch (error) {
+        console.error('Erro no login:', error);
+        
+        switch (error.code) {
+            case 'auth/invalid-email':
+                errorDiv.textContent = '❌ Login inválido';
+                break;
+            case 'auth/user-disabled':
+                errorDiv.textContent = '❌ Usuário desabilitado';
+                break;
+            case 'auth/user-not-found':
+                errorDiv.textContent = '❌ Usuário não encontrado';
+                break;
+            case 'auth/wrong-password':
+                errorDiv.textContent = '❌ Senha incorreta';
+                break;
+            case 'auth/invalid-credential':
+                errorDiv.textContent = '❌ Credenciais inválidas';
+                break;
+            case 'auth/too-many-requests':
+                errorDiv.textContent = '❌ Muitas tentativas. Aguarde um momento.';
+                break;
+            default:
+                errorDiv.textContent = '❌ Erro ao fazer login. Tente novamente.';
+        }
+        
+        senhaInput.value = '';
+        senhaInput.focus();
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = originalText;
+    }
+}
+
+// Função para fazer logout
+async function fazerLogout() {
+    try {
+        await auth.signOut();
+        currentUser = null;
+        
+        const loginInput = document.getElementById('loginUsuario');
+        const senhaInput = document.getElementById('senhaUsuario');
+        if (loginInput) loginInput.value = '';
+        if (senhaInput) senhaInput.value = '';
+    } catch (error) {
+        console.error('Erro no logout:', error);
+        mostrarStatus('Erro ao fazer logout', 'danger');
+    }
+}
+
+// Função para mostrar o sistema (após login)
+function mostrarSistema(user) {
+    const loginFormArea = document.getElementById('loginFormArea');
+    const userInfoArea = document.getElementById('userInfoArea');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const conteudoSistema = document.getElementById('conteudoSistema');
+    const bloqueioOverlay = document.getElementById('bloqueioOverlay');
+    
+    if (loginFormArea) loginFormArea.style.display = 'none';
+    
+    if (userInfoArea) {
+        userInfoArea.style.display = 'flex';
+        if (userNameDisplay) {
+            userNameDisplay.textContent = user.email.split('@')[0];
+        }
+    }
+    
+    if (conteudoSistema) conteudoSistema.style.display = 'block';
+    if (bloqueioOverlay) bloqueioOverlay.style.display = 'none';
+}
+
+// Função para esconder o sistema (logout)
+function esconderSistema() {
+    const loginFormArea = document.getElementById('loginFormArea');
+    const userInfoArea = document.getElementById('userInfoArea');
+    const conteudoSistema = document.getElementById('conteudoSistema');
+    const bloqueioOverlay = document.getElementById('bloqueioOverlay');
+    
+    if (loginFormArea) loginFormArea.style.display = 'flex';
+    if (userInfoArea) userInfoArea.style.display = 'none';
+    if (conteudoSistema) conteudoSistema.style.display = 'none';
+    if (bloqueioOverlay) bloqueioOverlay.style.display = 'flex';
+}
+
+// Observer de autenticação
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        mostrarSistema(user);
+    } else {
+        currentUser = null;
+        esconderSistema();
+    }
+});
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
     await verificarOrganizacao();
@@ -38,6 +194,26 @@ document.addEventListener('DOMContentLoaded', async function() {
     await gerarNumeroContrato();
     setupEventListeners();
     atualizarCamposRelatorio();
+    
+    // Enter para login
+    const senhaInput = document.getElementById('senhaUsuario');
+    if (senhaInput) {
+        senhaInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fazerLogin();
+            }
+        });
+    }
+    
+    const loginInput = document.getElementById('loginUsuario');
+    if (loginInput) {
+        loginInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const senhaEl = document.getElementById('senhaUsuario');
+                if (senhaEl) senhaEl.focus();
+            }
+        });
+    }
 });
 
 // ========== FUNÇÕES DE VERIFICAÇÃO ==========
@@ -93,7 +269,6 @@ async function gerarNumeroContrato() {
         numero = `CT-${ano}-${aleatorio}`;
         tentativas++;
         
-        // Verificar se o número já existe no Firestore
         const snapshot = await db.collection('contratos')
             .where('numeroContrato', '==', numero)
             .get();
@@ -111,11 +286,8 @@ function validarCPF(cpf) {
     cpf = cpf.replace(/[^\d]/g, '');
     
     if (cpf.length !== 11) return false;
-    
-    // Verificar se todos os dígitos são iguais
     if (/^(\d)\1{10}$/.test(cpf)) return false;
     
-    // Validar primeiro dígito verificador
     let soma = 0;
     for (let i = 0; i < 9; i++) {
         soma += parseInt(cpf.charAt(i)) * (10 - i);
@@ -125,7 +297,6 @@ function validarCPF(cpf) {
     
     if (parseInt(cpf.charAt(9)) !== digitoVerificador1) return false;
     
-    // Validar segundo dígito verificador
     soma = 0;
     for (let i = 0; i < 10; i++) {
         soma += parseInt(cpf.charAt(i)) * (11 - i);
@@ -141,7 +312,6 @@ function validarCPF(cpf) {
 // ========== CÁLCULO DO VALOR DA PARCELA ==========
 function calcularValorParcela() {
     const valorCartaoStr = document.getElementById('valorCartao').value;
-    // Converte vírgula para ponto para fazer o cálculo
     const valorCartao = parseFloat(valorCartaoStr.replace(/\./g, '').replace(',', '.')) || 0;
     const parcelas = parseInt(document.getElementById('parcelas').value) || 0;
     
@@ -155,20 +325,14 @@ function calcularValorParcela() {
 
 // ========== VALIDAÇÃO E MÁSCARA DE NOME ==========
 function validarNome(nome) {
-    // Permite apenas letras (incluindo acentos), espaços e apóstrofos
     const regex = /^[A-ZÀ-Ú\s']+$/;
     return regex.test(nome);
 }
 
 function mascaraNome(e) {
     let value = e.target.value;
-    
-    // Remove caracteres não permitidos (apenas letras, acentos, espaços e apóstrofos)
     value = value.replace(/[^a-zA-ZÀ-ÿ\s']/g, '');
-    
-    // Converte para maiúsculo
     value = value.toUpperCase();
-    
     e.target.value = value;
 }
 
@@ -212,37 +376,22 @@ function toggleTipoPagamento() {
     const dadosTransferencia = document.getElementById('dadosTransferencia');
     
     if (tipoPagamento === 'pix') {
-        // Mostrar campos PIX
         divPixCampos.style.display = 'block';
         divTransferenciaCampos.style.display = 'none';
-        
-        // Tornar campos PIX disponíveis
         pixInput.required = false;
         nomeBeneficiario.required = false;
-        
-        // Limpar campo de transferência
         dadosTransferencia.value = '';
         dadosTransferencia.required = false;
-        
-        // Resetar beneficiário para mesmo titular
         document.getElementById('radioMesmoTitular').checked = true;
         toggleTipoBeneficiario();
-        
     } else if (tipoPagamento === 'transferencia') {
-        // Mostrar campo transferência
         divPixCampos.style.display = 'none';
         divTransferenciaCampos.style.display = 'block';
-        
-        // Tornar campo transferência obrigatório
         dadosTransferencia.required = true;
-        
-        // Limpar campos PIX
         pixInput.value = '';
         pixInput.required = false;
         nomeBeneficiario.value = '';
         nomeBeneficiario.required = false;
-        
-        // Esconder CPF terceiros
         document.getElementById('divCpfTerceiros').style.display = 'none';
         document.getElementById('cpfTerceiros').value = '';
         document.getElementById('cpfTerceiros').required = false;
@@ -251,7 +400,6 @@ function toggleTipoPagamento() {
 }
 
 // ========== TOGGLE TIPO BENEFICIÁRIO ==========
-// ========== TOGGLE TIPO BENEFICIÁRIO ==========
 function toggleTipoBeneficiario() {
     const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked').value;
     const nomeBeneficiario = document.getElementById('nomeBeneficiario');
@@ -259,28 +407,19 @@ function toggleTipoBeneficiario() {
     const cpfTerceiros = document.getElementById('cpfTerceiros');
     
     if (tipoBeneficiario === 'mesmo_titular') {
-        // Modo: Mesmo titular do cartão
-        // ATUALIZAÇÃO: Pegar o nome atual do cliente e aplicar ao beneficiário
         const nomeCliente = document.getElementById('nome').value;
         nomeBeneficiario.value = nomeCliente;
         nomeBeneficiario.readOnly = true;
         nomeBeneficiario.style.backgroundColor = '#f8f9fa';
-        
-        // Esconder CPF de terceiros
         divCpfTerceiros.style.display = 'none';
         cpfTerceiros.value = '';
         cpfTerceiros.required = false;
-        cpfTerceiros.classList.remove('is-invalid');
-        cpfTerceiros.classList.remove('is-valid');
-        
+        cpfTerceiros.classList.remove('is-invalid', 'is-valid');
     } else if (tipoBeneficiario === 'terceiros') {
-        // Modo: Terceiros
         nomeBeneficiario.readOnly = false;
         nomeBeneficiario.style.backgroundColor = '';
         nomeBeneficiario.value = '';
         nomeBeneficiario.focus();
-        
-        // Mostrar CPF de terceiros
         divCpfTerceiros.style.display = 'block';
         cpfTerceiros.required = true;
     }
@@ -295,18 +434,14 @@ function toggleEnderecoManual() {
         const elemento = document.getElementById(campo);
         if (elemento) {
             if (manual) {
-                // Se marcou manual, libera tudo
                 elemento.readOnly = false;
                 elemento.style.backgroundColor = '';
             } else {
-                // Se desmarcou manual, volta a bloquear (exceto se já tiver CEP preenchido)
                 const cep = document.getElementById('cep').value.replace(/\D/g, '');
                 if (cep.length === 8) {
-                    // Se tem CEP preenchido, mantém liberado
                     elemento.readOnly = false;
                     elemento.style.backgroundColor = '';
                 } else {
-                    // Se não tem CEP, bloqueia
                     elemento.readOnly = true;
                     elemento.style.backgroundColor = '#f8f9fa';
                 }
@@ -315,20 +450,32 @@ function toggleEnderecoManual() {
     });
 }
 
+// ========== TOGGLE CARTÃO RETIDO ==========
+function toggleCartaoRetido() {
+    const isRetido = document.getElementById('cartaoRetido').checked;
+    
+    document.getElementById('divBandeiraCartao').style.display = isRetido ? 'block' : 'none';
+    document.getElementById('divUltimosDigitos').style.display = isRetido ? 'block' : 'none';
+    document.getElementById('divDataRetirada').style.display = isRetido ? 'block' : 'none';
+    document.getElementById('divObservacaoCartao').style.display = isRetido ? 'block' : 'none';
+    
+    if (!isRetido) {
+        document.getElementById('bandeiraCartao').value = '';
+        document.getElementById('bandeiraOutros').value = '';
+        document.getElementById('ultimosDigitos').value = '';
+        document.getElementById('dataRetirada').value = '';
+        document.getElementById('observacaoCartao').value = '';
+        document.getElementById('divBandeiraOutros').style.display = 'none';
+    }
+}
+
 // ========== SETUP EVENT LISTENERS ==========
 function setupEventListeners() {
-    // Função auxiliar para adicionar event listener com segurança
-    function safeAddListener(id, event, handler) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener(event, handler);
-        } else {
-            console.warn(`Elemento com ID "${id}" não encontrado`);
-        }
-    }
-    
     // Form submit
-    safeAddListener('formEmprestimo', 'submit', salvarContrato);
+    const formEmprestimo = document.getElementById('formEmprestimo');
+    if (formEmprestimo) {
+        formEmprestimo.addEventListener('submit', salvarContrato);
+    }
     
     // Upload areas
     const uploadFicha = document.getElementById('uploadFicha');
@@ -362,12 +509,11 @@ function setupEventListeners() {
         });
     }
     
-    // Máscaras para campos de nome (apenas letras e acentos, maiúsculo)
+    // Máscaras e validações de nome
     const nomeInput = document.getElementById('nome');
     if (nomeInput) {
         nomeInput.addEventListener('input', function(e) {
             mascaraNome(e);
-            // Atualizar nome do beneficiário se for mesmo titular
             const tipoBeneficiario = document.querySelector('input[name="tipoBeneficiario"]:checked');
             if (tipoBeneficiario && tipoBeneficiario.value === 'mesmo_titular') {
                 const nomeBeneficiario = document.getElementById('nomeBeneficiario');
@@ -382,14 +528,11 @@ function setupEventListeners() {
                 if (nomeBeneficiario) nomeBeneficiario.value = this.value;
             }
             
-            // Validação do nome
             const nome = this.value.trim();
             if (nome.length < 3) {
                 this.classList.add('is-invalid');
-                mostrarStatus('Nome do cliente deve ter pelo menos 3 caracteres!', 'warning');
             } else if (!validarNome(nome)) {
                 this.classList.add('is-invalid');
-                mostrarStatus('Nome do cliente contém caracteres inválidos!', 'warning');
             } else {
                 this.classList.remove('is-invalid');
                 this.classList.add('is-valid');
@@ -419,7 +562,6 @@ function setupEventListeners() {
         });
     }
     
-    // Validação de CPF de terceiros
     const cpfTerceirosInput = document.getElementById('cpfTerceiros');
     if (cpfTerceirosInput) {
         cpfTerceirosInput.addEventListener('input', mascaraCPF);
@@ -454,9 +596,16 @@ function setupEventListeners() {
             if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
             e.target.value = value;
         });
+        
+        cepInput.addEventListener('blur', function() {
+            const cep = this.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                buscarCEP();
+            }
+        });
     }
     
-    // Tipo de venda - ajustar parcelas automaticamente
+    // Tipo de venda
     const tipoVendaSelect = document.getElementById('tipoVenda');
     if (tipoVendaSelect) {
         tipoVendaSelect.addEventListener('change', function() {
@@ -474,7 +623,7 @@ function setupEventListeners() {
         });
     }
     
-    // Validação de parcelas (apenas números inteiros, máximo 120)
+    // Parcelas
     const parcelasInput = document.getElementById('parcelas');
     if (parcelasInput) {
         parcelasInput.addEventListener('input', function(e) {
@@ -491,32 +640,19 @@ function setupEventListeners() {
         });
     }
     
-    // Validação de valores (formatação automática com centavos)
+    // Valores financeiros
     ['valorCartao', 'valorEmprestado'].forEach(id => {
         const element = document.getElementById(id);
         if (element) {
-            // Mudar o tipo para text para permitir formatação
-            element.type = 'text';
-            element.inputMode = 'numeric';
-            
             element.addEventListener('input', function(e) {
                 let value = e.target.value;
-                
-                // Remove tudo que não for número
                 value = value.replace(/\D/g, '');
                 
-                // Formata com centavos (últimos 2 dígitos = centavos)
                 if (value.length > 0) {
-                    // Completa com zeros à esquerda se necessário
                     value = value.padStart(3, '0');
-                    
-                    // Separa os centavos
                     const inteiros = value.slice(0, -2);
                     const centavos = value.slice(-2);
-                    
-                    // Remove zeros à esquerda dos inteiros
                     const inteirosFormatado = parseInt(inteiros).toString();
-                    
                     e.target.value = `${inteirosFormatado},${centavos}`;
                 } else {
                     e.target.value = '';
@@ -525,12 +661,10 @@ function setupEventListeners() {
                 if (id === 'valorCartao') calcularValorParcela();
             });
             
-            // Ao perder o foco, garantir formato correto
             element.addEventListener('blur', function(e) {
                 let value = e.target.value;
                 
                 if (value) {
-                    // Substitui vírgula por ponto para cálculo
                     value = value.replace(/\./g, '').replace(',', '.');
                     const numero = parseFloat(value) || 0;
                     e.target.value = numero.toFixed(2).replace('.', ',');
@@ -547,27 +681,16 @@ function setupEventListeners() {
         flagEnderecoManual.addEventListener('change', toggleEnderecoManual);
     }
     
-    // Radio buttons tipo pagamento
+    // Radio buttons
     document.querySelectorAll('input[name="tipoPagamento"]').forEach(radio => {
         radio.addEventListener('change', toggleTipoPagamento);
     });
     
-    // Radio buttons tipo beneficiário
     document.querySelectorAll('input[name="tipoBeneficiario"]').forEach(radio => {
         radio.addEventListener('change', toggleTipoBeneficiario);
     });
     
-    // Busca CEP
-    if (cepInput) {
-        cepInput.addEventListener('blur', function() {
-            const cep = this.value.replace(/\D/g, '');
-            if (cep.length === 8) {
-                buscarCEP();
-            }
-        });
-    }
-    
-    // Bloquear navegação entre abas se organização inativa
+    // Bloquear abas se organização inativa
     document.querySelectorAll('#myTab .nav-link').forEach(tab => {
         tab.addEventListener('click', function(e) {
             if (!organizacaoAtiva && this.id !== 'cadastro-tab') {
@@ -575,16 +698,6 @@ function setupEventListeners() {
                 e.stopPropagation();
                 mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
                 return false;
-            }
-        });
-    });
-    
-    // Bloquear navegação via Bootstrap Tab API
-    document.querySelectorAll('#myTab button[data-bs-toggle="tab"]').forEach(tab => {
-        tab.addEventListener('show.bs.tab', function(e) {
-            if (!organizacaoAtiva && this.id !== 'cadastro-tab') {
-                e.preventDefault();
-                mostrarStatus('⚠️ Organização inativa! Apenas a aba de Cadastro está disponível.', 'warning');
             }
         });
     });
@@ -599,13 +712,11 @@ function setupEventListeners() {
         }
     });
     
-    // Busca por cartão retido
     const searchCartaoRetido = document.getElementById('searchCartaoRetido');
     if (searchCartaoRetido) {
         searchCartaoRetido.addEventListener('change', buscarContratos);
     }
 }
-
 // ========== PREVIEW DE IMAGENS ==========
 function previewImagem(input, previewId, uploadAreaId) {
     const preview = document.getElementById(previewId);
@@ -644,25 +755,6 @@ async function uploadImagemParaImgBB(file) {
     return data.data.url;
 }
 
-// ========== TOGGLE CARTÃO RETIDO ==========
-function toggleCartaoRetido() {
-    const isRetido = document.getElementById('cartaoRetido').checked;
-    
-    document.getElementById('divBandeiraCartao').style.display = isRetido ? 'block' : 'none';
-    document.getElementById('divUltimosDigitos').style.display = isRetido ? 'block' : 'none';
-    document.getElementById('divDataRetirada').style.display = isRetido ? 'block' : 'none';
-    document.getElementById('divObservacaoCartao').style.display = isRetido ? 'block' : 'none';
-    
-    if (!isRetido) {
-        document.getElementById('bandeiraCartao').value = '';
-        document.getElementById('bandeiraOutros').value = '';
-        document.getElementById('ultimosDigitos').value = '';
-        document.getElementById('dataRetirada').value = '';
-        document.getElementById('observacaoCartao').value = '';
-        document.getElementById('divBandeiraOutros').style.display = 'none';
-    }
-}
-
 // ========== BUSCAR CEP ==========
 async function buscarCEP() {
     const cep = document.getElementById('cep').value.replace(/\D/g, '');
@@ -685,7 +777,6 @@ async function buscarCEP() {
             return;
         }
         
-        // Preencher campos
         document.getElementById('endereco').value = data.logradouro || '';
         document.getElementById('bairro').value = data.bairro || '';
         document.getElementById('cidade').value = data.localidade || '';
@@ -695,7 +786,6 @@ async function buscarCEP() {
         feedback.textContent = 'CEP encontrado!';
         feedback.className = 'form-text text-success';
         
-        // LIBERAR CAMPOS PARA EDIÇÃO após preencher o CEP
         const camposEndereco = ['endereco', 'numeroEndereco', 'bairro', 'complemento', 'cidade', 'estado'];
         camposEndereco.forEach(campo => {
             const elemento = document.getElementById(campo);
@@ -723,53 +813,38 @@ async function salvarContrato(e) {
         return;
     }
     
-    // Função auxiliar para pegar valor com segurança
     function getValue(id, defaultValue = '') {
         const element = document.getElementById(id);
         return element ? element.value : defaultValue;
     }
     
-    // Função auxiliar para pegar elemento com segurança
-    function getElement(id) {
-        const element = document.getElementById(id);
-        if (!element) {
-            console.error(`Elemento com ID "${id}" não encontrado`);
-        }
-        return element;
-    }
-    
-    // Função para converter valor com vírgula para número
     function parseValor(valorStr) {
         if (!valorStr) return 0;
-        // Remove pontos e substitui vírgula por ponto
         const limpo = valorStr.replace(/\./g, '').replace(',', '.');
         return parseFloat(limpo) || 0;
     }
     
-    // Validar nome do cliente
+    // Validar nome
     const nome = getValue('nome').trim();
     if (!nome || nome.length < 3) {
         mostrarStatus('Nome do cliente é obrigatório e deve ter pelo menos 3 caracteres!', 'danger');
-        const nomeElement = getElement('nome');
-        if (nomeElement) nomeElement.focus();
+        document.getElementById('nome')?.focus();
         return;
     }
     
-    // Validar CPF do cliente
+    // Validar CPF
     const cpf = getValue('cpf').replace(/\D/g, '');
     if (!validarCPF(cpf)) {
-        mostrarStatus('CPF do cliente inválido! Verifique e tente novamente.', 'danger');
-        const cpfElement = getElement('cpf');
-        if (cpfElement) cpfElement.focus();
+        mostrarStatus('CPF do cliente inválido!', 'danger');
+        document.getElementById('cpf')?.focus();
         return;
     }
     
-    // Validar data do contrato
+    // Validar data
     const dataContrato = getValue('dataContrato');
     if (!dataContrato) {
         mostrarStatus('Data do contrato é obrigatória!', 'danger');
-        const dataElement = getElement('dataContrato');
-        if (dataElement) dataElement.focus();
+        document.getElementById('dataContrato')?.focus();
         return;
     }
     
@@ -777,16 +852,13 @@ async function salvarContrato(e) {
     const tipoVenda = getValue('tipoVenda');
     if (!tipoVenda) {
         mostrarStatus('Tipo de Venda é obrigatório!', 'danger');
-        const tipoVendaElement = getElement('tipoVenda');
-        if (tipoVendaElement) tipoVendaElement.focus();
+        document.getElementById('tipoVenda')?.focus();
         return;
     }
     
-    // Validar tipo de pagamento
     const tipoPagamentoRadio = document.querySelector('input[name="tipoPagamento"]:checked');
     const tipoPagamento = tipoPagamentoRadio ? tipoPagamentoRadio.value : 'pix';
     
-    // Validar CPF de terceiros (apenas se for PIX e terceiros)
     const tipoBeneficiarioRadio = document.querySelector('input[name="tipoBeneficiario"]:checked');
     const tipoBeneficiario = (tipoPagamento === 'pix' && tipoBeneficiarioRadio) ? tipoBeneficiarioRadio.value : null;
     let cpfTerceiros = '';
@@ -796,92 +868,76 @@ async function salvarContrato(e) {
         
         if (!cpfTerceiros) {
             mostrarStatus('CPF do terceiro é obrigatório!', 'danger');
-            const cpfTerceirosElement = getElement('cpfTerceiros');
-            if (cpfTerceirosElement) cpfTerceirosElement.focus();
+            document.getElementById('cpfTerceiros')?.focus();
             return;
         }
         
         if (!validarCPF(cpfTerceiros)) {
-            mostrarStatus('CPF do terceiro inválido! Verifique e tente novamente.', 'danger');
-            const cpfTerceirosElement = getElement('cpfTerceiros');
-            if (cpfTerceirosElement) cpfTerceirosElement.focus();
+            mostrarStatus('CPF do terceiro inválido!', 'danger');
+            document.getElementById('cpfTerceiros')?.focus();
             return;
         }
         
         if (cpfTerceiros === cpf) {
             mostrarStatus('O CPF do terceiro não pode ser igual ao CPF do cliente!', 'danger');
-            const cpfTerceirosElement = getElement('cpfTerceiros');
-            if (cpfTerceirosElement) cpfTerceirosElement.focus();
+            document.getElementById('cpfTerceiros')?.focus();
             return;
         }
     }
     
-    // Validar dados da transferência se for o caso
     if (tipoPagamento === 'transferencia') {
         const dadosTransferencia = getValue('dadosTransferencia').trim();
         if (!dadosTransferencia) {
             mostrarStatus('Informe os detalhes da transferência!', 'danger');
-            const dadosTransferenciaElement = getElement('dadosTransferencia');
-            if (dadosTransferenciaElement) dadosTransferenciaElement.focus();
+            document.getElementById('dadosTransferencia')?.focus();
             return;
         }
     }
     
-    // Validar banco
     const bancoSelecionado = getValue('banco');
     if (!bancoSelecionado) {
         mostrarStatus('Banco é obrigatório!', 'danger');
-        const bancoElement = getElement('banco');
-        if (bancoElement) bancoElement.focus();
+        document.getElementById('banco')?.focus();
         return;
     }
     
-    // Validar valor do cartão
     const valorCartaoStr = getValue('valorCartao');
     const valorCartao = parseValor(valorCartaoStr);
     if (!valorCartaoStr || valorCartao <= 0) {
         mostrarStatus('Valor do Cartão é obrigatório e deve ser maior que zero!', 'danger');
-        const valorCartaoElement = getElement('valorCartao');
-        if (valorCartaoElement) valorCartaoElement.focus();
+        document.getElementById('valorCartao')?.focus();
         return;
     }
     
-    // Validar parcelas
     const parcelasValue = getValue('parcelas');
     const parcelas = parseInt(parcelasValue);
     if (isNaN(parcelas) || parcelas < 1 || parcelas > 120) {
         mostrarStatus('Quantidade de parcelas deve ser entre 1 e 120!', 'danger');
-        const parcelasElement = getElement('parcelas');
-        if (parcelasElement) parcelasElement.focus();
+        document.getElementById('parcelas')?.focus();
         return;
     }
     
-    // Validar valor emprestado
     const valorEmprestadoStr = getValue('valorEmprestado');
     const valorEmprestado = parseValor(valorEmprestadoStr);
     if (!valorEmprestadoStr || valorEmprestado <= 0) {
         mostrarStatus('Valor Emprestado é obrigatório e deve ser maior que zero!', 'danger');
-        const valorEmprestadoElement = getElement('valorEmprestado');
-        if (valorEmprestadoElement) valorEmprestadoElement.focus();
+        document.getElementById('valorEmprestado')?.focus();
         return;
     }
     
-    // Validar se valor emprestado não é maior que valor do cartão
     if (valorEmprestado > valorCartao) {
         mostrarStatus('Valor Emprestado não pode ser maior que o Valor do Cartão!', 'danger');
-        const valorEmprestadoElement = getElement('valorEmprestado');
-        if (valorEmprestadoElement) valorEmprestadoElement.focus();
+        document.getElementById('valorEmprestado')?.focus();
         return;
     }
     
-    const btnSubmit = getElement('btnSubmit');
+    const btnSubmit = document.getElementById('btnSubmit');
     if (btnSubmit) {
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
     }
     
     try {
-        // Montar endereço
         const enderecoCompleto = {
             cep: getValue('cep'),
             logradouro: getValue('endereco'),
@@ -893,8 +949,7 @@ async function salvarContrato(e) {
             completo: `${getValue('endereco')}, ${getValue('numeroEndereco')} - ${getValue('bairro')}, ${getValue('cidade')}/${getValue('estado')}`
         };
         
-        // Dados do cartão retido
-        const cartaoRetidoCheckbox = getElement('cartaoRetido');
+        const cartaoRetidoCheckbox = document.getElementById('cartaoRetido');
         const cartaoRetido = cartaoRetidoCheckbox ? cartaoRetidoCheckbox.checked : false;
         const bandeiraSelecionada = getValue('bandeiraCartao');
         const bandeiraFinal = bandeiraSelecionada === 'Outros' ? 
@@ -912,23 +967,19 @@ async function salvarContrato(e) {
             retido: false
         };
         
-        // Banco
-        const bancoElement = getElement('banco');
+        const bancoElement = document.getElementById('banco');
         const bancoFinal = bancoSelecionado === 'outros' ? 
             getValue('bancoOutros') : 
             (bancoElement ? bancoElement.options[bancoElement.selectedIndex]?.text : '');
         
-        // Cálculo do valor da parcela
         const valorParcelas = parcelas > 0 ? valorCartao / parcelas : 0;
         
-        // Montar dados de pagamento
         const dadosPagamento = {
             tipo: tipoPagamento
         };
         
         if (tipoPagamento === 'pix') {
             dadosPagamento.pix = getValue('pix');
-            
             dadosPagamento.beneficiario = {
                 tipo: tipoBeneficiario || 'mesmo_titular',
                 nome: getValue('nomeBeneficiario')
@@ -941,7 +992,6 @@ async function salvarContrato(e) {
             dadosPagamento.dadosTransferencia = getValue('dadosTransferencia');
         }
         
-        // Montar objeto do contrato
         const dadosContrato = {
             numeroContrato: getValue('numeroContrato'),
             statusValorCartao: getValue('statusValorCartao', 'processamento'),
@@ -965,9 +1015,8 @@ async function salvarContrato(e) {
             dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // Upload de imagens (se houver)
-        const fichaFile = getElement('fichaCliente')?.files[0];
-        const docFile = getElement('documentoCliente')?.files[0];
+        const fichaFile = document.getElementById('fichaCliente')?.files[0];
+        const docFile = document.getElementById('documentoCliente')?.files[0];
         
         if (fichaFile) {
             dadosContrato.fichaUrl = await uploadImagemParaImgBB(fichaFile);
@@ -976,20 +1025,15 @@ async function salvarContrato(e) {
             dadosContrato.documentoUrl = await uploadImagemParaImgBB(docFile);
         }
         
-        // Salvar no Firebase
         await db.collection('contratos').add(dadosContrato);
-        
-        // Adicionar à lista de contratos existentes
         contratosExistentes.push(dadosContrato.numeroContrato);
         
-        // Mensagem de sucesso
         if (cartaoRetido) {
             mostrarStatus('✅ Contrato cadastrado com sucesso! Cartão registrado como RETIDO.', 'warning');
         } else {
             mostrarStatus('✅ Contrato cadastrado com sucesso!', 'success');
         }
         
-        // Limpar formulário e gerar novo número
         limparFormulario();
         gerarNumeroContrato();
         
@@ -1051,19 +1095,18 @@ async function atualizarStatusEmprestado(id, novoStatus) {
         mostrarStatus('❌ Erro ao atualizar status: ' + error.message, 'danger');
     }
 }
-
 // ========== BUSCAR CONTRATOS ==========
 async function buscarContratos() {
-    const cpf = document.getElementById('searchCPF').value.replace(/\D/g, '');
-    const nome = document.getElementById('searchNome').value.toUpperCase();
-    const telefone = document.getElementById('searchTelefone').value.replace(/\D/g, '');
-    const contrato = document.getElementById('searchContrato').value;
-    const statusCartao = document.getElementById('searchStatusCartao').value;
-    const statusEmprestado = document.getElementById('searchStatusEmprestado').value;
-    const tipoVenda = document.getElementById('searchTipoVenda').value;
-    const dataInicio = document.getElementById('searchDataInicio').value;
-    const dataFim = document.getElementById('searchDataFim').value;
-    const cartaoRetido = document.getElementById('searchCartaoRetido').checked;
+    const cpf = document.getElementById('searchCPF')?.value.replace(/\D/g, '') || '';
+    const nome = (document.getElementById('searchNome')?.value || '').toUpperCase();
+    const telefone = document.getElementById('searchTelefone')?.value.replace(/\D/g, '') || '';
+    const contrato = document.getElementById('searchContrato')?.value || '';
+    const statusCartao = document.getElementById('searchStatusCartao')?.value || '';
+    const statusEmprestado = document.getElementById('searchStatusEmprestado')?.value || '';
+    const tipoVenda = document.getElementById('searchTipoVenda')?.value || '';
+    const dataInicio = document.getElementById('searchDataInicio')?.value || '';
+    const dataFim = document.getElementById('searchDataFim')?.value || '';
+    const cartaoRetido = document.getElementById('searchCartaoRetido')?.checked || false;
     
     let query = db.collection('contratos');
     
@@ -1083,11 +1126,12 @@ async function buscarContratos() {
     try {
         const snapshot = await query.get();
         const tbody = document.getElementById('resultadosBusca');
+        if (!tbody) return;
+        
         tbody.innerHTML = '';
         
         if (snapshot.empty) {
             tbody.innerHTML = '<tr><td colspan="14" class="text-center py-4">Nenhum contrato encontrado</td></tr>';
-            ajustarTabelaConsulta();
             return;
         }
         
@@ -1096,7 +1140,6 @@ async function buscarContratos() {
         snapshot.forEach(doc => {
             const dados = doc.data();
             
-            // Status Valor Cartão
             const statusCartaoClass = `status-cartao-${dados.statusValorCartao || 'processamento'}`;
             const statusCartaoTexto = {
                 'processamento': 'Processamento',
@@ -1104,7 +1147,6 @@ async function buscarContratos() {
                 'cancelado': 'Cancelado'
             }[dados.statusValorCartao] || 'Processamento';
             
-            // Status Valor Emprestado
             const statusEmprestadoClass = `status-emprestado-${dados.statusValorEmprestado || 'processamento'}`;
             const statusEmprestadoTexto = {
                 'processamento': 'Processamento',
@@ -1133,7 +1175,6 @@ async function buscarContratos() {
             
             const rowClass = dados.cartaoRetido?.retido && dados.cartaoRetido?.statusDevolucao !== 'devolvido' ? 'cartao-retido-row' : '';
             
-            // Formatar valores com vírgula
             const valorCartaoFormatado = (dados.valorCartao || 0).toFixed(2).replace('.', ',');
             const valorParcelaFormatado = (dados.valorParcelas || 0).toFixed(2).replace('.', ',');
             const valorEmprestadoFormatado = (dados.valorEmprestado || 0).toFixed(2).replace('.', ',');
@@ -1159,7 +1200,6 @@ async function buscarContratos() {
                                 <i class="bi bi-eye"></i>
                             </button>
                             
-                            <!-- Status Cartão -->
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-warning btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" title="Alterar Status Cartão">
                                     <i class="bi bi-credit-card"></i>
@@ -1174,7 +1214,6 @@ async function buscarContratos() {
                                 </ul>
                             </div>
                             
-                            <!-- Status Empréstimo -->
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" title="Alterar Status Empréstimo">
                                     <i class="bi bi-cash"></i>
@@ -1200,7 +1239,6 @@ async function buscarContratos() {
             `;
         });
         
-        // Linha de totais
         const totalCartoesFormatado = totalCartoes.toFixed(2).replace('.', ',');
         const totalEmprestadoFormatado = totalEmprestado.toFixed(2).replace('.', ',');
         
@@ -1219,52 +1257,11 @@ async function buscarContratos() {
             </tr>
         `;
         
-        // Ajustar a tabela após carregar os dados
-        ajustarTabelaConsulta();
-        
     } catch (error) {
         console.error('Erro na busca:', error);
         mostrarStatus('Erro ao buscar contratos: ' + error.message, 'danger');
     }
 }
-
-// ========== AJUSTAR TABELA DE CONSULTA ==========
-function ajustarTabelaConsulta() {
-    const tabelaContainer = document.querySelector('#consulta .table-responsive');
-    const tabela = document.getElementById('tabelaContratos');
-    
-    if (tabelaContainer) {
-        tabelaContainer.style.overflowX = 'auto';
-        tabelaContainer.style.overflowY = 'visible';
-        tabelaContainer.style.width = '100%';
-        tabelaContainer.style.maxWidth = '100%';
-        tabelaContainer.style.display = 'block';
-    }
-    
-    if (tabela) {
-        tabela.style.width = 'auto';
-        tabela.style.minWidth = '100%';
-        tabela.style.whiteSpace = 'nowrap';
-        tabela.style.tableLayout = 'auto';
-    }
-}
-
-// ========== CORRIGIR DROPDOWNS AO ABRIR ==========
-document.addEventListener('shown.bs.dropdown', function(e) {
-    const dropdownMenu = e.target.querySelector('.dropdown-menu');
-    if (dropdownMenu) {
-        dropdownMenu.style.zIndex = '99999';
-        dropdownMenu.style.position = 'absolute';
-    }
-});
-
-document.addEventListener('show.bs.dropdown', function(e) {
-    const dropdownMenu = e.target.querySelector('.dropdown-menu');
-    if (dropdownMenu) {
-        dropdownMenu.style.zIndex = '99999';
-        dropdownMenu.style.position = 'absolute';
-    }
-});
 
 // ========== REGISTRAR DEVOLUÇÃO ==========
 async function registrarDevolucao(id) {
@@ -1290,118 +1287,120 @@ async function registrarDevolucao(id) {
 async function verDetalhes(id) {
     try {
         const doc = await db.collection('contratos').doc(id).get();
-        if (doc.exists) {
-            const dados = doc.data();
-            const modalBody = document.getElementById('detalhesContrato');
-            
-            const tipoVendaNome = dados.tipoVendaNome || dados.tipoVenda || 'N/A';
-            const tipoVendaClass = dados.tipoVenda ? `tipo-${dados.tipoVenda}` : '';
-            
-            const statusCartaoTexto = {
-                'processamento': 'Processamento',
-                'recebido': 'Recebido',
-                'cancelado': 'Cancelado'
-            }[dados.statusValorCartao] || 'Processamento';
-            
-            const statusEmprestadoTexto = {
-                'processamento': 'Processamento',
-                'pago': 'Pago',
-                'cancelado': 'Cancelado'
-            }[dados.statusValorEmprestado] || 'Processamento';
-            
-            const statusCartaoClass = `status-cartao-${dados.statusValorCartao || 'processamento'}`;
-            const statusEmprestadoClass = `status-emprestado-${dados.statusValorEmprestado || 'processamento'}`;
-            
-            const enderecoHTML = dados.endereco?.logradouro ? `
-                <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <i class="bi bi-geo-alt"></i> <strong>Endereço Completo</strong>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>CEP:</strong> ${dados.endereco.cep || 'N/A'}</p>
-                        <p><strong>Logradouro:</strong> ${dados.endereco.logradouro || 'N/A'}, ${dados.endereco.numero || 'S/N'}</p>
-                        ${dados.endereco.complemento ? `<p><strong>Complemento:</strong> ${dados.endereco.complemento}</p>` : ''}
-                        <p><strong>Bairro:</strong> ${dados.endereco.bairro || 'N/A'}</p>
-                        <p><strong>Cidade/Estado:</strong> ${dados.endereco.cidade || 'N/A'}/${dados.endereco.estado || 'N/A'}</p>
-                    </div>
+        if (!doc.exists) return;
+        
+        const dados = doc.data();
+        const modalBody = document.getElementById('detalhesContrato');
+        if (!modalBody) return;
+        
+        const tipoVendaNome = dados.tipoVendaNome || dados.tipoVenda || 'N/A';
+        const tipoVendaClass = dados.tipoVenda ? `tipo-${dados.tipoVenda}` : '';
+        
+        const statusCartaoTexto = {
+            'processamento': 'Processamento',
+            'recebido': 'Recebido',
+            'cancelado': 'Cancelado'
+        }[dados.statusValorCartao] || 'Processamento';
+        
+        const statusEmprestadoTexto = {
+            'processamento': 'Processamento',
+            'pago': 'Pago',
+            'cancelado': 'Cancelado'
+        }[dados.statusValorEmprestado] || 'Processamento';
+        
+        const statusCartaoClass = `status-cartao-${dados.statusValorCartao || 'processamento'}`;
+        const statusEmprestadoClass = `status-emprestado-${dados.statusValorEmprestado || 'processamento'}`;
+        
+        const enderecoHTML = dados.endereco?.logradouro ? `
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <i class="bi bi-geo-alt"></i> <strong>Endereço Completo</strong>
                 </div>
-            ` : '';
-            
-            const cartaoHTML = dados.cartaoRetido?.retido ? `
-                <div class="card mb-3 border-danger">
-                    <div class="card-header bg-danger text-white">
-                        <i class="bi bi-credit-card"></i> <strong>Cartão Retido</strong>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Bandeira:</strong> ${dados.cartaoRetido.bandeira || 'N/A'}</p>
-                        <p><strong>Últimos dígitos:</strong> ${dados.cartaoRetido.ultimosDigitos || 'N/A'}</p>
-                        <p><strong>Data da Retirada:</strong> ${dados.cartaoRetido.dataRetirada || 'N/A'}</p>
-                        <p><strong>Status:</strong> ${dados.cartaoRetido.statusDevolucao === 'devolvido' ? '✅ Devolvido' : '⚠️ Pendente de Devolução'}</p>
-                        ${dados.cartaoRetido.dataDevolucao ? `<p><strong>Data Devolução:</strong> ${dados.cartaoRetido.dataDevolucao}</p>` : ''}
-                        ${dados.cartaoRetido.observacao ? `<p><strong>Observações:</strong> ${dados.cartaoRetido.observacao}</p>` : ''}
-                    </div>
+                <div class="card-body">
+                    <p><strong>CEP:</strong> ${dados.endereco.cep || 'N/A'}</p>
+                    <p><strong>Logradouro:</strong> ${dados.endereco.logradouro || 'N/A'}, ${dados.endereco.numero || 'S/N'}</p>
+                    ${dados.endereco.complemento ? `<p><strong>Complemento:</strong> ${dados.endereco.complemento}</p>` : ''}
+                    <p><strong>Bairro:</strong> ${dados.endereco.bairro || 'N/A'}</p>
+                    <p><strong>Cidade/Estado:</strong> ${dados.endereco.cidade || 'N/A'}/${dados.endereco.estado || 'N/A'}</p>
                 </div>
-            ` : '';
-            
-            const pagamentoHTML = dados.pagamento ? `
-                <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <i class="bi bi-cash-stack"></i> <strong>Dados do Pagamento</strong>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Modalidade:</strong> ${dados.pagamento.tipo === 'pix' ? 
-                            '<span class="badge bg-info">PIX</span>' : 
-                            '<span class="badge bg-primary">Transferência Bancária</span>'}</p>
-                        
-                        ${dados.pagamento.tipo === 'pix' ? `
-                            <p><strong>Chave PIX:</strong> ${dados.pagamento.pix || 'N/A'}</p>
-                            <p><strong>Tipo Beneficiário:</strong> ${dados.pagamento.beneficiario?.tipo === 'terceiros' ? 'Terceiros' : 'Mesmo titular do cartão'}</p>
-                            <p><strong>Beneficiário:</strong> ${dados.pagamento.beneficiario?.nome || 'N/A'}</p>
-                            ${dados.pagamento.beneficiario?.tipo === 'terceiros' && dados.pagamento.beneficiario?.cpf ? 
-                                `<p><strong>CPF Terceiro:</strong> ${mascararCPF(dados.pagamento.beneficiario.cpf)}</p>` : ''}
-                        ` : ''}
-                        
-                        ${dados.pagamento.tipo === 'transferencia' ? `
-                            <p><strong>Detalhes da Transferência:</strong></p>
-                            <div class="alert alert-light border">
-                                <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">${dados.pagamento.dadosTransferencia || 'N/A'}</pre>
-                            </div>
-                        ` : ''}
-                    </div>
+            </div>
+        ` : '';
+        
+        const cartaoHTML = dados.cartaoRetido?.retido ? `
+            <div class="card mb-3 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <i class="bi bi-credit-card"></i> <strong>Cartão Retido</strong>
                 </div>
-            ` : '';
-            
-            modalBody.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-primary">Contrato: ${dados.numeroContrato}</h6>
-                        <p><strong>Status Cartão:</strong> <span class="badge badge-status ${statusCartaoClass}">${statusCartaoTexto}</span></p>
-                        <p><strong>Status Empréstimo:</strong> <span class="badge badge-status ${statusEmprestadoClass}">${statusEmprestadoTexto}</span></p>
-                        <p><strong>Tipo de Venda:</strong> <span class="tipo-venda-badge ${tipoVendaClass}">${tipoVendaNome}</span></p>
-                        <p><strong>Data:</strong> ${dados.dataContrato}</p>
-                        <p><strong>Nome:</strong> ${dados.nome}</p>
-                        <p><strong>CPF:</strong> ${mascararCPF(dados.cpf)}</p>
-                        <p><strong>Telefone:</strong> ${mascararTelefone(dados.telefone)}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Banco:</strong> ${dados.banco || 'N/A'}</p>
-                        <p><strong>Valor Cartão:</strong> R$ ${(dados.valorCartao || 0).toFixed(2)}</p>
-                        <p><strong>Parcelas:</strong> ${dados.parcelas || 0}x</p>
-                        <p><strong>Valor Parcela:</strong> R$ ${(dados.valorParcelas || 0).toFixed(2)}</p>
-                        <p><strong>Valor Emprestado:</strong> R$ ${(dados.valorEmprestado || 0).toFixed(2)}</p>
-                        <p><strong>Lucro:</strong> R$ ${(dados.lucro || 0).toFixed(2)}</p>
-                    </div>
+                <div class="card-body">
+                    <p><strong>Bandeira:</strong> ${dados.cartaoRetido.bandeira || 'N/A'}</p>
+                    <p><strong>Últimos dígitos:</strong> ${dados.cartaoRetido.ultimosDigitos || 'N/A'}</p>
+                    <p><strong>Data da Retirada:</strong> ${dados.cartaoRetido.dataRetirada || 'N/A'}</p>
+                    <p><strong>Status:</strong> ${dados.cartaoRetido.statusDevolucao === 'devolvido' ? '✅ Devolvido' : '⚠️ Pendente de Devolução'}</p>
+                    ${dados.cartaoRetido.dataDevolucao ? `<p><strong>Data Devolução:</strong> ${dados.cartaoRetido.dataDevolucao}</p>` : ''}
+                    ${dados.cartaoRetido.observacao ? `<p><strong>Observações:</strong> ${dados.cartaoRetido.observacao}</p>` : ''}
                 </div>
-                ${pagamentoHTML}
-                ${enderecoHTML}
-                ${cartaoHTML}
-                ${dados.fichaUrl ? `<div class="mb-3"><strong>Ficha do Cliente:</strong><br><img src="${dados.fichaUrl}" class="img-fluid mt-2 rounded" alt="Ficha"></div>` : ''}
-                ${dados.documentoUrl ? `<div class="mb-3"><strong>Documento:</strong><br><img src="${dados.documentoUrl}" class="img-fluid mt-2 rounded" alt="Documento"></div>` : ''}
-            `;
-            
-            contratoAtualId = id;
-            new bootstrap.Modal(document.getElementById('modalDetalhes')).show();
-        }
+            </div>
+        ` : '';
+        
+        const pagamentoHTML = dados.pagamento ? `
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <i class="bi bi-cash-stack"></i> <strong>Dados do Pagamento</strong>
+                </div>
+                <div class="card-body">
+                    <p><strong>Modalidade:</strong> ${dados.pagamento.tipo === 'pix' ? 
+                        '<span class="badge bg-info">PIX</span>' : 
+                        '<span class="badge bg-primary">Transferência Bancária</span>'}</p>
+                    
+                    ${dados.pagamento.tipo === 'pix' ? `
+                        <p><strong>Chave PIX:</strong> ${dados.pagamento.pix || 'N/A'}</p>
+                        <p><strong>Tipo Beneficiário:</strong> ${dados.pagamento.beneficiario?.tipo === 'terceiros' ? 'Terceiros' : 'Mesmo titular do cartão'}</p>
+                        <p><strong>Beneficiário:</strong> ${dados.pagamento.beneficiario?.nome || 'N/A'}</p>
+                        ${dados.pagamento.beneficiario?.tipo === 'terceiros' && dados.pagamento.beneficiario?.cpf ? 
+                            `<p><strong>CPF Terceiro:</strong> ${mascararCPF(dados.pagamento.beneficiario.cpf)}</p>` : ''}
+                    ` : ''}
+                    
+                    ${dados.pagamento.tipo === 'transferencia' ? `
+                        <p><strong>Detalhes da Transferência:</strong></p>
+                        <div class="alert alert-light border">
+                            <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">${dados.pagamento.dadosTransferencia || 'N/A'}</pre>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        ` : '';
+        
+        modalBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-primary">Contrato: ${dados.numeroContrato}</h6>
+                    <p><strong>Status Cartão:</strong> <span class="badge badge-status ${statusCartaoClass}">${statusCartaoTexto}</span></p>
+                    <p><strong>Status Empréstimo:</strong> <span class="badge badge-status ${statusEmprestadoClass}">${statusEmprestadoTexto}</span></p>
+                    <p><strong>Tipo de Venda:</strong> <span class="tipo-venda-badge ${tipoVendaClass}">${tipoVendaNome}</span></p>
+                    <p><strong>Data:</strong> ${dados.dataContrato}</p>
+                    <p><strong>Nome:</strong> ${dados.nome}</p>
+                    <p><strong>CPF:</strong> ${mascararCPF(dados.cpf)}</p>
+                    <p><strong>Telefone:</strong> ${mascararTelefone(dados.telefone)}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Banco:</strong> ${dados.banco || 'N/A'}</p>
+                    <p><strong>Valor Cartão:</strong> R$ ${(dados.valorCartao || 0).toFixed(2)}</p>
+                    <p><strong>Parcelas:</strong> ${dados.parcelas || 0}x</p>
+                    <p><strong>Valor Parcela:</strong> R$ ${(dados.valorParcelas || 0).toFixed(2)}</p>
+                    <p><strong>Valor Emprestado:</strong> R$ ${(dados.valorEmprestado || 0).toFixed(2)}</p>
+                    <p><strong>Lucro:</strong> R$ ${(dados.lucro || 0).toFixed(2)}</p>
+                </div>
+            </div>
+            ${pagamentoHTML}
+            ${enderecoHTML}
+            ${cartaoHTML}
+            ${dados.fichaUrl ? `<div class="mb-3"><strong>Ficha do Cliente:</strong><br><img src="${dados.fichaUrl}" class="img-fluid mt-2 rounded" alt="Ficha"></div>` : ''}
+            ${dados.documentoUrl ? `<div class="mb-3"><strong>Documento:</strong><br><img src="${dados.documentoUrl}" class="img-fluid mt-2 rounded" alt="Documento"></div>` : ''}
+        `;
+        
+        contratoAtualId = id;
+        new bootstrap.Modal(document.getElementById('modalDetalhes')).show();
+        
     } catch (error) {
         console.error('Erro:', error);
     }
@@ -1409,19 +1408,28 @@ async function verDetalhes(id) {
 
 // ========== RELATÓRIOS ==========
 function atualizarCamposRelatorio() {
-    const tipo = document.getElementById('relatorioTipo').value;
-    document.getElementById('relatorioMes').style.display = tipo === 'mensal' ? 'block' : 'none';
-    document.getElementById('relatorioDataInicio').style.display = tipo === 'periodo' ? 'block' : 'none';
-    document.getElementById('relatorioDataFim').style.display = tipo === 'periodo' ? 'block' : 'none';
-    document.getElementById('divTipoVendaRelatorio').style.display = tipo === 'tipo_venda' ? 'block' : 'none';
+    const tipo = document.getElementById('relatorioTipo')?.value;
+    if (!tipo) return;
+    
+    const relatorioMes = document.getElementById('relatorioMes');
+    const relatorioDataInicio = document.getElementById('relatorioDataInicio');
+    const relatorioDataFim = document.getElementById('relatorioDataFim');
+    const divTipoVendaRelatorio = document.getElementById('divTipoVendaRelatorio');
+    
+    if (relatorioMes) relatorioMes.style.display = tipo === 'mensal' ? 'block' : 'none';
+    if (relatorioDataInicio) relatorioDataInicio.style.display = tipo === 'periodo' ? 'block' : 'none';
+    if (relatorioDataFim) relatorioDataFim.style.display = tipo === 'periodo' ? 'block' : 'none';
+    if (divTipoVendaRelatorio) divTipoVendaRelatorio.style.display = tipo === 'tipo_venda' ? 'block' : 'none';
 }
 
 async function gerarRelatorio() {
-    const tipo = document.getElementById('relatorioTipo').value;
+    const tipo = document.getElementById('relatorioTipo')?.value;
+    if (!tipo) return;
+    
     let query = db.collection('contratos');
     
     if (tipo === 'mensal') {
-        const mes = document.getElementById('relatorioMes').value;
+        const mes = document.getElementById('relatorioMes')?.value;
         if (!mes) {
             mostrarStatus('Selecione um mês!', 'warning');
             return;
@@ -1432,12 +1440,12 @@ async function gerarRelatorio() {
         const fim = `${ano}-${mesNum}-${ultimoDia}`;
         query = query.where('dataContrato', '>=', inicio).where('dataContrato', '<=', fim);
     } else if (tipo === 'periodo') {
-        const inicio = document.getElementById('relatorioDataInicio').value;
-        const fim = document.getElementById('relatorioDataFim').value;
+        const inicio = document.getElementById('relatorioDataInicio')?.value;
+        const fim = document.getElementById('relatorioDataFim')?.value;
         if (inicio) query = query.where('dataContrato', '>=', inicio);
         if (fim) query = query.where('dataContrato', '<=', fim);
     } else if (tipo === 'tipo_venda') {
-        const tipoVenda = document.getElementById('relatorioTipoVenda').value;
+        const tipoVenda = document.getElementById('relatorioTipoVenda')?.value;
         if (tipoVenda) query = query.where('tipoVenda', '==', tipoVenda);
     }
     
@@ -1446,12 +1454,13 @@ async function gerarRelatorio() {
     try {
         const snapshot = await query.get();
         const tbody = document.getElementById('dadosRelatorio');
+        if (!tbody) return;
+        
         tbody.innerHTML = '';
         
         let totalCartoes = 0, totalEmprestado = 0, totalLucro = 0;
         let cartoesRetidosPendentes = 0, cartoesDevolvidos = 0, cartoesRetidosTotal = 0;
         
-        // Agrupar por tipo de venda se for relatório completo
         const porTipoVenda = {};
         
         snapshot.forEach(doc => {
@@ -1461,7 +1470,6 @@ async function gerarRelatorio() {
             totalEmprestado += dados.valorEmprestado || 0;
             totalLucro += dados.lucro || 0;
             
-            // Agrupamento
             const tv = dados.tipoVenda || 'outros';
             if (!porTipoVenda[tv]) {
                 porTipoVenda[tv] = { 
@@ -1513,18 +1521,16 @@ async function gerarRelatorio() {
                     <td>R$ ${(dados.valorEmprestado || 0).toFixed(2)}</td>
                     <td>R$ ${(dados.lucro || 0).toFixed(2)}</td>
                     <td>${cartaoInfo}</td>
-                    <td>${statusCartaoTexto}</td>
-                    <td>${statusEmprestadoTexto}</td>
+                    <td>${statusCartaoTexto} / ${statusEmprestadoTexto}</td>
                     <td>${dados.dataContrato}</td>
                 </tr>
             `;
         });
         
-        // Se for relatório completo, adicionar resumo por tipo de venda
         if (tipo === 'completo' && Object.keys(porTipoVenda).length > 0) {
             tbody.innerHTML += `
                 <tr class="table-secondary fw-bold">
-                    <td colspan="12">RESUMO POR TIPO DE VENDA</td>
+                    <td colspan="11">RESUMO POR TIPO DE VENDA</td>
                 </tr>
             `;
             Object.values(porTipoVenda).forEach(tv => {
@@ -1537,13 +1543,12 @@ async function gerarRelatorio() {
                         <td></td>
                         <td>R$ ${tv.valorEmprestado.toFixed(2)}</td>
                         <td>R$ ${tv.lucro.toFixed(2)}</td>
-                        <td colspan="4"></td>
+                        <td colspan="3"></td>
                     </tr>
                 `;
             });
         }
         
-        // Atualizar cards
         document.getElementById('totalContratos').textContent = snapshot.size;
         document.getElementById('totalCartoes').textContent = `R$ ${totalCartoes.toFixed(2)}`;
         document.getElementById('totalEmprestado').textContent = `R$ ${totalEmprestado.toFixed(2)}`;
@@ -1553,7 +1558,6 @@ async function gerarRelatorio() {
         document.getElementById('totalCartoesDevolvidos').textContent = cartoesDevolvidos;
         document.getElementById('totalCartoesRetidos').textContent = cartoesRetidosTotal;
         document.getElementById('cardsCartoesRetidos').style.display = cartoesRetidosTotal > 0 ? 'flex' : 'none';
-        
         document.getElementById('tabelaRelatorio').style.display = 'block';
         
         window.dadosExportacao = {
@@ -1657,6 +1661,8 @@ function mostrarStatus(mensagem, tipo) {
     const statusDiv = document.getElementById('statusOrg');
     const statusMessage = document.getElementById('statusMessage');
     
+    if (!statusDiv || !statusMessage) return;
+    
     statusDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
     statusMessage.innerHTML = mensagem;
     statusDiv.style.display = 'block';
@@ -1667,9 +1673,14 @@ function mostrarStatus(mensagem, tipo) {
 }
 
 function limparFormulario() {
-    document.getElementById('formEmprestimo').reset();
-    document.getElementById('previewFicha').style.display = 'none';
-    document.getElementById('previewDocumento').style.display = 'none';
+    const form = document.getElementById('formEmprestimo');
+    if (form) form.reset();
+    
+    const previewFicha = document.getElementById('previewFicha');
+    const previewDocumento = document.getElementById('previewDocumento');
+    if (previewFicha) previewFicha.style.display = 'none';
+    if (previewDocumento) previewDocumento.style.display = 'none';
+    
     document.querySelectorAll('.upload-icon').forEach(icon => icon.style.display = 'block');
     document.querySelectorAll('.upload-area p').forEach(p => p.style.display = 'block');
     
@@ -1687,16 +1698,13 @@ function limparFormulario() {
     document.getElementById('cpf').classList.remove('is-valid', 'is-invalid');
     document.getElementById('cpfTerceiros').classList.remove('is-valid', 'is-invalid');
     
-    // Resetar flags
     document.getElementById('flagEnderecoManual').checked = false;
     document.getElementById('radioMesmoTitular').checked = true;
     document.getElementById('radioPix').checked = true;
     
-    // Resetar status para padrão "processamento"
     document.getElementById('statusValorCartao').value = 'processamento';
     document.getElementById('statusValorEmprestado').value = 'processamento';
     
-    // Limpar campos
     document.getElementById('cpfTerceiros').value = '';
     document.getElementById('dadosTransferencia').value = '';
     document.getElementById('nomeBeneficiario').readOnly = true;
@@ -1705,9 +1713,7 @@ function limparFormulario() {
     gerarNumeroContrato();
 }
 
-// ========== DESABILITAR SISTEMA COMPLETO ==========
 function desabilitarSistema() {
-    // Desabilitar navegação das abas
     const tabButtons = document.querySelectorAll('#myTab .nav-link');
     tabButtons.forEach(button => {
         if (button.id !== 'cadastro-tab') {
@@ -1718,37 +1724,12 @@ function desabilitarSistema() {
         }
     });
     
-    // Forçar navegação para aba de cadastro
-    const cadastroTab = document.getElementById('cadastro-tab');
-    const bsTab = new bootstrap.Tab(cadastroTab);
-    bsTab.show();
-    
-    // Desabilitar todos os campos do formulário
-    desabilitarFormulario();
-    
-    // Desabilitar botões de busca nas outras abas
-    document.querySelectorAll('#consulta button, #relatorios button').forEach(btn => {
-        btn.disabled = true;
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-    });
-    
-    // Desabilitar inputs de busca
-    document.querySelectorAll('#consulta input, #consulta select, #relatorios input, #relatorios select').forEach(input => {
-        input.disabled = true;
-        input.style.pointerEvents = 'none';
-        input.style.opacity = '0.5';
-    });
-}
-
-function desabilitarFormulario() {
     const inputs = document.querySelectorAll('#formEmprestimo input, #formEmprestimo select, #formEmprestimo button, #formEmprestimo textarea');
     inputs.forEach(input => {
         input.disabled = true;
         input.style.pointerEvents = 'none';
     });
     
-    // Desabilitar upload areas
     document.querySelectorAll('.upload-area').forEach(area => {
         area.style.pointerEvents = 'none';
         area.style.opacity = '0.5';
