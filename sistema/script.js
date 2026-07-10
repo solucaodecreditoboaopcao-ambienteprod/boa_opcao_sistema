@@ -47,12 +47,12 @@ function togglePassword() {
     if (senhaInput.type === 'password') {
         // Senha oculta → mostrar senha
         senhaInput.type = 'text';
-        toggleBtn.innerHTML = '👁️‍🗨️'; // Olho com censura (fechado)
+        toggleBtn.innerHTML = '<i class="bi bi-eye-fill"></i>'; // Olho aberto
         toggleBtn.title = 'Ocultar senha';
     } else {
         // Senha visível → ocultar senha
         senhaInput.type = 'password';
-        toggleBtn.innerHTML = '👁️'; // Olho aberto
+        toggleBtn.innerHTML = '<i class="bi bi-eye-slash-fill"></i>'; // Olho cortado
         toggleBtn.title = 'Mostrar senha';
     }
 }
