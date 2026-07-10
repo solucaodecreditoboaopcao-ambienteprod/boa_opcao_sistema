@@ -18,7 +18,15 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Header com Logo -->
+    <!-- Overlay de Bloqueio -->
+    <div id="bloqueioOverlay" class="bloqueio-overlay">
+        <div class="bloqueio-mensagem">
+            <span class="bloqueio-icon">🔒</span>
+            <p class="bloqueio-texto">Faça login para acessar o sistema</p>
+        </div>
+    </div>
+
+    <!-- Header com Logo e Login -->
     <header class="header">
         <div class="container">
             <div class="row align-items-center">
@@ -29,6 +37,37 @@
                     <div class="slogan">
                         <h2 class="org-title" id="orgName">BOA OPÇÃO</h2>
                         <p class="org-subtitle" id="orgSubName">SOLUÇÕES DE CRÉDITO</p>
+                    </div>
+                    
+                    <!-- Área de Login -->
+                    <div class="login-container mt-2" id="loginContainer">
+                        <div id="loginFormArea" class="login-form-inline">
+                            <div class="login-input-group">
+                                <input type="text" class="login-input" id="loginUsuario" placeholder="Login" autocomplete="username">
+                            </div>
+                            <div class="login-input-group">
+                                <div class="password-wrapper">
+                                    <input type="password" class="login-input" id="senhaUsuario" placeholder="Senha" autocomplete="current-password">
+                                    <button type="button" class="toggle-password-btn" onclick="togglePassword()">
+                                        👁️
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-login-action" onclick="fazerLogin()">
+                                <i class="bi bi-box-arrow-in-right"></i> Logar
+                            </button>
+                            <div id="loginError" class="error-message"></div>
+                        </div>
+                        
+                        <div id="userInfoArea" class="user-info-display" style="display: none;">
+                            <div class="user-avatar">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <span class="user-name-display" id="userNameDisplay"></span>
+                            <button type="button" class="btn-logout-action" onclick="fazerLogout()">
+                                <i class="bi bi-box-arrow-right"></i> Sair
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -43,741 +82,743 @@
         </div>
     </div>
 
-    <!-- Sistema de Abas -->
-    <div class="container mt-4">
-        <ul class="nav nav-tabs custom-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="cadastro-tab" data-bs-toggle="tab" data-bs-target="#cadastro" type="button" role="tab">
-                    <i class="bi bi-plus-circle-fill"></i> Novo Contrato
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="consulta-tab" data-bs-toggle="tab" data-bs-target="#consulta" type="button" role="tab">
-                    <i class="bi bi-search"></i> Consultar Contratos
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="relatorios-tab" data-bs-toggle="tab" data-bs-target="#relatorios" type="button" role="tab">
-                    <i class="bi bi-file-earmark-spreadsheet"></i> Relatórios
-                </button>
-            </li>
-        </ul>
+    <!-- Sistema de Abas (inicialmente oculto) -->
+    <div id="conteudoSistema" style="display: none;">
+        <div class="container mt-4">
+            <ul class="nav nav-tabs custom-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="cadastro-tab" data-bs-toggle="tab" data-bs-target="#cadastro" type="button" role="tab">
+                        <i class="bi bi-plus-circle-fill"></i> Novo Contrato
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="consulta-tab" data-bs-toggle="tab" data-bs-target="#consulta" type="button" role="tab">
+                        <i class="bi bi-search"></i> Consultar Contratos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="relatorios-tab" data-bs-toggle="tab" data-bs-target="#relatorios" type="button" role="tab">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Relatórios
+                    </button>
+                </li>
+            </ul>
 
-        <div class="tab-content custom-tab-content" id="myTabContent">
-            <!-- Aba 1: Novo Contrato -->
-            <div class="tab-pane fade show active" id="cadastro" role="tabpanel">
-                <div class="row justify-content-center">
-                    <div class="col-lg-10">
-                        <div class="card shadow-lg border-0">
-                            <div class="card-body p-4">
-                                <h4 class="card-title mb-4">
-                                    <i class="bi bi-file-earmark-plus text-primary"></i> 
-                                    Novo Contrato de Empréstimo
-                                </h4>
-                                
-                                <form id="formEmprestimo">
-                                    <!-- Número do Contrato, Status e Tipo de Venda -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="numeroContrato" readonly>
-                                                <label for="numeroContrato">
-                                                    <i class="bi bi-hash"></i> Nº Contrato
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="tipoVenda" required>
-                                                    <option value="">Selecione...</option>
-                                                    <option value="cartao_alimentacao">Cartão Alimentação</option>
-                                                    <option value="cartao_refeicao">Cartão Refeição</option>
-                                                    <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
-                                                    <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
-                                                </select>
-                                                <label for="tipoVenda">
-                                                    <i class="bi bi-tag"></i> Tipo de Venda *
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="statusValorCartao" required>
-                                                    <option value="processamento">Processamento</option>
-                                                    <option value="recebido">Recebido</option>
-                                                    <option value="cancelado">Cancelado</option>
-                                                </select>
-                                                <label for="statusValorCartao">
-                                                    <i class="bi bi-credit-card"></i> Status Valor Cartão
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="statusValorEmprestado" required>
-                                                    <option value="processamento">Processamento</option>
-                                                    <option value="pago">Pago</option>
-                                                    <option value="cancelado">Cancelado</option>
-                                                </select>
-                                                <label for="statusValorEmprestado">
-                                                    <i class="bi bi-cash"></i> Status Valor Emprestado
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
+            <div class="tab-content custom-tab-content" id="myTabContent">
+                <!-- Aba 1: Novo Contrato -->
+                <div class="tab-pane fade show active" id="cadastro" role="tabpanel">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-10">
+                            <div class="card shadow-lg border-0">
+                                <div class="card-body p-4">
+                                    <h4 class="card-title mb-4">
+                                        <i class="bi bi-file-earmark-plus text-primary"></i> 
+                                        Novo Contrato de Empréstimo
+                                    </h4>
                                     
-                                    <!-- Data do Contrato -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="date" class="form-control" id="dataContrato" required>
-                                                <label for="dataContrato">
-                                                    <i class="bi bi-calendar"></i> Data do Contrato
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Dados do Cliente -->
-                                    <div class="section-title">
-                                        <i class="bi bi-person-badge"></i> Dados do Cliente
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="nome" required placeholder="Nome completo">
-                                                <label for="nome">Nome Completo *</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="cpf" required placeholder="000.000.000-00" maxlength="14">
-                                                <label for="cpf">CPF *</label>
-                                                <div class="invalid-feedback" id="cpfFeedback"></div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <input type="tel" class="form-control" id="numero" required placeholder="(00) 00000-0000">
-                                                <label for="numero">Telefone *</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Endereço -->
-                                    <div class="section-title">
-                                        <i class="bi bi-geo-alt"></i> Endereço
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-12 mb-3">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="flagEnderecoManual">
-                                                <label class="form-check-label fw-bold" for="flagEnderecoManual">
-                                                    <i class="bi bi-pencil"></i> Digitar endereço manualmente
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="cep" placeholder="00000-000" maxlength="9">
-                                                <label for="cep">CEP</label>
-                                                <div id="cepFeedback" class="form-text" style="display:none;"></div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-7">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="endereco" placeholder="Rua, Avenida...">
-                                                <label for="endereco">Logradouro</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="numeroEndereco" placeholder="Nº">
-                                                <label for="numeroEndereco">Número</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="bairro" placeholder="Bairro">
-                                                <label for="bairro">Bairro</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="complemento" placeholder="Apto, Bloco, etc.">
-                                                <label for="complemento">Complemento</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="cidade" placeholder="Cidade">
-                                                <label for="cidade">Cidade</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="estado">
-                                                    <option value="">UF</option>
-                                                    <option value="AC">AC</option>
-                                                    <option value="AL">AL</option>
-                                                    <option value="AP">AP</option>
-                                                    <option value="AM">AM</option>
-                                                    <option value="BA">BA</option>
-                                                    <option value="CE">CE</option>
-                                                    <option value="DF">DF</option>
-                                                    <option value="ES">ES</option>
-                                                    <option value="GO">GO</option>
-                                                    <option value="MA">MA</option>
-                                                    <option value="MT">MT</option>
-                                                    <option value="MS">MS</option>
-                                                    <option value="MG">MG</option>
-                                                    <option value="PA">PA</option>
-                                                    <option value="PB">PB</option>
-                                                    <option value="PR">PR</option>
-                                                    <option value="PE">PE</option>
-                                                    <option value="PI">PI</option>
-                                                    <option value="RJ">RJ</option>
-                                                    <option value="RN">RN</option>
-                                                    <option value="RS">RS</option>
-                                                    <option value="RO">RO</option>
-                                                    <option value="RR">RR</option>
-                                                    <option value="SC">SC</option>
-                                                    <option value="SP">SP</option>
-                                                    <option value="SE">SE</option>
-                                                    <option value="TO">TO</option>
-                                                </select>
-                                                <label for="estado">Estado</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Dados Financeiros -->
-                                    <div class="section-title">
-                                        <i class="bi bi-cash-stack"></i> Dados Financeiros
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <!-- Tipo de Pagamento -->
-                                        <div class="col-12">
-                                            <label class="form-label fw-bold">Modalidade de Pagamento</label>
-                                            <div class="d-flex gap-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="tipoPagamento" id="radioPix" value="pix" checked onchange="toggleTipoPagamento()">
-                                                    <label class="form-check-label" for="radioPix">
-                                                        <i class="bi bi-qr-code"></i> PIX
+                                    <form id="formEmprestimo">
+                                        <!-- Número do Contrato, Status e Tipo de Venda -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-3">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="numeroContrato" readonly>
+                                                    <label for="numeroContrato">
+                                                        <i class="bi bi-hash"></i> Nº Contrato
                                                     </label>
                                                 </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="tipoPagamento" id="radioTransferencia" value="transferencia" onchange="toggleTipoPagamento()">
-                                                    <label class="form-check-label" for="radioTransferencia">
-                                                        <i class="bi bi-bank"></i> Transferência Bancária
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="tipoVenda" required>
+                                                        <option value="">Selecione...</option>
+                                                        <option value="cartao_alimentacao">Cartão Alimentação</option>
+                                                        <option value="cartao_refeicao">Cartão Refeição</option>
+                                                        <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
+                                                        <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
+                                                    </select>
+                                                    <label for="tipoVenda">
+                                                        <i class="bi bi-tag"></i> Tipo de Venda *
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="statusValorCartao" required>
+                                                        <option value="processamento">Processamento</option>
+                                                        <option value="recebido">Recebido</option>
+                                                        <option value="cancelado">Cancelado</option>
+                                                    </select>
+                                                    <label for="statusValorCartao">
+                                                        <i class="bi bi-credit-card"></i> Status Valor Cartão
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="statusValorEmprestado" required>
+                                                        <option value="processamento">Processamento</option>
+                                                        <option value="pago">Pago</option>
+                                                        <option value="cancelado">Cancelado</option>
+                                                    </select>
+                                                    <label for="statusValorEmprestado">
+                                                        <i class="bi bi-cash"></i> Status Valor Emprestado
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
-                                    
-                                        <!-- Campos PIX (visíveis por padrão) -->
-                                        <div id="divPixCampos">
-                                            <div class="row g-3">
-                                                <div class="col-md-6">
-                                                    <label class="form-label fw-bold">Chave PIX</label>
-                                                    <div class="input-group">
-                                                        <span class="input-group-text"><i class="bi bi-qr-code"></i></span>
-                                                        <input type="text" class="form-control" id="pix" placeholder="Chave PIX">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label fw-bold">Nome do Beneficiário</label>
-                                                    <div class="input-group">
-                                                        <span class="input-group-text"><i class="bi bi-person-check"></i></span>
-                                                        <input type="text" class="form-control" id="nomeBeneficiario" placeholder="Nome do beneficiário">
-                                                    </div>
-                                                    <div class="mt-2">
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" name="tipoBeneficiario" id="radioMesmoTitular" value="mesmo_titular" checked onchange="toggleTipoBeneficiario()">
-                                                            <label class="form-check-label" for="radioMesmoTitular">
-                                                                <i class="bi bi-credit-card"></i> Mesmo titular do cartão
-                                                            </label>
-                                                        </div>
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" name="tipoBeneficiario" id="radioTerceiros" value="terceiros" onchange="toggleTipoBeneficiario()">
-                                                            <label class="form-check-label" for="radioTerceiros">
-                                                                <i class="bi bi-people"></i> Terceiros
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6" id="divCpfTerceiros" style="display: none;">
-                                                    <div class="form-floating">
-                                                        <input type="text" class="form-control" id="cpfTerceiros" placeholder="000.000.000-00" maxlength="14">
-                                                        <label for="cpfTerceiros">CPF do Terceiro</label>
-                                                        <div class="invalid-feedback" id="cpfTerceirosFeedback"></div>
-                                                    </div>
+
+                                        
+                                        <!-- Data do Contrato -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="date" class="form-control" id="dataContrato" required>
+                                                    <label for="dataContrato">
+                                                        <i class="bi bi-calendar"></i> Data do Contrato
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>
-                                    
-                                        <!-- Campos Transferência (oculto por padrão) -->
-                                        <div id="divTransferenciaCampos" style="display: none;">
-                                            <div class="row g-3">
-                                                <div class="col-12">
-                                                    <div class="form-floating">
-                                                        <input type="text" class="form-control" id="dadosTransferencia" placeholder="Detalhes da transferência">
-                                                        <label for="dadosTransferencia">
-                                                            <i class="bi bi-pencil"></i> Detalhes da Transferência (Banco, Agência, Conta, Tipo, etc.)
-                                                        </label>
-                                                        <div class="form-text text-muted">
-                                                            <i class="bi bi-info-circle"></i> 
-                                                            Informe: Banco, Agência, Nº da Conta, Tipo de Conta, Titular e demais informações relevantes para a transferência.
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+
+                                        <!-- Dados do Cliente -->
+                                        <div class="section-title">
+                                            <i class="bi bi-person-badge"></i> Dados do Cliente
                                         </div>
-                                    
-                                        <!-- Campos comuns (Banco) -->
-                                        <div class="row g-3 mt-2">
+                                        
+                                        <div class="row g-3 mb-4">
                                             <div class="col-md-6">
                                                 <div class="form-floating">
-                                                    <select class="form-select" id="banco" required onchange="toggleBancoOutros()">
-                                                        <option value="">Selecione...</option>
-                                                        <option value="001">Banco do Brasil</option>
-                                                        <option value="104">Caixa Econômica</option>
-                                                        <option value="237">Bradesco</option>
-                                                        <option value="341">Itaú</option>
-                                                        <option value="033">Santander</option>
-                                                        <option value="260">Nubank</option>
-                                                        <option value="077">Inter</option>
-                                                        <option value="336">C6 Bank</option>
-                                                        <option value="outros">OUTROS</option>
+                                                    <input type="text" class="form-control" id="nome" required placeholder="Nome completo">
+                                                    <label for="nome">Nome Completo *</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="cpf" required placeholder="000.000.000-00" maxlength="14">
+                                                    <label for="cpf">CPF *</label>
+                                                    <div class="invalid-feedback" id="cpfFeedback"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-floating">
+                                                    <input type="tel" class="form-control" id="numero" required placeholder="(00) 00000-0000">
+                                                    <label for="numero">Telefone *</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Endereço -->
+                                        <div class="section-title">
+                                            <i class="bi bi-geo-alt"></i> Endereço
+                                        </div>
+                                        
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-12 mb-3">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="flagEnderecoManual">
+                                                    <label class="form-check-label fw-bold" for="flagEnderecoManual">
+                                                        <i class="bi bi-pencil"></i> Digitar endereço manualmente
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="cep" placeholder="00000-000" maxlength="9">
+                                                    <label for="cep">CEP</label>
+                                                    <div id="cepFeedback" class="form-text" style="display:none;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-7">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="endereco" placeholder="Rua, Avenida...">
+                                                    <label for="endereco">Logradouro</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="numeroEndereco" placeholder="Nº">
+                                                    <label for="numeroEndereco">Número</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="bairro" placeholder="Bairro">
+                                                    <label for="bairro">Bairro</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="complemento" placeholder="Apto, Bloco, etc.">
+                                                    <label for="complemento">Complemento</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="cidade" placeholder="Cidade">
+                                                    <label for="cidade">Cidade</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <div class="form-floating">
+                                                    <select class="form-select" id="estado">
+                                                        <option value="">UF</option>
+                                                        <option value="AC">AC</option>
+                                                        <option value="AL">AL</option>
+                                                        <option value="AP">AP</option>
+                                                        <option value="AM">AM</option>
+                                                        <option value="BA">BA</option>
+                                                        <option value="CE">CE</option>
+                                                        <option value="DF">DF</option>
+                                                        <option value="ES">ES</option>
+                                                        <option value="GO">GO</option>
+                                                        <option value="MA">MA</option>
+                                                        <option value="MT">MT</option>
+                                                        <option value="MS">MS</option>
+                                                        <option value="MG">MG</option>
+                                                        <option value="PA">PA</option>
+                                                        <option value="PB">PB</option>
+                                                        <option value="PR">PR</option>
+                                                        <option value="PE">PE</option>
+                                                        <option value="PI">PI</option>
+                                                        <option value="RJ">RJ</option>
+                                                        <option value="RN">RN</option>
+                                                        <option value="RS">RS</option>
+                                                        <option value="RO">RO</option>
+                                                        <option value="RR">RR</option>
+                                                        <option value="SC">SC</option>
+                                                        <option value="SP">SP</option>
+                                                        <option value="SE">SE</option>
+                                                        <option value="TO">TO</option>
                                                     </select>
-                                                    <label for="banco">Banco *</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6" id="divBancoOutros" style="display: none;">
-                                                <div class="form-floating">
-                                                    <input type="text" class="form-control" id="bancoOutros" placeholder="Digite o nome do banco">
-                                                    <label for="bancoOutros">Qual banco?</label>
+                                                    <label for="estado">Estado</label>
                                                 </div>
                                             </div>
                                         </div>
-                                    
-                                        <!-- Valores -->
-                                        <div class="row g-3 mt-2">
-                                            <div class="col-md-4">
-                                                <div class="form-floating">
-                                                    <input type="number" class="form-control" id="valorCartao" required placeholder="0.00" step="0.01" min="0" onchange="calcularValorParcela()">
-                                                    <label for="valorCartao">Valor do Cartão (R$) *</label>
+
+                                        <!-- Dados Financeiros -->
+                                        <div class="section-title">
+                                            <i class="bi bi-cash-stack"></i> Dados Financeiros
+                                        </div>
+                                        
+                                        <div class="row g-3 mb-4">
+                                            <!-- Tipo de Pagamento -->
+                                            <div class="col-12">
+                                                <label class="form-label fw-bold">Modalidade de Pagamento</label>
+                                                <div class="d-flex gap-3">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="tipoPagamento" id="radioPix" value="pix" checked onchange="toggleTipoPagamento()">
+                                                        <label class="form-check-label" for="radioPix">
+                                                            <i class="bi bi-qr-code"></i> PIX
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="tipoPagamento" id="radioTransferencia" value="transferencia" onchange="toggleTipoPagamento()">
+                                                        <label class="form-check-label" for="radioTransferencia">
+                                                            <i class="bi bi-bank"></i> Transferência Bancária
+                                                        </label>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="form-floating">
-                                                    <input type="number" class="form-control" id="parcelas" required placeholder="Quantidade" min="1" max="120" onchange="calcularValorParcela()">
-                                                    <label for="parcelas">QTD Parcelas *</label>
-                                                    <div class="form-text">Máximo 120 parcelas</div>
+                                        
+                                            <!-- Campos PIX (visíveis por padrão) -->
+                                            <div id="divPixCampos">
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">Chave PIX</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text"><i class="bi bi-qr-code"></i></span>
+                                                            <input type="text" class="form-control" id="pix" placeholder="Chave PIX">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">Nome do Beneficiário</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text"><i class="bi bi-person-check"></i></span>
+                                                            <input type="text" class="form-control" id="nomeBeneficiario" placeholder="Nome do beneficiário">
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <div class="form-check form-check-inline">
+                                                                <input class="form-check-input" type="radio" name="tipoBeneficiario" id="radioMesmoTitular" value="mesmo_titular" checked onchange="toggleTipoBeneficiario()">
+                                                                <label class="form-check-label" for="radioMesmoTitular">
+                                                                    <i class="bi bi-credit-card"></i> Mesmo titular do cartão
+                                                                </label>
+                                                            </div>
+                                                            <div class="form-check form-check-inline">
+                                                                <input class="form-check-input" type="radio" name="tipoBeneficiario" id="radioTerceiros" value="terceiros" onchange="toggleTipoBeneficiario()">
+                                                                <label class="form-check-label" for="radioTerceiros">
+                                                                    <i class="bi bi-people"></i> Terceiros
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6" id="divCpfTerceiros" style="display: none;">
+                                                        <div class="form-floating">
+                                                            <input type="text" class="form-control" id="cpfTerceiros" placeholder="000.000.000-00" maxlength="14">
+                                                            <label for="cpfTerceiros">CPF do Terceiro</label>
+                                                            <div class="invalid-feedback" id="cpfTerceirosFeedback"></div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="form-floating">
-                                                    <input type="text" class="form-control" id="valorParcelas" readonly>
-                                                    <label for="valorParcelas">Valor Parcelas (R$)</label>
+                                        
+                                            <!-- Campos Transferência (oculto por padrão) -->
+                                            <div id="divTransferenciaCampos" style="display: none;">
+                                                <div class="row g-3">
+                                                    <div class="col-12">
+                                                        <div class="form-floating">
+                                                            <input type="text" class="form-control" id="dadosTransferencia" placeholder="Detalhes da transferência">
+                                                            <label for="dadosTransferencia">
+                                                                <i class="bi bi-pencil"></i> Detalhes da Transferência (Banco, Agência, Conta, Tipo, etc.)
+                                                            </label>
+                                                            <div class="form-text text-muted">
+                                                                <i class="bi bi-info-circle"></i> 
+                                                                Informe: Banco, Agência, Nº da Conta, Tipo de Conta, Titular e demais informações relevantes para a transferência.
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        
+                                            <!-- Campos comuns (Banco) -->
+                                            <div class="row g-3 mt-2">
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <select class="form-select" id="banco" required onchange="toggleBancoOutros()">
+                                                            <option value="">Selecione...</option>
+                                                            <option value="001">Banco do Brasil</option>
+                                                            <option value="104">Caixa Econômica</option>
+                                                            <option value="237">Bradesco</option>
+                                                            <option value="341">Itaú</option>
+                                                            <option value="033">Santander</option>
+                                                            <option value="260">Nubank</option>
+                                                            <option value="077">Inter</option>
+                                                            <option value="336">C6 Bank</option>
+                                                            <option value="outros">OUTROS</option>
+                                                        </select>
+                                                        <label for="banco">Banco *</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" id="divBancoOutros" style="display: none;">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="bancoOutros" placeholder="Digite o nome do banco">
+                                                        <label for="bancoOutros">Qual banco?</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        
+                                            <!-- Valores -->
+                                            <div class="row g-3 mt-2">
+                                                <div class="col-md-4">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="valorCartao" required placeholder="0,00" inputmode="numeric">
+                                                        <label for="valorCartao">Valor do Cartão (R$) *</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="parcelas" required placeholder="Quantidade" inputmode="numeric">
+                                                        <label for="parcelas">QTD Parcelas *</label>
+                                                        <div class="form-text">Máximo 120 parcelas</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="valorParcelas" readonly>
+                                                        <label for="valorParcelas">Valor Parcelas (R$)</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="valorEmprestado" required placeholder="0,00" inputmode="numeric">
+                                                        <label for="valorEmprestado">Valor Emprestado (R$) *</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Controle de Cartão Retido -->
+                                        <div class="section-title">
+                                            <i class="bi bi-credit-card"></i> Controle de Cartão
+                                        </div>
+                                        
+                                        <div class="row g-3 mb-4">
                                             <div class="col-md-12">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="cartaoRetido" onchange="toggleCartaoRetido()">
+                                                    <label class="form-check-label fw-bold" for="cartaoRetido">
+                                                        <i class="bi bi-lock"></i> Cartão Retido para Devolução
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4" id="divBandeiraCartao" style="display: none;">
                                                 <div class="form-floating">
-                                                    <input type="number" class="form-control" id="valorEmprestado" required placeholder="0.00" step="0.01" min="0">
-                                                    <label for="valorEmprestado">Valor Emprestado (R$) *</label>
+                                                    <select class="form-select" id="bandeiraCartao" onchange="toggleBandeiraOutros()">
+                                                        <option value="">Selecione...</option>
+                                                        <option value="Visa">Visa</option>
+                                                        <option value="Mastercard">Mastercard</option>
+                                                        <option value="Elo">Elo</option>
+                                                        <option value="American Express">American Express</option>
+                                                        <option value="Hipercard">Hipercard</option>
+                                                        <option value="Diners">Diners Club</option>
+                                                        <option value="Discover">Discover</option>
+                                                        <option value="Sodexo">Sodexo</option>
+                                                        <option value="Ticket">Ticket</option>
+                                                        <option value="Alelo">Alelo</option>
+                                                        <option value="VR">VR</option>
+                                                        <option value="Outros">Outros</option>
+                                                    </select>
+                                                    <label for="bandeiraCartao">Bandeira do Cartão</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4" id="divBandeiraOutros" style="display: none;">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="bandeiraOutros" placeholder="Digite a bandeira">
+                                                    <label for="bandeiraOutros">Qual bandeira?</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4" id="divUltimosDigitos" style="display: none;">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="ultimosDigitos" placeholder="0000" maxlength="4">
+                                                    <label for="ultimosDigitos">Últimos 4 dígitos</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4" id="divDataRetirada" style="display: none;">
+                                                <div class="form-floating">
+                                                    <input type="date" class="form-control" id="dataRetirada">
+                                                    <label for="dataRetirada">Data da Retirada</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12" id="divObservacaoCartao" style="display: none;">
+                                                <div class="form-floating">
+                                                    <textarea class="form-control" id="observacaoCartao" style="height: 80px;" placeholder="Observações sobre o cartão"></textarea>
+                                                    <label for="observacaoCartao">Observações</label>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Controle de Cartão Retido -->
-                                    <div class="section-title">
-                                        <i class="bi bi-credit-card"></i> Controle de Cartão
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-12">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="cartaoRetido" onchange="toggleCartaoRetido()">
-                                                <label class="form-check-label fw-bold" for="cartaoRetido">
-                                                    <i class="bi bi-lock"></i> Cartão Retido para Devolução
-                                                </label>
+                                        <!-- Documentos -->
+                                        <div class="section-title">
+                                            <i class="bi bi-file-earmark-image"></i> Documentos do Cliente
+                                        </div>
+                                        
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Ficha do Cliente</label>
+                                                <div class="upload-area" id="uploadFicha">
+                                                    <input type="file" id="fichaCliente" accept="image/*" capture="environment" hidden>
+                                                    <i class="bi bi-cloud-upload upload-icon"></i>
+                                                    <p>Clique para upload da ficha</p>
+                                                    <img id="previewFicha" class="preview-doc" style="display:none;">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Documento do Cliente</label>
+                                                <div class="upload-area" id="uploadDocumento">
+                                                    <input type="file" id="documentoCliente" accept="image/*" capture="environment" hidden>
+                                                    <i class="bi bi-cloud-upload upload-icon"></i>
+                                                    <p>Clique para upload do documento</p>
+                                                    <img id="previewDocumento" class="preview-doc" style="display:none;">
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-4" id="divBandeiraCartao" style="display: none;">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="bandeiraCartao" onchange="toggleBandeiraOutros()">
-                                                    <option value="">Selecione...</option>
-                                                    <option value="Visa">Visa</option>
-                                                    <option value="Mastercard">Mastercard</option>
-                                                    <option value="Elo">Elo</option>
-                                                    <option value="American Express">American Express</option>
-                                                    <option value="Hipercard">Hipercard</option>
-                                                    <option value="Diners">Diners Club</option>
-                                                    <option value="Discover">Discover</option>
-                                                    <option value="Sodexo">Sodexo</option>
-                                                    <option value="Ticket">Ticket</option>
-                                                    <option value="Alelo">Alelo</option>
-                                                    <option value="VR">VR</option>
-                                                    <option value="Outros">Outros</option>
-                                                </select>
-                                                <label for="bandeiraCartao">Bandeira do Cartão</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4" id="divBandeiraOutros" style="display: none;">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="bandeiraOutros" placeholder="Digite a bandeira">
-                                                <label for="bandeiraOutros">Qual bandeira?</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4" id="divUltimosDigitos" style="display: none;">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="ultimosDigitos" placeholder="0000" maxlength="4">
-                                                <label for="ultimosDigitos">Últimos 4 dígitos</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4" id="divDataRetirada" style="display: none;">
-                                            <div class="form-floating">
-                                                <input type="date" class="form-control" id="dataRetirada">
-                                                <label for="dataRetirada">Data da Retirada</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-12" id="divObservacaoCartao" style="display: none;">
-                                            <div class="form-floating">
-                                                <textarea class="form-control" id="observacaoCartao" style="height: 80px;" placeholder="Observações sobre o cartão"></textarea>
-                                                <label for="observacaoCartao">Observações</label>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <!-- Documentos -->
-                                    <div class="section-title">
-                                        <i class="bi bi-file-earmark-image"></i> Documentos do Cliente
-                                    </div>
-                                    
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold">Ficha do Cliente</label>
-                                            <div class="upload-area" id="uploadFicha">
-                                                <input type="file" id="fichaCliente" accept="image/*" capture="environment" hidden>
-                                                <i class="bi bi-cloud-upload upload-icon"></i>
-                                                <p>Clique para upload da ficha</p>
-                                                <img id="previewFicha" class="preview-doc" style="display:none;">
+                                        <!-- Botões -->
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <button type="submit" class="btn btn-primary btn-lg w-100" id="btnSubmit">
+                                                    <i class="bi bi-check-circle"></i> Cadastrar Contrato
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button type="button" class="btn btn-outline-secondary btn-lg w-100" onclick="limparFormulario()">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Limpar
+                                                </button>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold">Documento do Cliente</label>
-                                            <div class="upload-area" id="uploadDocumento">
-                                                <input type="file" id="documentoCliente" accept="image/*" capture="environment" hidden>
-                                                <i class="bi bi-cloud-upload upload-icon"></i>
-                                                <p>Clique para upload do documento</p>
-                                                <img id="previewDocumento" class="preview-doc" style="display:none;">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Botões -->
-                                    <div class="row">
-                                        <div class="col-md-6 mb-2">
-                                            <button type="submit" class="btn btn-primary btn-lg w-100" id="btnSubmit">
-                                                <i class="bi bi-check-circle"></i> Cadastrar Contrato
-                                            </button>
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <button type="button" class="btn btn-outline-secondary btn-lg w-100" onclick="limparFormulario()">
-                                                <i class="bi bi-arrow-counterclockwise"></i> Limpar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Aba 2: Consultar Contratos -->
-            <div class="tab-pane fade" id="consulta" role="tabpanel">
-                <div class="card shadow-lg border-0">
-                    <div class="card-body p-4">
-                        <h4 class="card-title mb-4">
-                            <i class="bi bi-search text-info"></i> 
-                            Consultar Contratos
-                        </h4>
-                        
-                        <!-- Filtros de Busca -->
-                        <div class="search-filters mb-4">
-                            <div class="row g-2">
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="searchCPF" placeholder="CPF">
-                                        <label for="searchCPF">CPF</label>
+                <!-- Aba 2: Consultar Contratos -->
+                <div class="tab-pane fade" id="consulta" role="tabpanel">
+                    <div class="card shadow-lg border-0">
+                        <div class="card-body p-4">
+                            <h4 class="card-title mb-4">
+                                <i class="bi bi-search text-info"></i> 
+                                Consultar Contratos
+                            </h4>
+                            
+                            <!-- Filtros de Busca -->
+                            <div class="search-filters mb-4">
+                                <div class="row g-2">
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="searchCPF" placeholder="CPF">
+                                            <label for="searchCPF">CPF</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="searchNome" placeholder="Nome">
+                                            <label for="searchNome">Nome</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="searchTelefone" placeholder="Telefone">
+                                            <label for="searchTelefone">Telefone</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="searchContrato" placeholder="Nº Contrato">
+                                            <label for="searchContrato">Nº Contrato</label>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="searchNome" placeholder="Nome">
-                                        <label for="searchNome">Nome</label>
+                                <div class="row g-2 mt-2">
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <select class="form-select" id="searchStatusCartao">
+                                                <option value="">Status Cartão</option>
+                                                <option value="processamento">Processamento</option>
+                                                <option value="recebido">Recebido</option>
+                                                <option value="cancelado">Cancelado</option>
+                                            </select>
+                                            <label for="searchStatusCartao">Status Cartão</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <select class="form-select" id="searchStatusEmprestado">
+                                                <option value="">Status Empréstimo</option>
+                                                <option value="processamento">Processamento</option>
+                                                <option value="pago">Pago</option>
+                                                <option value="cancelado">Cancelado</option>
+                                            </select>
+                                            <label for="searchStatusEmprestado">Status Empréstimo</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <select class="form-select" id="searchTipoVenda">
+                                                <option value="">Todos os Tipos</option>
+                                                <option value="cartao_alimentacao">Cartão Alimentação</option>
+                                                <option value="cartao_refeicao">Cartão Refeição</option>
+                                                <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
+                                                <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
+                                            </select>
+                                            <label for="searchTipoVenda">Tipo de Venda</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="date" class="form-control" id="searchDataInicio">
+                                            <label for="searchDataInicio">Data Início</label>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="searchTelefone" placeholder="Telefone">
-                                        <label for="searchTelefone">Telefone</label>
+                                <div class="row g-2 mt-2">
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="date" class="form-control" id="searchDataFim">
+                                            <label for="searchDataFim">Data Fim</label>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="searchContrato" placeholder="Nº Contrato">
-                                        <label for="searchContrato">Nº Contrato</label>
+                                    <div class="col-md-3">
+                                        <div class="form-check form-switch mt-3">
+                                            <input class="form-check-input" type="checkbox" id="searchCartaoRetido">
+                                            <label class="form-check-label fw-bold" for="searchCartaoRetido">
+                                                <i class="bi bi-credit-card"></i> Cartões Retidos
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button class="btn btn-info btn-lg w-100" onclick="buscarContratos()">
+                                            <i class="bi bi-search"></i> Buscar Contratos
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row g-2 mt-2">
-                                <div class="col-md-3">
+                            <!-- Resultados -->
+                            <div class="table-responsive" style="overflow-x: auto; overflow-y: visible; width: 100%;">
+                                <table class="table table-hover table-striped" id="tabelaContratos" style="width: auto; min-width: 100%; white-space: nowrap;">
+                                    <thead>
+                                        <tr>
+                                            <th>Contrato</th>
+                                            <th>Nome</th>
+                                            <th>CPF</th>
+                                            <th>Telefone</th>
+                                            <th>Tipo Venda</th>
+                                            <th>Valor Cartão</th>
+                                            <th>Valor Parcela</th>
+                                            <th>Valor Empréstimo</th>
+                                            <th>Qtd. Parcelas</th>
+                                            <th>Cartão Retido</th>
+                                            <th>Status Cartão</th>
+                                            <th>Status Empréstimo</th>
+                                            <th>Data</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resultadosBusca">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba 3: Relatórios -->
+                <div class="tab-pane fade" id="relatorios" role="tabpanel">
+                    <div class="card shadow-lg border-0">
+                        <div class="card-body p-4">
+                            <h4 class="card-title mb-4">
+                                <i class="bi bi-file-earmark-spreadsheet text-success"></i> 
+                                Relatórios
+                            </h4>
+                            
+                            <!-- Filtros do Relatório -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-2">
                                     <div class="form-floating">
-                                        <select class="form-select" id="searchStatusCartao">
-                                            <option value="">Status Cartão</option>
-                                            <option value="processamento">Processamento</option>
-                                            <option value="recebido">Recebido</option>
-                                            <option value="cancelado">Cancelado</option>
+                                        <select class="form-select" id="relatorioTipo" onchange="atualizarCamposRelatorio()">
+                                            <option value="mensal">Mensal</option>
+                                            <option value="periodo">Por Período</option>
+                                            <option value="tipo_venda">Por Tipo de Venda</option>
+                                            <option value="completo">Completo</option>
                                         </select>
-                                        <label for="searchStatusCartao">Status Cartão</label>
+                                        <label for="relatorioTipo">Tipo</label>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-floating">
-                                        <select class="form-select" id="searchStatusEmprestado">
-                                            <option value="">Status Empréstimo</option>
-                                            <option value="processamento">Processamento</option>
-                                            <option value="pago">Pago</option>
-                                            <option value="cancelado">Cancelado</option>
-                                        </select>
-                                        <label for="searchStatusEmprestado">Status Empréstimo</label>
+                                        <input type="month" class="form-control" id="relatorioMes">
+                                        <label for="relatorioMes">Mês/Ano</label>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-floating">
-                                        <select class="form-select" id="searchTipoVenda">
-                                            <option value="">Todos os Tipos</option>
+                                        <input type="date" class="form-control" id="relatorioDataInicio" style="display:none;">
+                                        <label for="relatorioDataInicio">Data Início</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-floating">
+                                        <input type="date" class="form-control" id="relatorioDataFim" style="display:none;">
+                                        <label for="relatorioDataFim">Data Fim</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-2" id="divTipoVendaRelatorio" style="display:none;">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="relatorioTipoVenda">
+                                            <option value="">Todos</option>
                                             <option value="cartao_alimentacao">Cartão Alimentação</option>
                                             <option value="cartao_refeicao">Cartão Refeição</option>
-                                            <option value="cartao_credito_parcelado">Cartão de Crédito - Parcelado</option>
-                                            <option value="cartao_credito_vista">Cartão de Crédito - À Vista</option>
+                                            <option value="cartao_credito_parcelado">Crédito Parcelado</option>
+                                            <option value="cartao_credito_vista">Crédito À Vista</option>
                                         </select>
-                                        <label for="searchTipoVenda">Tipo de Venda</label>
+                                        <label for="relatorioTipoVenda">Tipo de Venda</label>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="date" class="form-control" id="searchDataInicio">
-                                        <label for="searchDataInicio">Data Início</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row g-2 mt-2">
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input type="date" class="form-control" id="searchDataFim">
-                                        <label for="searchDataFim">Data Fim</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check form-switch mt-3">
-                                        <input class="form-check-input" type="checkbox" id="searchCartaoRetido">
-                                        <label class="form-check-label fw-bold" for="searchCartaoRetido">
-                                            <i class="bi bi-credit-card"></i> Cartões Retidos
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <button class="btn btn-info btn-lg w-100" onclick="buscarContratos()">
-                                        <i class="bi bi-search"></i> Buscar Contratos
+                                <div class="col-md-2">
+                                    <button class="btn btn-success btn-lg w-100 h-100" onclick="gerarRelatorio()">
+                                        <i class="bi bi-download"></i> Gerar
                                     </button>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Resultados -->
-                        <div class="table-responsive" style="overflow-x: auto; overflow-y: visible; width: 100%;">
-                            <table class="table table-hover table-striped" id="tabelaContratos" style="width: auto; min-width: 100%; white-space: nowrap;">
-                                <thead>
-                                    <tr>
-                                        <th>Contrato</th>
-                                        <th>Nome</th>
-                                        <th>CPF</th>
-                                        <th>Telefone</th>
-                                        <th>Tipo Venda</th>
-                                        <th>Valor Cartão</th>
-                                        <th>Valor Parcela</th>
-                                        <th>Valor Empréstimo</th>
-                                        <th>Qtd. Parcelas</th>
-                                        <th>Cartão Retido</th>
-                                        <th>Status Cartão</th>
-                                        <th>Status Empréstimo</th>
-                                        <th>Data</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="resultadosBusca">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Aba 3: Relatórios -->
-            <div class="tab-pane fade" id="relatorios" role="tabpanel">
-                <div class="card shadow-lg border-0">
-                    <div class="card-body p-4">
-                        <h4 class="card-title mb-4">
-                            <i class="bi bi-file-earmark-spreadsheet text-success"></i> 
-                            Relatórios
-                        </h4>
-                        
-                        <!-- Filtros do Relatório -->
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <select class="form-select" id="relatorioTipo" onchange="atualizarCamposRelatorio()">
-                                        <option value="mensal">Mensal</option>
-                                        <option value="periodo">Por Período</option>
-                                        <option value="tipo_venda">Por Tipo de Venda</option>
-                                        <option value="completo">Completo</option>
-                                    </select>
-                                    <label for="relatorioTipo">Tipo</label>
+                            <!-- Cards de Resumo -->
+                            <div class="row g-3 mb-4" id="cardsResumo">
+                                <div class="col-md-3">
+                                    <div class="card bg-primary text-white">
+                                        <div class="card-body">
+                                            <h6>Total Contratos</h6>
+                                            <h3 id="totalContratos">0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body">
+                                            <h6>Valor Total Cartões</h6>
+                                            <h3 id="totalCartoes">R$ 0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body">
+                                            <h6>Valor Total Emprestado</h6>
+                                            <h3 id="totalEmprestado">R$ 0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-warning text-white">
+                                        <div class="card-body">
+                                            <h6>Lucro Total</h6>
+                                            <h3 id="lucroTotal">R$ 0</h3>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <input type="month" class="form-control" id="relatorioMes">
-                                    <label for="relatorioMes">Mês/Ano</label>
+
+                            <!-- Cards de Cartões Retidos -->
+                            <div class="row g-3 mb-4" id="cardsCartoesRetidos" style="display:none;">
+                                <div class="col-md-4">
+                                    <div class="card card-cartoes-retidos">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-lock-fill"></i> Pendentes de Devolução</h6>
+                                            <h3 id="totalCartoesRetidosPendentes">0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-check-circle"></i> Cartões Devolvidos</h6>
+                                            <h3 id="totalCartoesDevolvidos">0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-credit-card"></i> Total Cartões Retidos</h6>
+                                            <h3 id="totalCartoesRetidos">0</h3>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <input type="date" class="form-control" id="relatorioDataInicio" style="display:none;">
-                                    <label for="relatorioDataInicio">Data Início</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <input type="date" class="form-control" id="relatorioDataFim" style="display:none;">
-                                    <label for="relatorioDataFim">Data Fim</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2" id="divTipoVendaRelatorio" style="display:none;">
-                                <div class="form-floating">
-                                    <select class="form-select" id="relatorioTipoVenda">
-                                        <option value="">Todos</option>
-                                        <option value="cartao_alimentacao">Cartão Alimentação</option>
-                                        <option value="cartao_refeicao">Cartão Refeição</option>
-                                        <option value="cartao_credito_parcelado">Crédito Parcelado</option>
-                                        <option value="cartao_credito_vista">Crédito À Vista</option>
-                                    </select>
-                                    <label for="relatorioTipoVenda">Tipo de Venda</label>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-success btn-lg w-100 h-100" onclick="gerarRelatorio()">
-                                    <i class="bi bi-download"></i> Gerar
+
+                            <!-- Tabela de Relatório -->
+                            <div class="table-responsive" id="tabelaRelatorio" style="display:none; overflow: visible !important;">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Contrato</th>
+                                            <th>Cliente</th>
+                                            <th>CPF</th>
+                                            <th>Tipo Venda</th>
+                                            <th>Valor Cartão</th>
+                                            <th>Valor Parcela</th>
+                                            <th>Valor Emprestado</th>
+                                            <th>Lucro</th>
+                                            <th>Cartão Retido</th>
+                                            <th>Status</th>
+                                            <th>Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dadosRelatorio">
+                                    </tbody>
+                                </table>
+                                <button class="btn btn-success mt-3" onclick="exportarParaExcel()">
+                                    <i class="bi bi-file-earmark-excel"></i> Exportar para Excel
                                 </button>
                             </div>
-                        </div>
-
-                        <!-- Cards de Resumo -->
-                        <div class="row g-3 mb-4" id="cardsResumo">
-                            <div class="col-md-3">
-                                <div class="card bg-primary text-white">
-                                    <div class="card-body">
-                                        <h6>Total Contratos</h6>
-                                        <h3 id="totalContratos">0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body">
-                                        <h6>Valor Total Cartões</h6>
-                                        <h3 id="totalCartoes">R$ 0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-info text-white">
-                                    <div class="card-body">
-                                        <h6>Valor Total Emprestado</h6>
-                                        <h3 id="totalEmprestado">R$ 0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-warning text-white">
-                                    <div class="card-body">
-                                        <h6>Lucro Total</h6>
-                                        <h3 id="lucroTotal">R$ 0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Cards de Cartões Retidos -->
-                        <div class="row g-3 mb-4" id="cardsCartoesRetidos" style="display:none;">
-                            <div class="col-md-4">
-                                <div class="card card-cartoes-retidos">
-                                    <div class="card-body">
-                                        <h6><i class="bi bi-lock-fill"></i> Pendentes de Devolução</h6>
-                                        <h3 id="totalCartoesRetidosPendentes">0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body">
-                                        <h6><i class="bi bi-check-circle"></i> Cartões Devolvidos</h6>
-                                        <h3 id="totalCartoesDevolvidos">0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-info text-white">
-                                    <div class="card-body">
-                                        <h6><i class="bi bi-credit-card"></i> Total Cartões Retidos</h6>
-                                        <h3 id="totalCartoesRetidos">0</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tabela de Relatório -->
-                        <div class="table-responsive" id="tabelaRelatorio" style="display:none; overflow: visible !important;">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Contrato</th>
-                                        <th>Cliente</th>
-                                        <th>CPF</th>
-                                        <th>Tipo Venda</th>
-                                        <th>Valor Cartão</th>
-                                        <th>Valor Parcela</th>
-                                        <th>Valor Emprestado</th>
-                                        <th>Lucro</th>
-                                        <th>Cartão Retido</th>
-                                        <th>Status</th>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dadosRelatorio">
-                                </tbody>
-                            </table>
-                            <button class="btn btn-success mt-3" onclick="exportarParaExcel()">
-                                <i class="bi bi-file-earmark-excel"></i> Exportar para Excel
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -815,6 +856,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
