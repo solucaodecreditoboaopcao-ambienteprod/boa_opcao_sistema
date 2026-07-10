@@ -694,9 +694,53 @@ tr.cartao-retido-row:hover {
 }
 
 /* ============================================
-   ESTILOS DO SISTEMA DE LOGIN
+   SISTEMA DE LOGIN - ESTILOS ESSENCIAIS
    ============================================ */
 
+/* Container principal - necessário para o overlay */
+#containerPrincipal {
+    position: relative;
+    min-height: 70vh;
+}
+
+/* Overlay de bloqueio - NÃO cobre o header */
+.bloqueio-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    border-radius: 0 0 20px 20px;
+}
+
+.bloqueio-mensagem {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    z-index: 1001;
+}
+
+.bloqueio-icon {
+    font-size: 80px;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.bloqueio-texto {
+    font-size: 20px;
+    color: #333;
+    font-weight: 600;
+}
+
+/* Container do login - acima do overlay */
 .login-container {
     background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
     padding: 15px 20px;
@@ -704,6 +748,8 @@ tr.cartao-retido-row:hover {
     border: 1px solid rgba(255,255,255,0.3);
     backdrop-filter: blur(10px);
     display: inline-block;
+    position: relative;
+    z-index: 2000;
 }
 
 .login-form-inline {
@@ -735,11 +781,6 @@ tr.cartao-retido-row:hover {
     background: white;
 }
 
-.login-input::placeholder {
-    color: #999;
-    font-size: 13px;
-}
-
 .password-wrapper {
     position: relative;
     display: flex;
@@ -756,8 +797,6 @@ tr.cartao-retido-row:hover {
     padding: 0;
     color: #666;
     z-index: 10;
-    transition: all 0.3s;
-    line-height: 1;
 }
 
 .toggle-password-btn:hover {
@@ -777,7 +816,6 @@ tr.cartao-retido-row:hover {
     transition: all 0.3s;
     white-space: nowrap;
     box-shadow: 0 4px 15px rgba(40,167,69,0.3);
-    letter-spacing: 0.5px;
 }
 
 .btn-login-action:hover {
@@ -786,8 +824,9 @@ tr.cartao-retido-row:hover {
     box-shadow: 0 6px 20px rgba(40,167,69,0.4);
 }
 
-.btn-login-action:active {
-    transform: translateY(0);
+.btn-login-action:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .btn-logout-action {
@@ -814,8 +853,6 @@ tr.cartao-retido-row:hover {
     display: flex;
     align-items: center;
     gap: 12px;
-    color: white;
-    padding: 5px 0;
 }
 
 .user-avatar {
@@ -829,6 +866,7 @@ tr.cartao-retido-row:hover {
     font-size: 22px;
     border: 2px solid rgba(255,255,255,0.5);
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    color: white;
 }
 
 .user-name-display {
@@ -850,45 +888,6 @@ tr.cartao-retido-row:hover {
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
-/* Bloqueio do sistema */
-.bloqueio-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    backdrop-filter: blur(5px);
-    animation: fadeIn 0.5s ease;
-}
-
-.bloqueio-mensagem {
-    background: white;
-    padding: 40px;
-    border-radius: 20px;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    animation: slideUp 0.5s ease;
-}
-
-.bloqueio-icon {
-    font-size: 80px;
-    display: block;
-    margin-bottom: 20px;
-    animation: pulse 2s infinite;
-}
-
-.bloqueio-texto {
-    font-size: 20px;
-    color: #333;
-    font-weight: 600;
-}
-
-/* Loader do login */
 .login-loading {
     display: inline-block;
     width: 20px;
@@ -904,23 +903,13 @@ tr.cartao-retido-row:hover {
     to { transform: rotate(360deg); }
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* Header acima do overlay */
+.header {
+    position: relative;
+    z-index: 2000;
 }
 
-@keyframes slideUp {
-    from { 
-        transform: translateY(50px);
-        opacity: 0;
-    }
-    to { 
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-/* Responsividade do login */
+/* Responsivo */
 @media (max-width: 768px) {
     .login-form-inline {
         flex-direction: column;
@@ -946,10 +935,6 @@ tr.cartao-retido-row:hover {
         flex-direction: column;
         align-items: center;
         gap: 8px;
-    }
-    
-    .btn-logout-action {
-        width: 100%;
     }
 }
 
