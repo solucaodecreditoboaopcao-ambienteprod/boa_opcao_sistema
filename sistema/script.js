@@ -111,7 +111,7 @@ async function fazerLogin() {
                 errorDiv.textContent = '❌ Credenciais inválidas';
                 break;
             case 'auth/too-many-requests':
-                errorDiv.textContent = '❌ Muitas tentativas. Aguarde um momento.';
+                errorDiv.textContent = '❌ Muitas tentativas. Aguarde.';
                 break;
             default:
                 errorDiv.textContent = '❌ Erro ao fazer login. Tente novamente.';
@@ -199,9 +199,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const senhaInput = document.getElementById('senhaUsuario');
     if (senhaInput) {
         senhaInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                fazerLogin();
-            }
+            if (e.key === 'Enter') fazerLogin();
         });
     }
     
