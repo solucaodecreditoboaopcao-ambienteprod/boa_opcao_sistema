@@ -45,11 +45,15 @@ function togglePassword() {
     if (!senhaInput || !toggleBtn) return;
     
     if (senhaInput.type === 'password') {
+        // Senha oculta → mostrar senha
         senhaInput.type = 'text';
-        toggleBtn.textContent = '🙈';
+        toggleBtn.innerHTML = '👁️‍🗨️'; // Olho com censura (fechado)
+        toggleBtn.title = 'Ocultar senha';
     } else {
+        // Senha visível → ocultar senha
         senhaInput.type = 'password';
-        toggleBtn.textContent = '👁️';
+        toggleBtn.innerHTML = '👁️'; // Olho aberto
+        toggleBtn.title = 'Mostrar senha';
     }
 }
 
