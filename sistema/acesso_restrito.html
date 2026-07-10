@@ -831,11 +831,38 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer mt-5">
+    <footer class="footer">
         <div class="container">
-            <p class="mb-0">&copy; APPTECH - Todos os direitos reservados</p>
+            <div class="footer-content">
+                <div class="footer-copyright" id="copyrightLink">
+                    <img src="imagens/logo_apptech.png" alt="APPTECH" class="footer-logo" id="logoApptech">
+                </div>
+            </div>
         </div>
     </footer>
+    
+    <!-- Modal para contato -->
+    <div class="modal fade" id="contatoModal" tabindex="-1" aria-labelledby="contatoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contatoModalLabel">
+                        <img src="imagens/logo_apptech.png" alt="APPTECH" style="height: 35px; margin-right: 12px;">
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="developer-info">
+                        <h4 class="developer-title">Contato com o Desenvolvedor:</h4>
+                        <a href="https://wa.me/5571985101828" target="_blank" class="btn-whatsapp-modal" id="whatsappLink">
+                            <i class="bi bi-whatsapp"></i>
+                            <span>(71) 98510-1828</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal de Detalhes -->
     <div class="modal fade" id="modalDetalhes" tabindex="-1">
