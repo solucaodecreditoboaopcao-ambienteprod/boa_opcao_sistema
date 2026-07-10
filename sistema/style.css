@@ -1071,6 +1071,25 @@ tr.cartao-retido-row:hover {
     }
 }
 
+/* Botão de excluir na tabela */
+#tabelaContratos .btn-danger.btn-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+#tabelaContratos .btn-danger.btn-sm:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.4);
+}
+
+#tabelaContratos .btn-danger.btn-sm i {
+    font-size: 0.8rem;
+}
+
 
 
 /* ========== BADGES ========== */
