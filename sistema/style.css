@@ -585,10 +585,14 @@ tr.cartao-retido-row:hover {
     background: linear-gradient(135deg, #212121, #111111);
     color: white;
     padding: 2rem 0;
+    position: relative;
+    z-index: 9999; /* MUITO ALTO - acima de tudo */
 }
 
 .footer-content {
     text-align: center;
+    position: relative;
+    z-index: 10000; /* Ainda mais alto */
 }
 
 .footer-copyright {
@@ -601,6 +605,8 @@ tr.cartao-retido-row:hover {
     padding: 0.75rem 1.5rem;
     border-radius: 50px;
     background: rgba(255, 255, 255, 0.05);
+    position: relative;
+    z-index: 10001; /* Máximo para ser clicável */
 }
 
 .footer-copyright:hover {
@@ -613,6 +619,7 @@ tr.cartao-retido-row:hover {
     width: auto;
     filter: brightness(0) invert(1);
     transition: all 0.3s ease;
+    pointer-events: auto; /* Garantir que é clicável */
 }
 
 .footer-copyright span {
@@ -839,9 +846,10 @@ tr.cartao-retido-row:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 1000; /* Abaixo do footer */
     backdrop-filter: blur(5px);
     border-radius: 0 0 20px 20px;
+    pointer-events: auto; /* Bloqueia cliques no conteúdo */
 }
 
 .bloqueio-mensagem {
