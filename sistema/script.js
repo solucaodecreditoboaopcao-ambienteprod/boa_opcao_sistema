@@ -313,31 +313,43 @@ function validarCPF(cpf) {
 }
 
 // ========== INICIALIZAR MODAL DO FOOTER ==========
+// ========== INICIALIZAR MODAL DO FOOTER ==========
 function initFooterModal() {
     const copyrightElement = document.getElementById('copyrightLink');
     const logoElement = document.getElementById('logoApptech');
     const modalElement = document.getElementById('contatoModal');
     
-    if (!modalElement) return;
+    if (!modalElement) {
+        console.error('Modal de contato não encontrado');
+        return;
+    }
     
-    const modal = new bootstrap.Modal(modalElement);
+    const modal = new bootstrap.Modal(modalElement, {
+        backdrop: true,
+        keyboard: true,
+        focus: true
+    });
     
-    // Abrir modal ao clicar na logo AppTech
+    // Função para abrir o modal
+    function abrirModal(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        modal.show();
+    }
+    
+    // Adicionar evento de clique no container do copyright
     if (copyrightElement) {
-        copyrightElement.addEventListener('click', function(e) {
-            modal.show();
-        });
+        copyrightElement.addEventListener('click', abrirModal);
+        console.log('Evento de clique adicionado ao copyrightElement');
     }
     
-    // Também abrir ao clicar diretamente na logo
+    // Adicionar evento de clique na logo
     if (logoElement) {
-        logoElement.addEventListener('click', function(e) {
-            e.stopPropagation();
-            modal.show();
-        });
+        logoElement.addEventListener('click', abrirModal);
+        console.log('Evento de clique adicionado ao logoElement');
     }
     
-    // Garantir que o link do WhatsApp funcione
+    // WhatsApp link
     const whatsappLink = document.getElementById('whatsappLink');
     if (whatsappLink) {
         whatsappLink.addEventListener('click', function(e) {
@@ -345,6 +357,18 @@ function initFooterModal() {
             window.open('https://wa.me/5571985101828', '_blank');
         });
     }
+    
+    console.log('Footer modal inicializado com sucesso');
+}
+
+// Chamar a função IMEDIATAMENTE, não apenas no DOMContentLoaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        initFooterModal();
+    });
+} else {
+    // DOM já carregado
+    initFooterModal();
 }
 
 // ========== CÁLCULO DO VALOR DA PARCELA ==========
