@@ -261,6 +261,46 @@ async function carregarContratosExistentes() {
     }
 }
 
+// ========== EXCLUIR CONTRATO ==========
+async function excluirContrato(id, numeroContrato) {
+    // Criar modal de confirmação personalizado
+    const confirmacao = confirm(
+        `⚠️ DESEJA REALMENTE EXCLUIR?\n\n` +
+        `Contrato: ${numeroContrato}\n\n` +
+        `Este processo NÃO PODE SER REVERTIDO!\n` +
+        `Todos os dados deste contrato serão perdidos permanentemente.\n\n` +
+        `Clique em OK para confirmar a exclusão.`
+    );
+    
+    if (!confirmacao) return;
+    
+    // Segunda confirmação para garantir
+    const confirmacao2 = confirm(
+        `⚠️ ÚLTIMA CONFIRMAÇÃO!\n\n` +
+        `Tem certeza absoluta que deseja excluir o contrato ${numeroContrato}?\n\n` +
+        `Esta ação é IRREVERSÍVEL!`
+    );
+    
+    if (!confirmacao2) return;
+    
+    try {
+        // Excluir documento do Firestore
+        await db.collection('contratos').doc(id).delete();
+        
+        // Remover da lista local
+        contratosExistentes = contratosExistentes.filter(num => num !== numeroContrato);
+        
+        mostrarStatus(`✅ Contrato ${numeroContrato} excluído com sucesso!`, 'success');
+        
+        // Atualizar tabela
+        buscarContratos();
+        
+    } catch (error) {
+        console.error('Erro ao excluir contrato:', error);
+        mostrarStatus('❌ Erro ao excluir contrato: ' + error.message, 'danger');
+    }
+}
+
 // ========== GERAR NÚMERO DO CONTRATO ÚNICO ==========
 async function gerarNumeroContrato() {
     let numero;
@@ -1258,10 +1298,12 @@ async function buscarContratos() {
                     <td>${data}</td>
                     <td style="white-space: nowrap;">
                         <div class="d-flex gap-1 align-items-center">
+                            <!-- Botão Ver Detalhes -->
                             <button class="btn btn-info btn-sm" onclick="verDetalhes('${doc.id}')" title="Ver detalhes">
                                 <i class="bi bi-eye"></i>
                             </button>
                             
+                            <!-- Status Cartão -->
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-warning btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" title="Alterar Status Cartão">
                                     <i class="bi bi-credit-card"></i>
@@ -1276,6 +1318,7 @@ async function buscarContratos() {
                                 </ul>
                             </div>
                             
+                            <!-- Status Empréstimo -->
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" title="Alterar Status Empréstimo">
                                     <i class="bi bi-cash"></i>
@@ -1290,11 +1333,17 @@ async function buscarContratos() {
                                 </ul>
                             </div>
                             
+                            <!-- Devolução de Cartão -->
                             ${dados.cartaoRetido?.retido && dados.cartaoRetido?.statusDevolucao === 'retido' ? `
                                 <button class="btn btn-success btn-sm" onclick="registrarDevolucao('${doc.id}')" title="Registrar devolução">
                                     <i class="bi bi-arrow-return-left"></i>
                                 </button>
                             ` : ''}
+                            
+                            <!-- ========== BOTÃO EXCLUIR (NOVO) ========== -->
+                            <button class="btn btn-danger btn-sm" onclick="excluirContrato('${doc.id}', '${dados.numeroContrato}')" title="Excluir contrato">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
